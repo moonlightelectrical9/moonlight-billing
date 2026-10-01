@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Moon Light Electricals</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#070d14">
@@ -13,16 +13,31 @@
   <link rel="icon" type="image/png" href="https://img.icons8.com/color/192/lightning-bolt.png">
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #0b131e; margin: 0; padding: 12px; color: #1e293b; }
     
-    /* Login Box (Board Dark Gold Theme) */
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: #0b131e;
+      color: #1e293b;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Login Screen - Always Centered */
     #loginOverlay { 
-      max-width: 400px; margin: 50px auto; background: #111c2a; padding: 26px; 
-      border-radius: 12px; border: 1px solid #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+      width: 92%;
+      max-width: 420px;
+      margin: auto;
+      background: #111c2a; 
+      padding: 26px; 
+      border-radius: 12px; 
+      border: 1px solid #1e293b; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
       color: #f8fafc;
     }
     .brand-glow { text-align: center; margin-bottom: 14px; }
-    .brand-title-lg { font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; margin: 0; }
+    .brand-title-lg { font-size: 21px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; margin: 0; }
     .brand-gold { color: #f59e0b; }
     .brand-sub { font-size: 11px; color: #f59e0b; font-style: italic; margin-top: 2px; }
 
@@ -37,67 +52,118 @@
       text-decoration: none; display: inline-block; text-align: center;
     }
 
-    /* Main Container Card */
-    .card { 
-      background: #ffffff; border-radius: 10px; max-width: 720px; margin: auto; 
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3); overflow: hidden;
+    /* FULL SCREEN CONTAINER (Fluid Layout) */
+    .app-wrapper {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
     }
 
     /* Board-Style Header Banner */
     .board-banner {
       background: linear-gradient(180deg, #070d14 0%, #101c2a 100%);
-      padding: 14px 18px; border-bottom: 3px solid #d97706; color: #ffffff;
+      padding: 14px 24px;
+      border-bottom: 3px solid #d97706;
+      color: #ffffff;
     }
-    .banner-top { display: flex; justify-content: space-between; align-items: center; }
-    .banner-title { font-size: 19px; font-weight: 900; letter-spacing: 1px; margin: 0; color: #ffffff; }
-    .banner-tagline { font-size: 11px; color: #f59e0b; font-style: italic; font-weight: 600; margin-top: 2px; }
-    .gst-tag { font-size: 10.5px; background: #1e293b; color: #fbbf24; border: 1px solid #d97706; padding: 2px 7px; border-radius: 4px; font-weight: bold; }
+    .banner-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .banner-title { font-size: 22px; font-weight: 900; letter-spacing: 1px; margin: 0; color: #ffffff; }
+    .banner-tagline { font-size: 11.5px; color: #f59e0b; font-style: italic; font-weight: 600; margin-top: 2px; }
+    .gst-tag { font-size: 11px; background: #1e293b; color: #fbbf24; border: 1px solid #d97706; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
 
-    /* User Bar */
+    /* User Header Bar */
     .user-header { 
-      display: flex; justify-content: space-between; align-items: center; 
-      background: #f8fafc; padding: 8px 18px; border-bottom: 1px solid #e2e8f0; 
-      font-size: 11.5px; color: #475569; 
+      display: flex;
+      justify-content: space-between;
+      align-items: center; 
+      background: #f8fafc;
+      padding: 10px 24px;
+      border-bottom: 1px solid #e2e8f0; 
+      font-size: 12px;
+      color: #475569;
     }
-    .user-badge { font-weight: bold; background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; }
-    .logout-btn { color: #dc2626; border: 1px solid #fca5a5; background: #fef2f2; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .user-badge { font-weight: bold; background: #fef3c7; color: #b45309; padding: 3px 8px; border-radius: 4px; }
+    .logout-btn { color: #dc2626; border: 1px solid #fca5a5; background: #fef2f2; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
-    .content-area { padding: 16px; }
+    /* Content Area - Full Width with dynamic margin */
+    .content-area { 
+      padding: 18px 24px;
+      flex: 1;
+      width: 100%;
+      margin: 0 auto;
+    }
 
     /* Tabs */
-    .tab-bar { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 15px; }
-    .tab-btn { flex: 1; padding: 10px; text-align: center; font-weight: 800; cursor: pointer; color: #64748b; font-size: 12.5px; border-bottom: 3px solid transparent; }
+    .tab-bar { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 16px; }
+    .tab-btn { padding: 12px 24px; font-weight: 800; cursor: pointer; color: #64748b; font-size: 13px; border-bottom: 3px solid transparent; }
     .tab-btn.active { color: #0b131e; border-bottom-color: #d97706; font-weight: 900; }
 
-    .alert-box { background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; padding: 8px 12px; border-radius: 4px; font-size: 12px; margin-bottom: 12px; display: none; }
+    .alert-box { background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; padding: 10px 14px; border-radius: 4px; font-size: 12px; margin-bottom: 16px; display: none; }
 
-    .row { display: flex; gap: 8px; margin-bottom: 10px; }
-    .col { flex: 1; position: relative; }
-    label { display: block; font-size: 10.5px; font-weight: 800; color: #475569; margin-bottom: 3px; text-transform: uppercase; }
-    input, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px; outline: none; }
-    input:focus, select:focus { border-color: #d97706; }
+    /* Auto Responsive Form Rows */
+    .row { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 12px; 
+      margin-bottom: 12px; 
+    }
+    .col { 
+      flex: 1 1 180px; 
+      position: relative; 
+      min-width: 140px;
+    }
+    .col-wide { flex: 2 1 280px; }
+    .col-small { flex: 0.8 1 110px; }
 
-    .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 999; background: white; border: 1px solid #0b131e; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 16px rgba(0,0,0,0.15); display: none; }
-    .autocomplete-item { padding: 9px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 12.5px; display: flex; justify-content: space-between; align-items: center; }
+    label { display: block; font-size: 11px; font-weight: 800; color: #475569; margin-bottom: 4px; text-transform: uppercase; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; transition: 0.2s; }
+    input:focus, select:focus { border-color: #d97706; box-shadow: 0 0 0 2px rgba(217,119,6,0.15); }
+
+    .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 999; background: white; border: 1px solid #0b131e; border-radius: 0 0 6px 6px; max-height: 220px; overflow-y: auto; box-shadow: 0 8px 16px rgba(0,0,0,0.15); display: none; }
+    .autocomplete-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
     .autocomplete-item:hover { background-color: #fef3c7; }
-    .item-stock-tag { font-size: 10.5px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .item-stock-tag { font-size: 10.5px; background: #e0f2fe; color: #0369a1; padding: 3px 7px; border-radius: 4px; font-weight: bold; }
     .tag-low { background: #fee2e2; color: #dc2626; }
 
-    .badge { font-size: 11.5px; font-weight: 700; color: #d97706; margin-top: 3px; }
-    .btn { background: #0b131e; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 13.5px; }
+    .badge { font-size: 11.5px; font-weight: 700; color: #d97706; margin-top: 4px; }
+    
+    .btn { background: #0b131e; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; }
     .btn-green { background: #059669; }
+    .btn-green:hover { background: #047857; }
     .btn-gold { background: linear-gradient(135deg, #d97706, #b45309); color: #ffffff; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
-    th, td { border: 1px solid #e2e8f0; padding: 6px; text-align: left; }
+    /* Responsive Table Wrapper */
+    .table-responsive { width: 100%; overflow-x: auto; margin-top: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 600px; }
+    th, td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: left; }
     th { background: #f8fafc; font-weight: 700; color: #334155; }
-    .total-bar { display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; margin: 12px 0; padding: 8px 12px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 5px; color: #78350f; }
+    .total-bar { display: flex; justify-content: space-between; font-weight: bold; font-size: 16px; margin: 16px 0; padding: 10px 16px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; color: #78350f; }
 
-    /* Install Prompt Banner */
+    /* Mobile Adaptations */
+    @media (max-width: 768px) {
+      .board-banner { padding: 12px 14px; }
+      .user-header { padding: 8px 14px; }
+      .content-area { padding: 12px 14px; }
+      .banner-title { font-size: 18px; }
+      .tab-btn { flex: 1; text-align: center; padding: 10px 6px; font-size: 12px; }
+      .col { flex: 1 1 100%; }
+      .col-wide { flex: 1 1 100%; }
+      .col-small { flex: 1 1 100%; }
+      .row { gap: 8px; margin-bottom: 8px; }
+    }
+
     #installBanner {
       display: none; background: #1e293b; color: #ffffff; padding: 10px 16px;
-      border-radius: 8px; margin-bottom: 12px; align-items: center; justify-content: space-between;
-      border: 1px solid #f59e0b;
+      align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #f59e0b;
     }
     #installBanner button {
       background: #f59e0b; color: #0b131e; border: none; padding: 6px 14px;
@@ -107,13 +173,12 @@
 </head>
 <body>
 
-<!-- Native App Install Banner -->
 <div id="installBanner">
   <div style="font-size: 12px; font-weight: bold;">📲 Install Moon Light Billing App</div>
   <button onclick="installPWA()">Install Now</button>
 </div>
 
-<!-- LOGIN VIEW -->
+<!-- LOGIN OVERLAY -->
 <div id="loginOverlay">
   <div class="brand-glow">
     <h2 class="brand-title-lg">MOON<span class="brand-gold">LIGHT</span> ELECTRICALS</h2>
@@ -146,8 +211,8 @@
   </div>
 </div>
 
-<!-- MAIN DASHBOARD -->
-<div class="card" id="mainDashboard" style="display:none;">
+<!-- FULL SCREEN ERP WRAPPER -->
+<div class="app-wrapper" id="mainDashboard" style="display:none;">
   
   <div class="board-banner">
     <div class="banner-top">
@@ -157,15 +222,15 @@
       </div>
       <div style="text-align:right;">
         <div class="gst-tag">GST: 09BUBPC3406L1ZT</div>
-        <div style="font-size:10px; color:#cbd5e1; margin-top:3px;">Sector-121, Noida</div>
+        <div style="font-size:11px; color:#cbd5e1; margin-top:3px;">Sector-121, Noida</div>
       </div>
     </div>
   </div>
 
   <div class="user-header">
     <div>User: <span id="displayUser" class="user-badge"></span> (<span id="displayRole"></span>)</div>
-    <div style="display:flex; align-items:center; gap: 8px;">
-      <span style="font-size: 11px; color: #64748b;">Session: 24h</span>
+    <div style="display:flex; align-items:center; gap: 10px;">
+      <span style="font-size: 11.5px; color: #64748b;">Session: 24h</span>
       <button class="logout-btn" onclick="doLogout()">Logout</button>
     </div>
   </div>
@@ -222,7 +287,7 @@
       </div>
 
       <div class="row">
-        <div class="col">
+        <div class="col-wide">
           <label>Customer Name</label>
           <input type="text" id="custName" placeholder="Name">
         </div>
@@ -233,7 +298,7 @@
       </div>
 
       <div class="row">
-        <div class="col" style="flex: 2;">
+        <div class="col-wide">
           <label>Customer Address</label>
           <input type="text" id="custAddress" placeholder="e.g. Sector-121, Noida">
         </div>
@@ -243,10 +308,10 @@
         </div>
       </div>
 
-      <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 10px 0;">
+      <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 14px 0;">
 
       <div class="row">
-        <div class="col" style="flex: 2;">
+        <div class="col-wide">
           <label>Item Name</label>
           <input type="text" id="itemInput" placeholder="Search fan, wire, switch..." autocomplete="off" oninput="filterItems('sale')" onfocus="filterItems('sale')">
           <div id="saleDropdown" class="autocomplete-list"></div>
@@ -256,7 +321,7 @@
           <label>Serial / Batch (Warranty)</label>
           <input type="text" id="serialInput" placeholder="Optional (e.g. SN1092)">
         </div>
-        <div class="col" style="flex: 0.6;">
+        <div class="col-small">
           <label>HSN</label>
           <input type="text" id="hsnInput" readonly style="background:#f8fafc;">
         </div>
@@ -283,31 +348,33 @@
 
       <button class="btn btn-green" onclick="addItem()">+ Add Item to Bill</button>
 
-      <table id="cartTable" style="display:none;">
-        <thead>
-          <tr><th>Item & S/N</th><th>HSN</th><th>Rate</th><th>Disc</th><th>Qty</th><th>Total</th><th>✕</th></tr>
-        </thead>
-        <tbody id="cartBody"></tbody>
-      </table>
+      <div class="table-responsive">
+        <table id="cartTable" style="display:none;">
+          <thead>
+            <tr><th>Item & S/N</th><th>HSN</th><th>Rate</th><th>Disc</th><th>Qty</th><th>Total</th><th>✕</th></tr>
+          </thead>
+          <tbody id="cartBody"></tbody>
+        </table>
+      </div>
 
       <div class="total-bar" id="totalBar" style="display:none;">
         <span>Grand Total:</span>
         <span style="font-weight:900;">₹<span id="grandTotal">0</span></span>
       </div>
 
-      <button class="btn btn-gold" id="submitBtn" style="display:none; margin-top: 10px; font-weight:900;" onclick="processBill()">
+      <button class="btn btn-gold" id="submitBtn" style="display:none; margin-top: 14px; font-weight:900;" onclick="processBill()">
         ⚡ Save Bill & Generate PDF
       </button>
     </div>
 
     <!-- TAB 2: STOCK INWARD -->
     <div id="stockView" style="display:none;">
-      <div style="font-size:12px; color:#475569; margin-bottom:12px;">
+      <div style="font-size:12px; color:#475569; margin-bottom:14px;">
         Market se naya maal aane par yahan se stock aur rates update karein:
       </div>
 
       <div class="row">
-        <div class="col" style="flex: 2;">
+        <div class="col-wide">
           <label>Item Name</label>
           <input type="text" id="pItemName" placeholder="Item name..." autocomplete="off" oninput="filterItems('purchase')" onfocus="filterItems('purchase')">
           <div id="purchaseDropdown" class="autocomplete-list"></div>
@@ -345,7 +412,7 @@
         </div>
       </div>
 
-      <button class="btn btn-green" id="pSubmitBtn" onclick="submitStockInward()" style="margin-top:10px;">
+      <button class="btn btn-green" id="pSubmitBtn" onclick="submitStockInward()" style="margin-top:14px;">
         📦 Update Stock in Inventory
       </button>
     </div>
@@ -353,7 +420,6 @@
 </div>
 
 <script>
-  // USER'S APPS SCRIPT URL ALREADY INTEGRATED
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
 
   var currentUser = null;
@@ -365,7 +431,6 @@
   const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
   var deferredPrompt;
 
-  // PWA Install Prompt Listener
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -499,7 +564,7 @@
 
   function renderAppForUser() {
     document.getElementById("loginOverlay").style.display = "none";
-    document.getElementById("mainDashboard").style.display = "block";
+    document.getElementById("mainDashboard").style.display = "flex";
     document.getElementById("displayUser").innerText = currentUser.name;
     document.getElementById("displayRole").innerText = currentUser.role;
     document.getElementById("billDate").value = new Date().toISOString().split('T')[0];
