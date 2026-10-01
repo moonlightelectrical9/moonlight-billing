@@ -119,7 +119,26 @@
     label { display: block; font-size: 11px; font-weight: 800; color: #475569; margin-bottom: 4px; text-transform: uppercase; }
     input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; transition: 0.2s; }
     input:focus, select:focus { border-color: #d97706; box-shadow: 0 0 0 2px rgba(217,119,6,0.15); }
-    input[readonly] { background: #f8fafc; color: #334155; cursor: not-allowed; }
+    
+    /* Strict Locked Field Styling */
+    .field-locked {
+      background-color: #f1f5f9 !important;
+      color: #334155 !important;
+      border-color: #cbd5e1 !important;
+      cursor: not-allowed !important;
+      user-select: none !important;
+      pointer-events: none !important;
+      font-weight: 700 !important;
+    }
+
+    .field-unlocked {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #059669 !important;
+      cursor: text !important;
+      pointer-events: auto !important;
+      box-shadow: 0 0 0 2px rgba(5,150,105,0.2) !important;
+    }
 
     .autocomplete-list { 
       position: absolute; 
@@ -390,15 +409,15 @@
         </div>
         <div class="col-small">
           <label>HSN / SAC</label>
-          <input type="text" id="hsnInput" placeholder="e.g. 998519">
+          <input type="text" id="hsnInput" placeholder="e.g. 998519" class="field-locked">
         </div>
       </div>
 
       <div class="row">
         <div class="col">
-          <label>Rate / Charge (₹)</label>
-          <!-- Initially Readonly so normal item rates are protected -->
-          <input type="number" id="rateInput" placeholder="Auto / Manual" readonly oninput="calculateItemTotal()">
+          <label id="rateLabel">Rate (₹) [🔒 Locked]</label>
+          <!-- Strict Locked by Default -->
+          <input type="number" id="rateInput" placeholder="Locked" class="field-locked" readonly tabindex="-1" oninput="calculateItemTotal()">
         </div>
         <div class="col">
           <label>Disc (₹/pc)</label>
@@ -410,7 +429,7 @@
         </div>
         <div class="col">
           <label>Total (₹)</label>
-          <input type="number" id="totalInput" readonly style="background:#f8fafc; font-weight:bold;">
+          <input type="number" id="totalInput" readonly class="field-locked" style="font-weight:900;">
         </div>
       </div>
 
@@ -742,22 +761,27 @@
     if (cat === "Family" && currentUser.role === "Admin") r = item.famRate;
     
     var rateInput = document.getElementById("rateInput");
+    var rateLabel = document.getElementById("rateLabel");
     var isLabour = isServiceOrLabour(item.name);
 
     if (isLabour) {
-      // LABOUR: Unlock Rate input for custom price
+      // LABOUR: Unlock Rate input completely
       rateInput.readOnly = false;
-      rateInput.style.background = "#ffffff";
-      rateInput.style.cursor = "text";
+      rateInput.removeAttribute("tabindex");
+      rateInput.className = "field-unlocked";
       rateInput.value = r > 0 ? r : "";
+      rateLabel.innerText = "Labour Charge (₹) [🔓 Editable]";
+      rateLabel.style.color = "#059669";
       document.getElementById("stockBadge").innerText = "🛠️ Labour Charge (Amount manually enter karein)";
-      rateInput.focus();
+      setTimeout(() => { rateInput.focus(); }, 50);
     } else {
-      // PHYSICAL GOODS: Lock Rate input (Protected)
+      // NORMAL PHYSICAL GOODS: Strictly Lock Rate
       rateInput.readOnly = true;
-      rateInput.style.background = "#f8fafc";
-      rateInput.style.cursor = "not-allowed";
+      rateInput.setAttribute("tabindex", "-1");
+      rateInput.className = "field-locked";
       rateInput.value = r;
+      rateLabel.innerText = "Rate (₹) [🔒 Locked]";
+      rateLabel.style.color = "#475569";
       document.getElementById("stockBadge").innerText = "Available Stock: " + item.stock;
     }
 
@@ -827,15 +851,19 @@
     cart.push({ name, serialNo, hsn, baseRate, discount: disc, finalRate, qty, total, gstPct });
     selectedSaleItem = null;
     
-    // Reset Form Fields
+    // Reset Fields to Locked
     document.getElementById("itemInput").value = "";
     document.getElementById("serialInput").value = "";
     document.getElementById("hsnInput").value = "";
     var rateInput = document.getElementById("rateInput");
     rateInput.value = "";
     rateInput.readOnly = true;
-    rateInput.style.background = "#f8fafc";
-    rateInput.style.cursor = "not-allowed";
+    rateInput.setAttribute("tabindex", "-1");
+    rateInput.className = "field-locked";
+    
+    var rateLabel = document.getElementById("rateLabel");
+    rateLabel.innerText = "Rate (₹) [🔒 Locked]";
+    rateLabel.style.color = "#475569";
 
     document.getElementById("discInput").value = "0";
     document.getElementById("qtyInput").value = "1";
@@ -953,8 +981,12 @@
     var rateInput = document.getElementById("rateInput");
     rateInput.value = "";
     rateInput.readOnly = true;
-    rateInput.style.background = "#f8fafc";
-    rateInput.style.cursor = "not-allowed";
+    rateInput.setAttribute("tabindex", "-1");
+    rateInput.className = "field-locked";
+    
+    var rateLabel = document.getElementById("rateLabel");
+    rateLabel.innerText = "Rate (₹) [🔒 Locked]";
+    rateLabel.style.color = "#475569";
 
     document.getElementById("discInput").value = "0";
     document.getElementById("qtyInput").value = "1";
