@@ -327,7 +327,7 @@
     </div>
 
     <div class="alert-box" id="alertBox">
-      <b>⚠️️ LOW STOCK ALERT:</b>
+      <b>⚠ LOW STOCK ALERT:</b>
       <div id="alertList"></div>
     </div>
 
@@ -356,7 +356,7 @@
         <div class="col" id="gstCheckCol">
           <label>GST Bill?</label>
           <select id="isGst">
-            <option value="No">No (Normal)</option>
+            <option value="No (Normal)" value="No">No (Normal)</option>
             <option value="Yes">Yes (GST Invoice)</option>
           </select>
         </div>
@@ -572,7 +572,6 @@
     doLogout();
   }
 
-  // Exact Indian Standard Time (IST) Date YYYY-MM-DD
   function getTodayDateString() {
     var now = new Date();
     var offsetMs = 5.5 * 60 * 60 * 1000;
@@ -671,7 +670,6 @@
     document.getElementById("displayUser").innerText = currentUser.name;
     document.getElementById("displayRole").innerText = currentUser.role;
     
-    // Auto sets current Indian date
     document.getElementById("billDate").value = getTodayDateString();
 
     if (currentUser.role === "Admin") {
@@ -943,6 +941,7 @@
         var isEst = (lastResult.billMode === "Estimate");
         var docType = isEst ? "Estimate Invoice" : "Invoice";
 
+        // REFINED CLEAN WHATSAPP MESSAGE (No corrupt symbols, 'Hi' instead of 'Dear')
         var msg = `Hi ${lastResult.customerName},\n\n`;
         msg += `Greetings from *Moon Light Electricals*!\n\n`;
         msg += `Your *${docType}* (*${lastResult.docNo}*) has been generated successfully.\n\n`;
@@ -950,12 +949,12 @@
         msg += `• Date: ${lastResult.billDate}\n`;
         msg += `• Total Amount: *₹${lastResult.grandTotal.toFixed(2)}*\n`;
         msg += `• Payment Mode: ${lastResult.paymentMode || 'Cash'}\n`;
-        if (isEst) msg += `• *Validity:* Strictly 3 Days\n`;
-        msg += `\n📄 *Download PDF Document:* \n${lastResult.pdfUrl}\n\n`;
+        if (isEst) msg += `• Validity: Strictly 3 Days\n`;
+        msg += `\n*Download PDF Document:* \n${lastResult.pdfUrl}\n\n`;
         msg += `Thank you for choosing us!\n`;
         msg += `*MOON LIGHT ELECTRICALS*\n`;
         msg += `Shop No 1, Sadbhavna Market, Sector-121, Noida\n`;
-        msg += `📞 9650897965 / 8860706865 / 8860880453`;
+        msg += `Ph: 9650897965 / 8860706865 / 8860880453`;
 
         var waUrl = phone ? ("https://wa.me/" + phone + "?text=" + encodeURIComponent(msg)) : ("https://wa.me/?text=" + encodeURIComponent(msg));
 
@@ -984,7 +983,7 @@
     document.getElementById("serialInput").value = "";
     document.getElementById("hsnInput").value = "";
     
-    // Auto reset date to current live date for next bill
+    // Auto reset date to current live date
     document.getElementById("billDate").value = getTodayDateString();
 
     var rateInput = document.getElementById("rateInput");
