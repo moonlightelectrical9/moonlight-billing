@@ -120,7 +120,6 @@
     input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; transition: 0.2s; }
     input:focus, select:focus { border-color: #d97706; box-shadow: 0 0 0 2px rgba(217,119,6,0.15); }
 
-    /* Floating Autocomplete Dropdown */
     .autocomplete-list { 
       position: absolute; 
       top: 100%; 
@@ -161,6 +160,44 @@
     th { background: #f8fafc; font-weight: 700; color: #334155; }
     .total-bar { display: flex; justify-content: space-between; font-weight: bold; font-size: 16px; margin: 16px 0; padding: 10px 16px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; color: #78350f; }
 
+    /* Success Pop-up Modal */
+    #successModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(7, 13, 20, 0.85);
+      z-index: 9999999;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .modal-content {
+      background: #ffffff;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      border-top: 5px solid #059669;
+      text-align: center;
+      padding: 24px;
+    }
+    .modal-icon { font-size: 48px; color: #059669; margin-bottom: 8px; }
+    .modal-title { font-size: 20px; font-weight: 900; color: #0f172a; margin-bottom: 6px; }
+    .modal-docno { font-size: 14px; color: #d97706; font-weight: bold; margin-bottom: 16px; }
+    .modal-btn-wa {
+      background: #25D366; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;
+      text-decoration: none; padding: 13px; border-radius: 8px; font-weight: bold; font-size: 15px; margin-bottom: 10px;
+    }
+    .modal-btn-pdf {
+      background: #0284c7; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;
+      text-decoration: none; padding: 11px; border-radius: 8px; font-weight: bold; font-size: 14px; margin-bottom: 12px;
+    }
+    .modal-btn-next {
+      background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; width: 100%;
+      padding: 11px; border-radius: 8px; font-weight: bold; font-size: 13.5px; cursor: pointer;
+    }
+
     @media (max-width: 768px) {
       .board-banner { padding: 12px 14px; }
       .user-header { padding: 8px 14px; }
@@ -187,6 +224,24 @@
 <div id="installBanner">
   <div style="font-size: 12px; font-weight: bold;">📲 Install Moon Light Billing App</div>
   <button onclick="installPWA()">Install Now</button>
+</div>
+
+<!-- SUCCESS SHARING MODAL POPUP -->
+<div id="successModal">
+  <div class="modal-content">
+    <div class="modal-icon">✅</div>
+    <div class="modal-title">Bill Generated Successfully!</div>
+    <div class="modal-docno" id="modalDocNo">MLE/EST-2026/001</div>
+    <a id="modalWaBtn" target="_blank" class="modal-btn-wa">
+      💬 Share Invoice on WhatsApp
+    </a>
+    <a id="modalPdfBtn" target="_blank" class="modal-btn-pdf">
+      📄 View / Download PDF
+    </a>
+    <button class="modal-btn-next" onclick="closeModalAndReset()">
+      + Create Next Bill
+    </button>
+  </div>
 </div>
 
 <!-- LOGIN OVERLAY -->
@@ -466,7 +521,6 @@
 
   window.onload = function() { checkActiveSession(); };
 
-  // Optimized API Call with proper redirect & headers
   async function apiCall(action, payload = {}) {
     payload.action = action;
     try {
@@ -635,7 +689,6 @@
     document.getElementById("gstCheckCol").style.display = (mode === "Estimate") ? "none" : "block";
   }
 
-  // Live Smart Filter (Shows all items on click, filters instantly on typing)
   function filterItems(context) {
     var inputId = (context === 'sale') ? 'itemInput' : 'pItemName';
     var listId = (context === 'sale') ? 'saleDropdown' : 'purchaseDropdown';
@@ -644,7 +697,7 @@
     listDiv.innerHTML = "";
 
     if (!masterItems || masterItems.length === 0) {
-      loadData(); // Auto reload if not yet loaded
+      loadData();
     }
 
     var matches = (val === "") ? masterItems : masterItems.filter(i => i.name.toLowerCase().includes(val));
@@ -812,17 +865,61 @@
         lastResult.grandTotal = payload.grandTotal;
         lastResult.paymentMode = payload.paymentMode;
 
-        var share = confirm(`Bill #${res.docNo} Generated Successfully!\n\nKya aap ise WhatsApp par share karna chahte hain?`);
-        if (share) {
-          sharePdfOnWhatsApp();
-        }
-        location.reload();
+        // Build WhatsApp Link
+        var phone = lastResult.phone ? lastResult.phone.replace(/\D/g, '') : '';
+        if (phone.length === 10) phone = "91" + phone;
+
+        var isEst = (lastResult.billMode === "Estimate");
+        var docType = isEst ? "Estimate Invoice" : "Invoice";
+
+        var msg = `Dear ${lastResult.customerName},\n\n`;
+        msg += `Greetings from *Moon Light Electricals*!\n\n`;
+        msg += `Your *${docType}* (*${lastResult.docNo}*) has been generated successfully.\n\n`;
+        msg += `*Billing Summary:*\n`;
+        msg += `• Date: ${lastResult.billDate}\n`;
+        msg += `• Total Amount: *₹${lastResult.grandTotal.toFixed(2)}*\n`;
+        msg += `• Payment Mode: ${lastResult.paymentMode || 'Cash'}\n`;
+        if (isEst) msg += `• *Validity:* Strictly 3 Days\n`;
+        msg += `\n📄 *Download PDF Document:* \n${lastResult.pdfUrl}\n\n`;
+        msg += `Thank you for choosing us!\n`;
+        msg += `*MOON LIGHT ELECTRICALS*\n`;
+        msg += `Shop No 1, Sadbhavna Market, Sector-121, Noida\n`;
+        msg += `📞 9650897965 / 8860706865 / 8860880453`;
+
+        var waUrl = phone ? ("https://wa.me/" + phone + "?text=" + encodeURIComponent(msg)) : ("https://wa.me/?text=" + encodeURIComponent(msg));
+
+        // Setup Modal Buttons
+        document.getElementById("modalDocNo").innerText = lastResult.docNo;
+        document.getElementById("modalWaBtn").href = waUrl;
+        document.getElementById("modalPdfBtn").href = lastResult.pdfUrl;
+        
+        // Show Pop-up Box
+        document.getElementById("successModal").style.display = "flex";
       }
     } catch(e) {
       btn.disabled = false;
       btn.innerText = "⚡ Save Bill & Generate PDF";
       alert("Error saving bill!");
     }
+  }
+
+  function closeModalAndReset() {
+    document.getElementById("successModal").style.display = "none";
+    // Reset Form for next bill without page reload
+    cart = [];
+    renderCart();
+    document.getElementById("custName").value = "";
+    document.getElementById("custPhone").value = "";
+    document.getElementById("custAddress").value = "";
+    document.getElementById("custGstin").value = "";
+    document.getElementById("itemInput").value = "";
+    document.getElementById("serialInput").value = "";
+    document.getElementById("hsnInput").value = "";
+    document.getElementById("rateInput").value = "";
+    document.getElementById("discInput").value = "0";
+    document.getElementById("qtyInput").value = "1";
+    document.getElementById("totalInput").value = "";
+    loadData(); // Update live stock in background
   }
 
   async function submitStockInward() {
@@ -848,41 +945,19 @@
       alert("Stock Updated Successfully: " + res.name);
       btn.disabled = false;
       btn.innerText = "📦 Update Stock in Inventory";
-      location.reload();
+      document.getElementById("pItemName").value = "";
+      document.getElementById("pHsn").value = "";
+      document.getElementById("pQty").value = "";
+      document.getElementById("pMinQty").value = "";
+      document.getElementById("pCustRate").value = "";
+      document.getElementById("pElecRate").value = "";
+      document.getElementById("pFamRate").value = "";
+      loadData();
     } catch(e) {
       btn.disabled = false;
       btn.innerText = "📦 Update Stock in Inventory";
       alert("Stock update failed!");
     }
-  }
-
-  function sharePdfOnWhatsApp() {
-    var phone = lastResult.phone;
-    if (!phone || phone.length < 10) {
-      phone = prompt("Customer ka 10-digit WhatsApp number daalein:");
-      if (!phone) return;
-    }
-    phone = phone.replace(/\D/g, '');
-    if (phone.length === 10) phone = "91" + phone;
-
-    var isEst = (lastResult.billMode === "Estimate");
-    var docType = isEst ? "Estimate Invoice" : "Invoice";
-
-    var msg = `Dear ${lastResult.customerName},\n\n`;
-    msg += `Greetings from *Moon Light Electricals*!\n\n`;
-    msg += `Your *${docType}* (*${lastResult.docNo}*) has been generated successfully.\n\n`;
-    msg += `*Billing Summary:*\n`;
-    msg += `• Date: ${lastResult.billDate}\n`;
-    msg += `• Total Amount: *₹${lastResult.grandTotal.toFixed(2)}*\n`;
-    msg += `• Payment Mode: ${lastResult.paymentMode || 'Cash'}\n`;
-    if (isEst) msg += `• *Validity:* Strictly 3 Days\n`;
-    msg += `\n📄 *Download PDF Document:* \n${lastResult.pdfUrl}\n\n`;
-    msg += `Thank you for choosing us!\n`;
-    msg += `*MOON LIGHT ELECTRICALS*\n`;
-    msg += `Shop No 1, Sadbhavna Market, Sector-121, Noida\n`;
-    msg += `📞 9650897965 / 8860706865 / 8860880453`;
-
-    window.open("https://wa.me/" + phone + "?text=" + encodeURIComponent(msg), '_blank');
   }
 </script>
 </body>
