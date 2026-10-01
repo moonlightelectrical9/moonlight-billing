@@ -231,7 +231,7 @@
   <div class="modal-content">
     <div class="modal-icon">✅</div>
     <div class="modal-title">Bill Generated Successfully!</div>
-    <div class="modal-docno" id="modalDocNo">MLE/EST-2026/001</div>
+    <div class="modal-docno" id="modalDocNo">MLE/INV-2026/001</div>
     <a id="modalWaBtn" target="_blank" class="modal-btn-wa">
       💬 Share Invoice on WhatsApp
     </a>
@@ -378,25 +378,25 @@
 
       <div class="row">
         <div class="col-wide">
-          <label>Item Name</label>
-          <input type="text" id="itemInput" placeholder="Click or type to search item (Fan, Wire, Switch...)" autocomplete="off" oninput="filterItems('sale')" onclick="filterItems('sale')" onfocus="filterItems('sale')">
+          <label>Item / Service Name</label>
+          <input type="text" id="itemInput" placeholder="Search item or type Labour Charge..." autocomplete="off" oninput="filterItems('sale')" onclick="filterItems('sale')" onfocus="filterItems('sale')">
           <div id="saleDropdown" class="autocomplete-list"></div>
           <div id="stockBadge" class="badge"></div>
         </div>
         <div class="col">
-          <label>Serial / Batch (Warranty)</label>
-          <input type="text" id="serialInput" placeholder="Optional (e.g. SN1092)">
+          <label>Work Note / Serial / Warranty</label>
+          <input type="text" id="serialInput" placeholder="e.g. Fan Fitting / SN1092">
         </div>
         <div class="col-small">
-          <label>HSN</label>
-          <input type="text" id="hsnInput" readonly style="background:#f8fafc;">
+          <label>HSN / SAC</label>
+          <input type="text" id="hsnInput" placeholder="e.g. 998519">
         </div>
       </div>
 
       <div class="row">
         <div class="col">
-          <label>Rate (₹)</label>
-          <input type="number" id="rateInput" oninput="calculateItemTotal()">
+          <label>Rate / Charge (₹)</label>
+          <input type="number" id="rateInput" placeholder="Enter amount" oninput="calculateItemTotal()">
         </div>
         <div class="col">
           <label>Disc (₹/pc)</label>
@@ -412,12 +412,12 @@
         </div>
       </div>
 
-      <button class="btn btn-green" onclick="addItem()">+ Add Item to Bill</button>
+      <button class="btn btn-green" onclick="addItem()">+ Add Item / Charge to Bill</button>
 
       <div class="table-responsive">
         <table id="cartTable" style="display:none;">
           <thead>
-            <tr><th>Item & S/N</th><th>HSN</th><th>Rate</th><th>Disc</th><th>Qty</th><th>Total</th><th>✕</th></tr>
+            <tr><th>Item & Description</th><th>HSN/SAC</th><th>Rate</th><th>Disc</th><th>Qty</th><th>Total</th><th>✕</th></tr>
           </thead>
           <tbody id="cartBody"></tbody>
         </table>
@@ -689,6 +689,11 @@
     document.getElementById("gstCheckCol").style.display = (mode === "Estimate") ? "none" : "block";
   }
 
+  function isServiceOrLabour(name) {
+    var lower = (name || "").toLowerCase();
+    return lower.includes("labour") || lower.includes("service") || lower.includes("charge") || lower.includes("repair") || lower.includes("fitting");
+  }
+
   function filterItems(context) {
     var inputId = (context === 'sale') ? 'itemInput' : 'pItemName';
     var listId = (context === 'sale') ? 'saleDropdown' : 'purchaseDropdown';
@@ -708,10 +713,13 @@
     }
 
     matches.slice(0, 30).forEach(function(item) {
-      var isLow = (item.minQty > 0 && item.stock <= item.minQty);
+      var isLabour = isServiceOrLabour(item.name);
+      var isLow = (!isLabour && item.minQty > 0 && item.stock <= item.minQty);
+      var stockLabel = isLabour ? "Service / Charge" : ("Stock: " + item.stock);
+
       var itemDiv = document.createElement("div");
       itemDiv.className = "autocomplete-item";
-      itemDiv.innerHTML = `<span><b>${item.name}</b></span><span class="item-stock-tag ${isLow ? 'tag-low' : ''}">Stock: ${item.stock}</span>`;
+      itemDiv.innerHTML = `<span><b>${item.name}</b></span><span class="item-stock-tag ${isLow ? 'tag-low' : ''}" style="${isLabour ? 'background:#fef3c7; color:#b45309;' : ''}">${stockLabel}</span>`;
       itemDiv.onmousedown = function(e) {
         e.preventDefault();
         if (context === 'sale') selectSaleItem(item);
@@ -725,20 +733,30 @@
   function selectSaleItem(item) {
     selectedSaleItem = item;
     document.getElementById("itemInput").value = item.name;
-    document.getElementById("hsnInput").value = item.hsn;
+    document.getElementById("hsnInput").value = item.hsn || (isServiceOrLabour(item.name) ? "998519" : "");
     var cat = document.getElementById("rateCategory").value;
     var r = item.custRate;
     if (cat === "Electrician") r = item.elecRate;
     if (cat === "Family" && currentUser.role === "Admin") r = item.famRate;
-    document.getElementById("rateInput").value = r;
+    
+    document.getElementById("rateInput").value = r > 0 ? r : "";
     document.getElementById("discInput").value = 0;
-    document.getElementById("stockBadge").innerText = "Available Stock: " + item.stock;
+    
+    var isLabour = isServiceOrLabour(item.name);
+    if (isLabour) {
+      document.getElementById("stockBadge").innerText = "🛠️ Labour Charge (Amount manually enter karein)";
+      document.getElementById("rateInput").focus();
+      document.getElementById("rateInput").select();
+    } else {
+      document.getElementById("stockBadge").innerText = "Available Stock: " + item.stock;
+    }
+
     document.getElementById("saleDropdown").style.display = "none";
     calculateItemTotal();
   }
 
   function onRateTypeChange() {
-    if (selectedSaleItem) {
+    if (selectedSaleItem && !isServiceOrLabour(selectedSaleItem.name)) {
       var cat = document.getElementById("rateCategory").value;
       var r = selectedSaleItem.custRate;
       if (cat === "Electrician") r = selectedSaleItem.elecRate;
@@ -774,15 +792,19 @@
   function addItem() {
     var name = document.getElementById("itemInput").value.trim();
     var serialNo = document.getElementById("serialInput").value.trim();
-    var hsn = document.getElementById("hsnInput").value;
+    var hsn = document.getElementById("hsnInput").value.trim();
     var baseRate = parseFloat(document.getElementById("rateInput").value) || 0;
     var disc = parseFloat(document.getElementById("discInput").value) || 0;
     var qty = parseInt(document.getElementById("qtyInput").value) || 1;
     var billMode = document.getElementById("billMode").value;
 
-    if (!name || baseRate <= 0) return alert("Item select karein!");
+    if (!name) return alert("Item ya Service ka naam enter karein!");
+    if (baseRate <= 0) return alert("Kripya sahi Rate / Charge enter karein!");
 
-    if (billMode === "Bill" && selectedSaleItem) {
+    var isLabour = isServiceOrLabour(name);
+
+    // Stock check ONLY for physical goods, not for Labour/Service
+    if (!isLabour && billMode === "Bill" && selectedSaleItem) {
       var inCart = 0;
       cart.forEach(c => { if (c.name.toLowerCase() === name.toLowerCase()) inCart += c.qty; });
       if ((inCart + qty) > selectedSaleItem.stock) return alert("Out of stock! Sirf " + selectedSaleItem.stock + " available hai.");
@@ -811,7 +833,7 @@
     var grand = 0;
     cart.forEach(function(item, idx) {
       grand += item.total;
-      var snText = item.serialNo ? `<br><small style="color:#d97706; font-weight:bold;">S/N: ${item.serialNo}</small>` : '';
+      var snText = item.serialNo ? `<br><small style="color:#d97706; font-weight:bold;">Note/SN: ${item.serialNo}</small>` : '';
       var tr = document.createElement("tr");
       tr.innerHTML = `<td><b>${item.name}</b>${snText}</td><td>${item.hsn}</td><td>₹${item.baseRate}</td><td style="color:#059669;">-₹${item.discount}</td><td>${item.qty}</td><td>₹${item.total.toFixed(2)}</td><td><button onclick="removeItem(${idx})" style="color:red;border:none;background:none;cursor:pointer;font-weight:bold;">✕</button></td>`;
       tbody.appendChild(tr);
@@ -865,7 +887,6 @@
         lastResult.grandTotal = payload.grandTotal;
         lastResult.paymentMode = payload.paymentMode;
 
-        // Build WhatsApp Link
         var phone = lastResult.phone ? lastResult.phone.replace(/\D/g, '') : '';
         if (phone.length === 10) phone = "91" + phone;
 
@@ -888,12 +909,10 @@
 
         var waUrl = phone ? ("https://wa.me/" + phone + "?text=" + encodeURIComponent(msg)) : ("https://wa.me/?text=" + encodeURIComponent(msg));
 
-        // Setup Modal Buttons
         document.getElementById("modalDocNo").innerText = lastResult.docNo;
         document.getElementById("modalWaBtn").href = waUrl;
         document.getElementById("modalPdfBtn").href = lastResult.pdfUrl;
         
-        // Show Pop-up Box
         document.getElementById("successModal").style.display = "flex";
       }
     } catch(e) {
@@ -905,7 +924,6 @@
 
   function closeModalAndReset() {
     document.getElementById("successModal").style.display = "none";
-    // Reset Form for next bill without page reload
     cart = [];
     renderCart();
     document.getElementById("custName").value = "";
@@ -919,7 +937,7 @@
     document.getElementById("discInput").value = "0";
     document.getElementById("qtyInput").value = "1";
     document.getElementById("totalInput").value = "";
-    loadData(); // Update live stock in background
+    loadData();
   }
 
   async function submitStockInward() {
