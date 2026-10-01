@@ -327,7 +327,7 @@
     </div>
 
     <div class="alert-box" id="alertBox">
-      <b>⚠ LOW STOCK ALERT:</b>
+      <b>⚠️ LOW STOCK ALERT:</b>
       <div id="alertList"></div>
     </div>
 
@@ -356,7 +356,7 @@
         <div class="col" id="gstCheckCol">
           <label>GST Bill?</label>
           <select id="isGst">
-            <option value="No (Normal)" value="No">No (Normal)</option>
+            <option value="No">No (Normal)</option>
             <option value="Yes">Yes (GST Invoice)</option>
           </select>
         </div>
@@ -941,22 +941,27 @@
         var isEst = (lastResult.billMode === "Estimate");
         var docType = isEst ? "Estimate Invoice" : "Invoice";
 
-        // REFINED CLEAN WHATSAPP MESSAGE (No corrupt symbols, 'Hi' instead of 'Dear')
-        var msg = `Hi ${lastResult.customerName},\n\n`;
-        msg += `Greetings from *Moon Light Electricals*!\n\n`;
-        msg += `Your *${docType}* (*${lastResult.docNo}*) has been generated successfully.\n\n`;
-        msg += `*Billing Summary:*\n`;
-        msg += `• Date: ${lastResult.billDate}\n`;
-        msg += `• Total Amount: *₹${lastResult.grandTotal.toFixed(2)}*\n`;
-        msg += `• Payment Mode: ${lastResult.paymentMode || 'Cash'}\n`;
-        if (isEst) msg += `• Validity: Strictly 3 Days\n`;
-        msg += `\n*Download PDF Document:* \n${lastResult.pdfUrl}\n\n`;
-        msg += `Thank you for choosing us!\n`;
-        msg += `*MOON LIGHT ELECTRICALS*\n`;
-        msg += `Shop No 1, Sadbhavna Market, Sector-121, Noida\n`;
-        msg += `Ph: 9650897965 / 8860706865 / 8860880453`;
+        // Safe URL Encoded Symbols (100% Guaranteed No Question Mark Glitch)
+        var docEmoji = "%F0%9F%93%84"; // 📄 Document icon
+        var phoneEmoji = "%F0%9F%93%9E"; // 📞 Phone icon
 
-        var waUrl = phone ? ("https://wa.me/" + phone + "?text=" + encodeURIComponent(msg)) : ("https://wa.me/?text=" + encodeURIComponent(msg));
+        var msg = "Hi " + lastResult.customerName + ",\n\n";
+        msg += "Greetings from *Moon Light Electricals*!\n\n";
+        msg += "Your *" + docType + "* (*" + lastResult.docNo + "*) has been generated successfully.\n\n";
+        msg += "*Billing Summary:*\n";
+        msg += "• Date: " + lastResult.billDate + "\n";
+        msg += "• Total Amount: *₹" + lastResult.grandTotal.toFixed(2) + "*\n";
+        msg += "• Payment Mode: " + (lastResult.paymentMode || 'Cash') + "\n";
+        if (isEst) msg += "• Validity: Strictly 3 Days\n";
+        msg += "\n" + decodeURIComponent(docEmoji) + " *Download PDF Document:*\n" + lastResult.pdfUrl + "\n\n";
+        msg += "Thank you for choosing us!\n";
+        msg += "*MOON LIGHT ELECTRICALS*\n";
+        msg += "Shop No 1, Sadbhavna Market, Sector-121, Noida\n";
+        msg += decodeURIComponent(phoneEmoji) + " 9650897965 / 8860706865 / 8860880453";
+
+        var waUrl = phone 
+          ? ("https://api.whatsapp.com/send?phone=" + phone + "&text=" + encodeURIComponent(msg))
+          : ("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
 
         document.getElementById("modalDocNo").innerText = lastResult.docNo;
         document.getElementById("modalWaBtn").href = waUrl;
@@ -983,7 +988,6 @@
     document.getElementById("serialInput").value = "";
     document.getElementById("hsnInput").value = "";
     
-    // Auto reset date to current live date
     document.getElementById("billDate").value = getTodayDateString();
 
     var rateInput = document.getElementById("rateInput");
