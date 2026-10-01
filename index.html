@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moon Light Electricals</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#070d14">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Moon Light Billing">
+  <link rel="icon" type="image/png" href="https://img.icons8.com/color/192/lightning-bolt.png">
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0b131e; margin: 0; padding: 12px; color: #1e293b; }
+    
+    /* Login Box (Board Dark Gold Theme) */
+    #loginOverlay { 
+      max-width: 400px; margin: 50px auto; background: #111c2a; padding: 26px; 
+      border-radius: 12px; border: 1px solid #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+      color: #f8fafc;
+    }
+    .brand-glow { text-align: center; margin-bottom: 14px; }
+    .brand-title-lg { font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; margin: 0; }
+    .brand-gold { color: #f59e0b; }
+    .brand-sub { font-size: 11px; color: #f59e0b; font-style: italic; margin-top: 2px; }
+
+    .login-btn { 
+      background: linear-gradient(135deg, #d97706, #f59e0b); color: #0b131e; border: none; 
+      padding: 12px; border-radius: 6px; font-weight: 900; width: 100%; font-size: 14px; 
+      cursor: pointer; margin-top: 14px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .wa-btn { 
+      background: #25D366; color: white; border: none; padding: 10px; border-radius: 6px; 
+      font-weight: bold; width: 100%; font-size: 13px; cursor: pointer; margin-top: 8px; 
+      text-decoration: none; display: inline-block; text-align: center;
+    }
+
+    /* Main Container Card */
+    .card { 
+      background: #ffffff; border-radius: 10px; max-width: 720px; margin: auto; 
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3); overflow: hidden;
+    }
+
+    /* Board-Style Header Banner */
+    .board-banner {
+      background: linear-gradient(180deg, #070d14 0%, #101c2a 100%);
+      padding: 14px 18px; border-bottom: 3px solid #d97706; color: #ffffff;
+    }
+    .banner-top { display: flex; justify-content: space-between; align-items: center; }
+    .banner-title { font-size: 19px; font-weight: 900; letter-spacing: 1px; margin: 0; color: #ffffff; }
+    .banner-tagline { font-size: 11px; color: #f59e0b; font-style: italic; font-weight: 600; margin-top: 2px; }
+    .gst-tag { font-size: 10.5px; background: #1e293b; color: #fbbf24; border: 1px solid #d97706; padding: 2px 7px; border-radius: 4px; font-weight: bold; }
+
+    /* User Bar */
+    .user-header { 
+      display: flex; justify-content: space-between; align-items: center; 
+      background: #f8fafc; padding: 8px 18px; border-bottom: 1px solid #e2e8f0; 
+      font-size: 11.5px; color: #475569; 
+    }
+    .user-badge { font-weight: bold; background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; }
+    .logout-btn { color: #dc2626; border: 1px solid #fca5a5; background: #fef2f2; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+    .content-area { padding: 16px; }
+
+    /* Tabs */
+    .tab-bar { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 15px; }
+    .tab-btn { flex: 1; padding: 10px; text-align: center; font-weight: 800; cursor: pointer; color: #64748b; font-size: 12.5px; border-bottom: 3px solid transparent; }
+    .tab-btn.active { color: #0b131e; border-bottom-color: #d97706; font-weight: 900; }
+
+    .alert-box { background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; padding: 8px 12px; border-radius: 4px; font-size: 12px; margin-bottom: 12px; display: none; }
+
+    .row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .col { flex: 1; position: relative; }
+    label { display: block; font-size: 10.5px; font-weight: 800; color: #475569; margin-bottom: 3px; text-transform: uppercase; }
+    input, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 13px; outline: none; }
+    input:focus, select:focus { border-color: #d97706; }
+
+    .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 999; background: white; border: 1px solid #0b131e; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 16px rgba(0,0,0,0.15); display: none; }
+    .autocomplete-item { padding: 9px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 12.5px; display: flex; justify-content: space-between; align-items: center; }
+    .autocomplete-item:hover { background-color: #fef3c7; }
+    .item-stock-tag { font-size: 10.5px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .tag-low { background: #fee2e2; color: #dc2626; }
+
+    .badge { font-size: 11.5px; font-weight: 700; color: #d97706; margin-top: 3px; }
+    .btn { background: #0b131e; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 13.5px; }
+    .btn-green { background: #059669; }
+    .btn-gold { background: linear-gradient(135deg, #d97706, #b45309); color: #ffffff; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+    th, td { border: 1px solid #e2e8f0; padding: 6px; text-align: left; }
+    th { background: #f8fafc; font-weight: 700; color: #334155; }
+    .total-bar { display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; margin: 12px 0; padding: 8px 12px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 5px; color: #78350f; }
+
+    /* Install Prompt Banner */
+    #installBanner {
+      display: none; background: #1e293b; color: #ffffff; padding: 10px 16px;
+      border-radius: 8px; margin-bottom: 12px; align-items: center; justify-content: space-between;
+      border: 1px solid #f59e0b;
+    }
+    #installBanner button {
+      background: #f59e0b; color: #0b131e; border: none; padding: 6px 14px;
+      border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Native App Install Banner -->
+<div id="installBanner">
+  <div style="font-size: 12px; font-weight: bold;">📲 Install Moon Light Billing App</div>
+  <button onclick="installPWA()">Install Now</button>
+</div>
+
+<!-- LOGIN VIEW -->
+<div id="loginOverlay">
+  <div class="brand-glow">
+    <h2 class="brand-title-lg">MOON<span class="brand-gold">LIGHT</span> ELECTRICALS</h2>
+    <div class="brand-sub">Brightening Lives, Powering Trust</div>
+  </div>
+
+  <div id="stepPhone">
+    <label style="color:#cbd5e1;">Authorized Mobile Number</label>
+    <input type="tel" id="loginPhone" placeholder="Enter 10-digit mobile number" maxlength="10" style="background:#0b131e; color:#ffffff; border-color:#334155;">
+    <div id="loginErr" style="color: #f87171; font-size: 12px; margin-top: 8px; display: none; text-align: center;"></div>
+    <button class="login-btn" id="sendOtpBtn" onclick="sendOtp()">📲 Send OTP on WhatsApp</button>
+  </div>
+
+  <div id="stepOtp" style="display:none; margin-top: 10px;">
+    <div style="font-size: 12.5px; color: #f8fafc; font-weight: bold; margin-bottom: 8px;">
+      OTP sent to: <span id="displaySentPhone" style="color:#f59e0b;"></span>
+    </div>
+
+    <a id="waDirectBtn" target="_blank" class="wa-btn">💬 Open WhatsApp to Check OTP</a>
+
+    <div style="margin-top: 12px;">
+      <label style="color:#cbd5e1;">Enter 4-Digit OTP</label>
+      <input type="number" id="otpValue" placeholder="e.g. 4821" maxlength="4" style="background:#0b131e; color:#ffffff; border-color:#334155; font-size:16px; letter-spacing:2px; text-align:center;">
+    </div>
+
+    <div id="otpErr" style="color: #f87171; font-size: 12px; margin-top: 8px; display: none; text-align: center;"></div>
+
+    <button class="login-btn" id="verifyOtpBtn" onclick="verifyOtp()">🔐 Verify & Enter Shop ERP</button>
+    <button class="btn" style="background:#334155; margin-top:8px; font-size:12px;" onclick="resetLoginStep()">Back / Change Number</button>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div class="card" id="mainDashboard" style="display:none;">
+  
+  <div class="board-banner">
+    <div class="banner-top">
+      <div>
+        <h2 class="banner-title">MOON<span style="color:#f59e0b;">LIGHT</span> ELECTRICALS</h2>
+        <div class="banner-tagline">Brightening Lives, Powering Trust</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="gst-tag">GST: 09BUBPC3406L1ZT</div>
+        <div style="font-size:10px; color:#cbd5e1; margin-top:3px;">Sector-121, Noida</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="user-header">
+    <div>User: <span id="displayUser" class="user-badge"></span> (<span id="displayRole"></span>)</div>
+    <div style="display:flex; align-items:center; gap: 8px;">
+      <span style="font-size: 11px; color: #64748b;">Session: 24h</span>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="tab-bar">
+      <div class="tab-btn active" id="tabBillingBtn" onclick="switchTab('billing')">🛒 SALE / BILLING</div>
+      <div class="tab-btn" id="tabStockBtn" onclick="switchTab('stock')" style="display:none;">📦 STOCK INWARD (PURCHASE)</div>
+    </div>
+
+    <div class="alert-box" id="alertBox">
+      <b>⚠️ LOW STOCK ALERT:</b>
+      <div id="alertList"></div>
+    </div>
+
+    <!-- TAB 1: BILLING & ESTIMATES -->
+    <div id="billingView">
+      <div class="row">
+        <div class="col">
+          <label>Bill Date</label>
+          <input type="date" id="billDate">
+        </div>
+        <div class="col">
+          <label>Mode</label>
+          <select id="billMode" onchange="toggleGstOption()">
+            <option value="Bill">Final Bill (Tax_Invoices)</option>
+            <option value="Estimate">Estimate (Estimates Sheet)</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>Rate Type</label>
+          <select id="rateCategory" onchange="onRateTypeChange()">
+            <option value="Customer">Customer Rate</option>
+            <option value="Electrician">Electrician Rate</option>
+            <option value="Family" id="familyRateOpt" style="display:none;">Friends & Family Rate</option>
+          </select>
+        </div>
+        <div class="col" id="gstCheckCol">
+          <label>GST Bill?</label>
+          <select id="isGst">
+            <option value="No">No (Normal)</option>
+            <option value="Yes">Yes (GST Invoice)</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>Payment</label>
+          <select id="paymentMode">
+            <option value="Cash">Cash</option>
+            <option value="UPI / Online">UPI / Online</option>
+            <option value="Card">Card</option>
+            <option value="Credit (Udhar)">Credit (Udhar)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Customer Name</label>
+          <input type="text" id="custName" placeholder="Name">
+        </div>
+        <div class="col">
+          <label>WhatsApp Number</label>
+          <input type="tel" id="custPhone" placeholder="10-digit Phone">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col" style="flex: 2;">
+          <label>Customer Address</label>
+          <input type="text" id="custAddress" placeholder="e.g. Sector-121, Noida">
+        </div>
+        <div class="col">
+          <label>Customer GSTIN (Optional)</label>
+          <input type="text" id="custGstin" placeholder="09XXXXX...">
+        </div>
+      </div>
+
+      <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 10px 0;">
+
+      <div class="row">
+        <div class="col" style="flex: 2;">
+          <label>Item Name</label>
+          <input type="text" id="itemInput" placeholder="Search fan, wire, switch..." autocomplete="off" oninput="filterItems('sale')" onfocus="filterItems('sale')">
+          <div id="saleDropdown" class="autocomplete-list"></div>
+          <div id="stockBadge" class="badge"></div>
+        </div>
+        <div class="col">
+          <label>Serial / Batch (Warranty)</label>
+          <input type="text" id="serialInput" placeholder="Optional (e.g. SN1092)">
+        </div>
+        <div class="col" style="flex: 0.6;">
+          <label>HSN</label>
+          <input type="text" id="hsnInput" readonly style="background:#f8fafc;">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Rate (₹)</label>
+          <input type="number" id="rateInput" oninput="calculateItemTotal()">
+        </div>
+        <div class="col">
+          <label>Disc (₹/pc)</label>
+          <input type="number" id="discInput" value="0" min="0" oninput="calculateItemTotal()">
+        </div>
+        <div class="col">
+          <label>Qty</label>
+          <input type="number" id="qtyInput" value="1" min="1" oninput="calculateItemTotal()">
+        </div>
+        <div class="col">
+          <label>Total (₹)</label>
+          <input type="number" id="totalInput" readonly style="background:#f8fafc; font-weight:bold;">
+        </div>
+      </div>
+
+      <button class="btn btn-green" onclick="addItem()">+ Add Item to Bill</button>
+
+      <table id="cartTable" style="display:none;">
+        <thead>
+          <tr><th>Item & S/N</th><th>HSN</th><th>Rate</th><th>Disc</th><th>Qty</th><th>Total</th><th>✕</th></tr>
+        </thead>
+        <tbody id="cartBody"></tbody>
+      </table>
+
+      <div class="total-bar" id="totalBar" style="display:none;">
+        <span>Grand Total:</span>
+        <span style="font-weight:900;">₹<span id="grandTotal">0</span></span>
+      </div>
+
+      <button class="btn btn-gold" id="submitBtn" style="display:none; margin-top: 10px; font-weight:900;" onclick="processBill()">
+        ⚡ Save Bill & Generate PDF
+      </button>
+    </div>
+
+    <!-- TAB 2: STOCK INWARD -->
+    <div id="stockView" style="display:none;">
+      <div style="font-size:12px; color:#475569; margin-bottom:12px;">
+        Market se naya maal aane par yahan se stock aur rates update karein:
+      </div>
+
+      <div class="row">
+        <div class="col" style="flex: 2;">
+          <label>Item Name</label>
+          <input type="text" id="pItemName" placeholder="Item name..." autocomplete="off" oninput="filterItems('purchase')" onfocus="filterItems('purchase')">
+          <div id="purchaseDropdown" class="autocomplete-list"></div>
+          <div id="pCurrentStockInfo" class="badge"></div>
+        </div>
+        <div class="col">
+          <label>HSN Code</label>
+          <input type="text" id="pHsn" placeholder="e.g. 8544">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Quantity Purchased</label>
+          <input type="number" id="pQty" placeholder="Qty">
+        </div>
+        <div class="col">
+          <label>Min Alert Qty</label>
+          <input type="number" id="pMinQty" placeholder="e.g. 2">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Cust Rate (₹)</label>
+          <input type="number" id="pCustRate" placeholder="Retail">
+        </div>
+        <div class="col">
+          <label>Elec Rate (₹)</label>
+          <input type="number" id="pElecRate" placeholder="Electrician">
+        </div>
+        <div class="col">
+          <label>Family Rate (₹)</label>
+          <input type="number" id="pFamRate" placeholder="Cost">
+        </div>
+      </div>
+
+      <button class="btn btn-green" id="pSubmitBtn" onclick="submitStockInward()" style="margin-top:10px;">
+        📦 Update Stock in Inventory
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // USER'S APPS SCRIPT URL ALREADY INTEGRATED
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
+
+  var currentUser = null;
+  var currentPendingPhone = "";
+  var masterItems = [];
+  var selectedSaleItem = null;
+  var cart = [];
+  var lastResult = null;
+  const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
+  var deferredPrompt;
+
+  // PWA Install Prompt Listener
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installBanner').style.display = 'flex';
+  });
+
+  function installPWA() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          document.getElementById('installBanner').style.display = 'none';
+        }
+        deferredPrompt = null;
+      });
+    }
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+
+  window.onload = function() { checkActiveSession(); };
+
+  async function apiCall(action, payload = {}) {
+    payload.action = action;
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  }
+
+  function checkActiveSession() {
+    var sessionData = localStorage.getItem("moonlight_session");
+    if (sessionData) {
+      try {
+        var sess = JSON.parse(sessionData);
+        var now = new Date().getTime();
+        if (sess.timestamp && (now - sess.timestamp < SESSION_TIMEOUT_MS)) {
+          currentUser = sess.user;
+          renderAppForUser();
+          return;
+        }
+      } catch(e) {}
+    }
+    doLogout();
+  }
+
+  async function sendOtp() {
+    var phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
+    var err = document.getElementById("loginErr");
+    var btn = document.getElementById("sendOtpBtn");
+    if (phone.length !== 10) {
+      err.innerText = "10-digit number enter karein!";
+      err.style.display = "block";
+      return;
+    }
+    err.style.display = "none";
+    btn.disabled = true;
+    btn.innerText = "Generating OTP...";
+    try {
+      const res = await apiCall("requestLoginOtp", { phone: phone });
+      btn.disabled = false;
+      btn.innerText = "📲 Send OTP on WhatsApp";
+      if (res.success) {
+        currentPendingPhone = res.phone;
+        document.getElementById("stepPhone").style.display = "none";
+        document.getElementById("stepOtp").style.display = "block";
+        document.getElementById("displaySentPhone").innerText = res.phone + " (" + res.name + ")";
+        document.getElementById("waDirectBtn").href = res.waUrl;
+        window.open(res.waUrl, '_blank');
+      } else {
+        err.innerText = res.message;
+        err.style.display = "block";
+      }
+    } catch(e) {
+      btn.disabled = false;
+      btn.innerText = "📲 Send OTP on WhatsApp";
+      err.innerText = "Connection error! Script redeploy check karein.";
+      err.style.display = "block";
+    }
+  }
+
+  async function verifyOtp() {
+    var otp = document.getElementById("otpValue").value.trim();
+    var err = document.getElementById("otpErr");
+    var btn = document.getElementById("verifyOtpBtn");
+    if (otp.length !== 4) {
+      err.innerText = "4-digit OTP enter karein!";
+      err.style.display = "block";
+      return;
+    }
+    err.style.display = "none";
+    btn.disabled = true;
+    btn.innerText = "Verifying...";
+    try {
+      const res = await apiCall("verifyLoginOtp", { phone: currentPendingPhone, otp: otp });
+      btn.disabled = false;
+      btn.innerText = "🔐 Verify & Enter Shop ERP";
+      if (res.success) {
+        currentUser = res;
+        localStorage.setItem("moonlight_session", JSON.stringify({ user: res, timestamp: new Date().getTime() }));
+        renderAppForUser();
+      } else {
+        err.innerText = res.message;
+        err.style.display = "block";
+      }
+    } catch(e) {
+      btn.disabled = false;
+      btn.innerText = "🔐 Verify & Enter Shop ERP";
+      err.innerText = "Verification failed!";
+      err.style.display = "block";
+    }
+  }
+
+  function resetLoginStep() {
+    document.getElementById("stepPhone").style.display = "block";
+    document.getElementById("stepOtp").style.display = "none";
+    document.getElementById("otpValue").value = "";
+    document.getElementById("otpErr").style.display = "none";
+  }
+
+  function doLogout() {
+    localStorage.removeItem("moonlight_session");
+    currentUser = null;
+    document.getElementById("loginOverlay").style.display = "block";
+    document.getElementById("mainDashboard").style.display = "none";
+    resetLoginStep();
+  }
+
+  function renderAppForUser() {
+    document.getElementById("loginOverlay").style.display = "none";
+    document.getElementById("mainDashboard").style.display = "block";
+    document.getElementById("displayUser").innerText = currentUser.name;
+    document.getElementById("displayRole").innerText = currentUser.role;
+    document.getElementById("billDate").value = new Date().toISOString().split('T')[0];
+
+    if (currentUser.role === "Admin") {
+      document.getElementById("tabStockBtn").style.display = "block";
+      document.getElementById("familyRateOpt").style.display = "block";
+    } else {
+      document.getElementById("tabStockBtn").style.display = "none";
+      document.getElementById("familyRateOpt").style.display = "none";
+      document.getElementById("alertBox").style.display = "none";
+    }
+    loadData();
+  }
+
+  async function loadData() {
+    try {
+      const res = await apiCall("getAppData", { role: currentUser.role });
+      masterItems = res.items || [];
+      if (currentUser.role === "Admin" && res.alerts && res.alerts.length > 0) {
+        document.getElementById("alertBox").style.display = "block";
+        document.getElementById("alertList").innerHTML = res.alerts.map(a => `<div>• ${a}</div>`).join("");
+      } else {
+        document.getElementById("alertBox").style.display = "none";
+      }
+    } catch(e) {}
+  }
+
+  function switchTab(tab) {
+    if (tab === 'billing') {
+      document.getElementById('billingView').style.display = 'block';
+      document.getElementById('stockView').style.display = 'none';
+      document.getElementById('tabBillingBtn').className = 'tab-btn active';
+      document.getElementById('tabStockBtn').className = 'tab-btn';
+    } else {
+      if (currentUser.role !== "Admin") {
+        alert("Access Denied! Sirf Admin access kar sakta hai.");
+        return;
+      }
+      document.getElementById('billingView').style.display = 'none';
+      document.getElementById('stockView').style.display = 'block';
+      document.getElementById('tabBillingBtn').className = 'tab-btn';
+      document.getElementById('tabStockBtn').className = 'tab-btn active';
+    }
+  }
+
+  function toggleGstOption() {
+    var mode = document.getElementById("billMode").value;
+    document.getElementById("gstCheckCol").style.display = (mode === "Estimate") ? "none" : "block";
+  }
+
+  function filterItems(context) {
+    var inputId = (context === 'sale') ? 'itemInput' : 'pItemName';
+    var listId = (context === 'sale') ? 'saleDropdown' : 'purchaseDropdown';
+    var val = document.getElementById(inputId).value.trim().toLowerCase();
+    var listDiv = document.getElementById(listId);
+    listDiv.innerHTML = "";
+
+    var matches = masterItems.filter(i => i.name.toLowerCase().includes(val));
+    if (matches.length === 0) {
+      listDiv.style.display = "none";
+      return;
+    }
+
+    matches.forEach(function(item) {
+      var isLow = (item.minQty > 0 && item.stock <= item.minQty);
+      var itemDiv = document.createElement("div");
+      itemDiv.className = "autocomplete-item";
+      itemDiv.innerHTML = `<span><b>${item.name}</b></span><span class="item-stock-tag ${isLow ? 'tag-low' : ''}">Stock: ${item.stock}</span>`;
+      itemDiv.onmousedown = function() {
+        if (context === 'sale') selectSaleItem(item);
+        else selectPurchaseItem(item);
+      };
+      listDiv.appendChild(itemDiv);
+    });
+    listDiv.style.display = "block";
+  }
+
+  function selectSaleItem(item) {
+    selectedSaleItem = item;
+    document.getElementById("itemInput").value = item.name;
+    document.getElementById("hsnInput").value = item.hsn;
+    var cat = document.getElementById("rateCategory").value;
+    var r = item.custRate;
+    if (cat === "Electrician") r = item.elecRate;
+    if (cat === "Family" && currentUser.role === "Admin") r = item.famRate;
+    document.getElementById("rateInput").value = r;
+    document.getElementById("discInput").value = 0;
+    document.getElementById("stockBadge").innerText = "Available Stock: " + item.stock;
+    document.getElementById("saleDropdown").style.display = "none";
+    calculateItemTotal();
+  }
+
+  function onRateTypeChange() {
+    if (selectedSaleItem) {
+      var cat = document.getElementById("rateCategory").value;
+      var r = selectedSaleItem.custRate;
+      if (cat === "Electrician") r = selectedSaleItem.elecRate;
+      if (cat === "Family" && currentUser.role === "Admin") r = selectedSaleItem.famRate;
+      document.getElementById("rateInput").value = r;
+      calculateItemTotal();
+    }
+  }
+
+  function selectPurchaseItem(item) {
+    document.getElementById("pItemName").value = item.name;
+    document.getElementById("pHsn").value = item.hsn;
+    document.getElementById("pCustRate").value = item.custRate;
+    document.getElementById("pElecRate").value = item.elecRate;
+    document.getElementById("pFamRate").value = item.famRate;
+    document.getElementById("pMinQty").value = item.minQty;
+    document.getElementById("pCurrentStockInfo").innerText = "Stock: " + item.stock;
+    document.getElementById("purchaseDropdown").style.display = "none";
+  }
+
+  document.addEventListener("click", function(e) {
+    if (!document.getElementById("itemInput").contains(e.target)) document.getElementById("saleDropdown").style.display = "none";
+    if (!document.getElementById("pItemName").contains(e.target)) document.getElementById("purchaseDropdown").style.display = "none";
+  });
+
+  function calculateItemTotal() {
+    var rate = parseFloat(document.getElementById("rateInput").value) || 0;
+    var disc = parseFloat(document.getElementById("discInput").value) || 0;
+    var qty = parseInt(document.getElementById("qtyInput").value) || 1;
+    document.getElementById("totalInput").value = (Math.max(0, rate - disc) * qty).toFixed(2);
+  }
+
+  function addItem() {
+    var name = document.getElementById("itemInput").value.trim();
+    var serialNo = document.getElementById("serialInput").value.trim();
+    var hsn = document.getElementById("hsnInput").value;
+    var baseRate = parseFloat(document.getElementById("rateInput").value) || 0;
+    var disc = parseFloat(document.getElementById("discInput").value) || 0;
+    var qty = parseInt(document.getElementById("qtyInput").value) || 1;
+    var billMode = document.getElementById("billMode").value;
+
+    if (!name || baseRate <= 0) return alert("Item select karein!");
+
+    if (billMode === "Bill" && selectedSaleItem) {
+      var inCart = 0;
+      cart.forEach(c => { if (c.name.toLowerCase() === name.toLowerCase()) inCart += c.qty; });
+      if ((inCart + qty) > selectedSaleItem.stock) return alert("Out of stock! Sirf " + selectedSaleItem.stock + " available hai.");
+    }
+
+    var finalRate = Math.max(0, baseRate - disc);
+    var total = finalRate * qty;
+    var gstPct = selectedSaleItem ? (selectedSaleItem.gstPct || 18) : 18;
+
+    cart.push({ name, serialNo, hsn, baseRate, discount: disc, finalRate, qty, total, gstPct });
+    selectedSaleItem = null;
+    document.getElementById("itemInput").value = "";
+    document.getElementById("serialInput").value = "";
+    document.getElementById("hsnInput").value = "";
+    document.getElementById("rateInput").value = "";
+    document.getElementById("discInput").value = "0";
+    document.getElementById("qtyInput").value = "1";
+    document.getElementById("totalInput").value = "";
+    document.getElementById("stockBadge").innerText = "";
+    renderCart();
+  }
+
+  function renderCart() {
+    var tbody = document.getElementById("cartBody");
+    tbody.innerHTML = "";
+    var grand = 0;
+    cart.forEach(function(item, idx) {
+      grand += item.total;
+      var snText = item.serialNo ? `<br><small style="color:#d97706; font-weight:bold;">S/N: ${item.serialNo}</small>` : '';
+      var tr = document.createElement("tr");
+      tr.innerHTML = `<td><b>${item.name}</b>${snText}</td><td>${item.hsn}</td><td>₹${item.baseRate}</td><td style="color:#059669;">-₹${item.discount}</td><td>${item.qty}</td><td>₹${item.total.toFixed(2)}</td><td><button onclick="removeItem(${idx})" style="color:red;border:none;background:none;cursor:pointer;font-weight:bold;">✕</button></td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById("grandTotal").innerText = grand.toFixed(2);
+    var show = cart.length > 0;
+    document.getElementById("cartTable").style.display = show ? "table" : "none";
+    document.getElementById("totalBar").style.display = show ? "flex" : "none";
+    document.getElementById("submitBtn").style.display = show ? "block" : "none";
+  }
+
+  function removeItem(idx) { cart.splice(idx, 1); renderCart(); }
+
+  async function processBill() {
+    var btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.innerText = "Processing & Saving PDF...";
+
+    var rawDate = document.getElementById("billDate").value;
+    var formattedDate = "";
+    if (rawDate) {
+      var parts = rawDate.split("-");
+      var dt = new Date(parts[0], parts[1] - 1, parts[2]);
+      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      formattedDate = ("0" + dt.getDate()).slice(-2) + "-" + months[dt.getMonth()] + "-" + dt.getFullYear();
+    }
+
+    var payload = {
+      billDate: formattedDate,
+      rawDateInput: rawDate,
+      billMode: document.getElementById("billMode").value,
+      isGst: (document.getElementById("isGst").value === "Yes"),
+      paymentMode: document.getElementById("paymentMode").value,
+      customerName: document.getElementById("custName").value.trim() || "Walk-in Customer",
+      phone: document.getElementById("custPhone").value.trim(),
+      address: document.getElementById("custAddress").value.trim(),
+      gstin: document.getElementById("custGstin").value.trim(),
+      items: cart,
+      grandTotal: parseFloat(document.getElementById("grandTotal").innerText)
+    };
+
+    try {
+      const res = await apiCall("processBillOrEstimate", payload);
+      btn.disabled = false;
+      btn.innerText = "⚡ Save Bill & Generate PDF";
+
+      if (res.success) {
+        lastResult = res;
+        lastResult.phone = payload.phone;
+        lastResult.customerName = payload.customerName;
+        lastResult.grandTotal = payload.grandTotal;
+        lastResult.paymentMode = payload.paymentMode;
+
+        var share = confirm(`Bill #${res.docNo} Generated Successfully!\n\nKya aap ise WhatsApp par share karna chahte hain?`);
+        if (share) {
+          sharePdfOnWhatsApp();
+        }
+        location.reload();
+      }
+    } catch(e) {
+      btn.disabled = false;
+      btn.innerText = "⚡ Save Bill & Generate PDF";
+      alert("Error saving bill!");
+    }
+  }
+
+  async function submitStockInward() {
+    var name = document.getElementById("pItemName").value.trim();
+    var qty = parseInt(document.getElementById("pQty").value);
+    if (!name || isNaN(qty) || qty <= 0) return alert("Valid name aur quantity dalein!");
+
+    var btn = document.getElementById("pSubmitBtn");
+    btn.disabled = true;
+    btn.innerText = "Updating Stock...";
+
+    var data = {
+      name, qty,
+      hsn: document.getElementById("pHsn").value.trim(),
+      custRate: document.getElementById("pCustRate").value,
+      elecRate: document.getElementById("pElecRate").value,
+      famRate: document.getElementById("pFamRate").value,
+      minQty: document.getElementById("pMinQty").value
+    };
+
+    try {
+      const res = await apiCall("addOrUpdateStock", { data: data, role: currentUser.role });
+      alert("Stock Updated Successfully: " + res.name);
+      btn.disabled = false;
+      btn.innerText = "📦 Update Stock in Inventory";
+      location.reload();
+    } catch(e) {
+      btn.disabled = false;
+      btn.innerText = "📦 Update Stock in Inventory";
+      alert("Stock update failed!");
+    }
+  }
+
+  function sharePdfOnWhatsApp() {
+    var phone = lastResult.phone;
+    if (!phone || phone.length < 10) {
+      phone = prompt("Customer ka 10-digit WhatsApp number daalein:");
+      if (!phone) return;
+    }
+    phone = phone.replace(/\D/g, '');
+    if (phone.length === 10) phone = "91" + phone;
+
+    var isEst = (lastResult.billMode === "Estimate");
+    var docType = isEst ? "Estimate Invoice" : "Invoice";
+
+    var msg = `Dear ${lastResult.customerName},\n\n`;
+    msg += `Greetings from *Moon Light Electricals*!\n\n`;
+    msg += `Your *${docType}* (*${lastResult.docNo}*) has been generated successfully.\n\n`;
+    msg += `*Billing Summary:*\n`;
+    msg += `• Date: ${lastResult.billDate}\n`;
+    msg += `• Total Amount: *₹${lastResult.grandTotal.toFixed(2)}*\n`;
+    msg += `• Payment Mode: ${lastResult.paymentMode || 'Cash'}\n`;
+    if (isEst) msg += `• *Validity:* Strictly 3 Days\n`;
+    msg += `\n📄 *Download PDF Document:* \n${lastResult.pdfUrl}\n\n`;
+    msg += `Thank you for choosing us!\n`;
+    msg += `*MOON LIGHT ELECTRICALS*\n`;
+    msg += `Shop No 1, Sadbhavna Market, Sector-121, Noida\n`;
+    msg += `📞 9650897965 / 8860706865 / 8860880453`;
+
+    window.open("https://wa.me/" + phone + "?text=" + encodeURIComponent(msg), '_blank');
+  }
+</script>
+</body>
+</html>
