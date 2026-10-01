@@ -120,7 +120,6 @@
     input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; transition: 0.2s; }
     input:focus, select:focus { border-color: #d97706; box-shadow: 0 0 0 2px rgba(217,119,6,0.15); }
     
-    /* Strict Locked Field Styling */
     .field-locked {
       background-color: #f1f5f9 !important;
       color: #334155 !important;
@@ -328,7 +327,7 @@
     </div>
 
     <div class="alert-box" id="alertBox">
-      <b>⚠️ LOW STOCK ALERT:</b>
+      <b>⚠️️ LOW STOCK ALERT:</b>
       <div id="alertList"></div>
     </div>
 
@@ -416,7 +415,6 @@
       <div class="row">
         <div class="col">
           <label id="rateLabel">Rate (₹) [🔒 Locked]</label>
-          <!-- Strict Locked by Default -->
           <input type="number" id="rateInput" placeholder="Locked" class="field-locked" readonly tabindex="-1" oninput="calculateItemTotal()">
         </div>
         <div class="col">
@@ -574,6 +572,17 @@
     doLogout();
   }
 
+  // Exact Indian Standard Time (IST) Date YYYY-MM-DD
+  function getTodayDateString() {
+    var now = new Date();
+    var offsetMs = 5.5 * 60 * 60 * 1000;
+    var istDate = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + offsetMs);
+    var yyyy = istDate.getFullYear();
+    var mm = ("0" + (istDate.getMonth() + 1)).slice(-2);
+    var dd = ("0" + istDate.getDate()).slice(-2);
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
   async function sendOtp() {
     var phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
     var err = document.getElementById("loginErr");
@@ -661,7 +670,9 @@
     document.getElementById("mainDashboard").style.display = "flex";
     document.getElementById("displayUser").innerText = currentUser.name;
     document.getElementById("displayRole").innerText = currentUser.role;
-    document.getElementById("billDate").value = new Date().toISOString().split('T')[0];
+    
+    // Auto sets current Indian date
+    document.getElementById("billDate").value = getTodayDateString();
 
     if (currentUser.role === "Admin") {
       document.getElementById("tabStockBtn").style.display = "block";
@@ -765,7 +776,6 @@
     var isLabour = isServiceOrLabour(item.name);
 
     if (isLabour) {
-      // LABOUR: Unlock Rate input completely
       rateInput.readOnly = false;
       rateInput.removeAttribute("tabindex");
       rateInput.className = "field-unlocked";
@@ -775,7 +785,6 @@
       document.getElementById("stockBadge").innerText = "🛠️ Labour Charge (Amount manually enter karein)";
       setTimeout(() => { rateInput.focus(); }, 50);
     } else {
-      // NORMAL PHYSICAL GOODS: Strictly Lock Rate
       rateInput.readOnly = true;
       rateInput.setAttribute("tabindex", "-1");
       rateInput.className = "field-locked";
@@ -851,7 +860,6 @@
     cart.push({ name, serialNo, hsn, baseRate, discount: disc, finalRate, qty, total, gstPct });
     selectedSaleItem = null;
     
-    // Reset Fields to Locked
     document.getElementById("itemInput").value = "";
     document.getElementById("serialInput").value = "";
     document.getElementById("hsnInput").value = "";
@@ -897,14 +905,11 @@
     btn.disabled = true;
     btn.innerText = "Processing & Saving PDF...";
 
-    var rawDate = document.getElementById("billDate").value;
-    var formattedDate = "";
-    if (rawDate) {
-      var parts = rawDate.split("-");
-      var dt = new Date(parts[0], parts[1] - 1, parts[2]);
-      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      formattedDate = ("0" + dt.getDate()).slice(-2) + "-" + months[dt.getMonth()] + "-" + dt.getFullYear();
-    }
+    var rawDate = document.getElementById("billDate").value || getTodayDateString();
+    var parts = rawDate.split("-");
+    var dt = new Date(parts[0], parts[1] - 1, parts[2]);
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var formattedDate = ("0" + dt.getDate()).slice(-2) + "-" + months[dt.getMonth()] + "-" + dt.getFullYear();
 
     var payload = {
       billDate: formattedDate,
@@ -978,6 +983,10 @@
     document.getElementById("itemInput").value = "";
     document.getElementById("serialInput").value = "";
     document.getElementById("hsnInput").value = "";
+    
+    // Auto reset date to current live date for next bill
+    document.getElementById("billDate").value = getTodayDateString();
+
     var rateInput = document.getElementById("rateInput");
     rateInput.value = "";
     rateInput.readOnly = true;
