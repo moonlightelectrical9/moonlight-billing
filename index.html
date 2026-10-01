@@ -943,7 +943,7 @@
         var isEst = (lastResult.billMode === "Estimate");
         var docType = isEst ? "Estimate Invoice" : "Invoice";
 
-        var msg = `Dear ${lastResult.customerName},\n\n`;
+        var msg = `Hi ${lastResult.customerName},\n\n`;
         msg += `Greetings from *Moon Light Electricals*!\n\n`;
         msg += `Your *${docType}* (*${lastResult.docNo}*) has been generated successfully.\n\n`;
         msg += `*Billing Summary:*\n`;
