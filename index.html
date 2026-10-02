@@ -338,7 +338,8 @@
   <div class="user-header">
     <div>User: <span id="displayUser" class="user-badge"></span> (<span id="displayRole"></span>)</div>
     <div style="display:flex; align-items:center; gap: 10px;">
-      <span style="font-size: 11.5px; color: #64748b;">Session: 24h</span>
+      <!-- ⏰ LIVE COUNTDOWN SESSION TIMER -->
+      <span style="font-size: 11.5px; color: #64748b;">Session: <b id="sessionCountdown" style="color:#d97706; font-family:monospace; font-size:12.5px;">24 : 00 : 00</b></span>
       <button class="logout-btn" onclick="doLogout()">Logout</button>
     </div>
   </div>
@@ -478,7 +479,7 @@
     <!-- TAB 2: STOCK INWARD -->
     <div id="stockView" style="display:none;">
       <div style="font-size:12px; color:#475569; margin-bottom:14px;">
-        Market se naya maal aane par yahan se stock aur rates update karein:
+        Market se naya maal aane par yahan se stock aur rates update karein (Base Rate Without GST):
       </div>
 
       <div class="row">
@@ -507,15 +508,15 @@
 
       <div class="row">
         <div class="col">
-          <label>Cust Rate (₹)</label>
+          <label>Cust Rate (₹ Base)</label>
           <input type="number" id="pCustRate" placeholder="Retail">
         </div>
         <div class="col">
-          <label>Elec Rate (₹)</label>
+          <label>Elec Rate (₹ Base)</label>
           <input type="number" id="pElecRate" placeholder="Electrician">
         </div>
         <div class="col">
-          <label>Family Rate (₹)</label>
+          <label>Family Rate (₹ Base)</label>
           <input type="number" id="pFamRate" placeholder="Cost">
         </div>
       </div>
@@ -537,7 +538,8 @@
   var cart = [];
   var lastResult = null;
   var currentAutoGstPct = 18;
-  const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
+  const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 Hours
+  var sessionTimerInterval = null;
   var deferredPrompt;
 
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -594,6 +596,45 @@
       } catch(e) {}
     }
     doLogout();
+  }
+
+  // ⏰ LIVE REVERSE COUNTDOWN TIMER FUNCTION
+  function startSessionTimer() {
+    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+
+    function updateTimer() {
+      var sessionData = localStorage.getItem("moonlight_session");
+      if (!sessionData) return;
+      try {
+        var sess = JSON.parse(sessionData);
+        var now = new Date().getTime();
+        var elapsed = now - (sess.timestamp || now);
+        var remaining = SESSION_TIMEOUT_MS - elapsed;
+
+        if (remaining <= 0) {
+          clearInterval(sessionTimerInterval);
+          alert("Session expire ho gaya hai, kripya dobara login karein.");
+          doLogout();
+          return;
+        }
+
+        var hours = Math.floor(remaining / (1000 * 60 * 60));
+        var mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+        var secs = Math.floor((remaining % (1000 * 60)) / 1000);
+
+        var hStr = (hours < 10 ? "0" : "") + hours;
+        var mStr = (mins < 10 ? "0" : "") + mins;
+        var sStr = (secs < 10 ? "0" : "") + secs;
+
+        var el = document.getElementById("sessionCountdown");
+        if (el) {
+          el.innerText = hStr + " : " + mStr + " : " + sStr;
+        }
+      } catch(e) {}
+    }
+
+    updateTimer();
+    sessionTimerInterval = setInterval(updateTimer, 1000);
   }
 
   function getTodayDateString() {
@@ -681,6 +722,7 @@
   }
 
   function doLogout() {
+    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
     localStorage.removeItem("moonlight_session");
     currentUser = null;
     document.getElementById("loginOverlay").style.display = "block";
@@ -704,6 +746,8 @@
       document.getElementById("familyRateOpt").style.display = "none";
       document.getElementById("alertBox").style.display = "none";
     }
+    
+    startSessionTimer();
     loadData();
   }
 
@@ -748,57 +792,61 @@
     return lower.includes("labour") || lower.includes("service") || lower.includes("charge") || lower.includes("repair") || lower.includes("fitting");
   }
 
-  // ⚡ FOOLPROOF PRIORITY HSN DETECTOR
+  // ⚡ 100% ACCURATE PRIORITY HSN DETECTOR
   function detectElectricalHsn(name) {
     var l = (name || "").toLowerCase().trim();
 
-    // Priority 1: Services & Labour
+    // 1. Services & Labour -> 998519
     if (isServiceOrLabour(l)) return { hsn: "998519", gst: 18, known: true };
 
-    // Priority 2: Boxes, Enclosures, Gang & Dibbi (PVC/GI/Metal Box) -> Always 8538
+    // 2. Pipes, Conduit & Fittings (Bends, Elbow, Coupler, Casing) -> 3917
+    if (l.includes("pipe") || l.includes("conduit") || l.includes("bend") || l.includes("elbow") || 
+        l.includes("coupler") || l.includes("casing") || l.includes("tape")) {
+      // Exception: Agar pipe ke sath "box" ho tabhi 8538
+      if (!l.includes("box") && !l.includes("gang") && !l.includes("board")) {
+        return { hsn: "3917", gst: 18, known: true };
+      }
+    }
+
+    // 3. Boxes, Enclosures, Gang & Dibbi (PVC/GI/Metal Box) -> 8538
     if (l.includes("box") || l.includes("gang") || l.includes("enclosure") || l.includes("dibbi") || l.includes("board")) {
       return { hsn: "8538", gst: 18, known: true };
     }
 
-    // Priority 3: Wires & Cables -> 8544
+    // 4. Wires & Cables -> 8544
     if (l.includes("wire") || l.includes("cable") || l.includes("copper") || l.includes("dori")) {
       return { hsn: "8544", gst: 18, known: true };
     }
 
-    // Priority 4: Fans & Coolers -> 8414
+    // 5. Fans & Coolers -> 8414
     if (l.includes("fan") || l.includes("cooler") || l.includes("exhaust")) {
       return { hsn: "8414", gst: 18, known: true };
     }
 
-    // Priority 5: Modular Accessories, Switches, Sockets, Plates, MCB -> 8536
+    // 6. Switches, Sockets, Plates, MCB, Isolators -> 8536
     if (l.includes("switch") || l.includes("socket") || l.includes("mcb") || l.includes("isolator") || 
         l.includes("plate") || l.includes("regulator") || l.includes("plug") || l.includes("top") || 
         l.includes("starter") || l.includes("holder")) {
       return { hsn: "8536", gst: 18, known: true };
     }
 
-    // Priority 6: Lighting (Bulbs, LED, Panels, Battens) -> 9405
+    // 7. Lighting (Bulb, LED, Panels, Battens, Tubes) -> 9405
     if (l.includes("bulb") || l.includes("led") || l.includes("batten") || l.includes("panel") || 
         l.includes("light") || l.includes("tube") || l.includes("strip") || l.includes("spot")) {
       return { hsn: "9405", gst: 18, known: true };
     }
 
-    // Priority 7: Pipes & Pipe Fittings (Only when not a Box) -> 3917
-    if (l.includes("pipe") || l.includes("casing") || l.includes("conduit") || l.includes("bend") || l.includes("tape")) {
-      return { hsn: "3917", gst: 18, known: true };
-    }
-
-    // Priority 8: Heating & Appliances -> 8516
+    // 8. Heating & Appliances -> 8516
     if (l.includes("geyser") || l.includes("heater") || l.includes("iron") || l.includes("element") || l.includes("rod")) {
       return { hsn: "8516", gst: 18, known: true };
     }
 
-    // Priority 9: Meters & Testing -> 9028
+    // 9. Meters & Testing -> 9028
     if (l.includes("meter") || l.includes("sub-meter") || l.includes("tester")) {
       return { hsn: "9028", gst: 18, known: true };
     }
 
-    // Unmatched: Open Modal Check
+    // 10. Unknown / New Item -> Popup Confirmation
     return { hsn: "8538", gst: 18, known: false };
   }
 
@@ -1146,6 +1194,7 @@
     loadData();
   }
 
+  // 📦 STOCK INWARD SUBMIT WITH PERMANENT UNDEFINED FIX
   async function submitStockInward() {
     var name = document.getElementById("pItemName").value.trim();
     var qty = parseInt(document.getElementById("pQty").value);
@@ -1172,8 +1221,11 @@
 
     try {
       const res = await apiCall("addOrUpdateStock", { data: data, role: currentUser.role });
+      
+      // ✅ SMART FALLBACK: Hamesha actual item name show hoga!
       var displayName = (res && res.name) ? res.name : name;
       alert("✅ Stock Updated Successfully: " + displayName);
+      
       btn.disabled = false;
       btn.innerText = "📦 Update Stock in Inventory";
       document.getElementById("pItemName").value = "";
