@@ -832,7 +832,7 @@
     }
   }
 
-  // 📒 LOAD KHATA RECORDS (DIRECT 1-TAP UPI INTENT INTEGRATION)
+  // 📒 LOAD KHATA RECORDS (OWN HOSTED DIRECT 1-TAP UPI PAYMENT)
   async function loadKhataData() {
     var tbody = document.getElementById("khataBody");
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:16px;">Loading khata records...</td></tr>`;
@@ -872,9 +872,9 @@
         } catch(e) {}
       }
 
-      // ⚡ DIRECT 1-TAP UPI APP INTENT LINK (PHONEPE / GPAY / PAYTM REDIRECTION)
+      // ⚡ DIRECT OWN HOSTED 1-TAP UPI REDIRECTION
       var upiId = khataBankSettings.upi || "8860706865@UPI";
-      var payLink = "https://upiqr.in/pay/" + encodeURIComponent(upiId) + "/" + rec.amount.toFixed(2);
+      var payLink = "https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=" + encodeURIComponent(upiId) + "&am=" + rec.amount.toFixed(2);
 
       // ⚡ ENGLISH REMINDER MESSAGE (STARTING WITH "Hi")
       var msg = `Hi ${rec.customerName || 'Customer'},\n\n`;
