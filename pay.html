@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Moon Light Electricals - Pay</title>
+  <title>Moon Light Electricals - Payment</title>
+  <!-- 100% Reliable QR Generator -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body {
@@ -23,7 +25,7 @@
       border: 1px solid #1e293b;
       border-radius: 16px;
       padding: 24px 20px;
-      max-width: 380px;
+      max-width: 360px;
       width: 100%;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
@@ -34,50 +36,67 @@
     .amt-box {
       background: #1e293b;
       border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 20px;
+      padding: 10px;
+      margin-bottom: 16px;
     }
     .amt-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; }
     .amt { font-size: 34px; font-weight: 900; color: #f59e0b; margin-top: 2px; }
 
-    .btn-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-    
-    .pay-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .qr-container {
+      background: #ffffff;
       padding: 14px;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 800;
-      text-decoration: none;
-      color: #ffffff;
+      border-radius: 14px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      min-width: 208px;
+      min-height: 208px;
     }
-    .btn-gpay { background: #1a73e8; }
-    .btn-phonepe { background: #5f259f; }
-    .btn-paytm { background: #00baf2; color: #070d14; font-weight: 900; }
-    .btn-all { background: #059669; }
+    .qr-container img {
+      display: block;
+      margin: auto;
+    }
+
+    .scan-note {
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 16px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
 
     .copy-box {
       background: #0b131e;
       border: 1px solid #334155;
       border-radius: 8px;
-      padding: 8px 12px;
+      padding: 10px 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-top: 6px;
     }
-    .upi-txt { font-family: monospace; font-size: 12.5px; color: #cbd5e1; font-weight: 700; }
+    .upi-txt { font-family: monospace; font-size: 13px; color: #38bdf8; font-weight: 700; }
     .btn-copy {
-      background: #f59e0b;
-      color: #0b131e;
+      background: #059669;
+      color: #ffffff;
       border: none;
-      padding: 6px 12px;
+      padding: 8px 14px;
       border-radius: 6px;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 800;
       cursor: pointer;
+    }
+    .btn-copy:active {
+      transform: scale(0.96);
+    }
+    .copied-toast {
+      color: #22c55e;
+      font-size: 11.5px;
+      font-weight: bold;
+      margin-top: 6px;
+      display: none;
     }
   </style>
 </head>
@@ -92,35 +111,23 @@
       <div class="amt" id="displayAmt">₹0.00</div>
     </div>
 
-    <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 12px; font-weight: 700;">
-      Select your UPI App to Pay:
+    <!-- Clear Screen QR Code -->
+    <div class="qr-container" id="qrContainer"></div>
+
+    <div class="scan-note">
+      📸 Scan with PhonePe / GPay / Paytm<br>
+      <span style="font-size: 10.5px; color: #94a3b8;">(Or take screenshot and scan in app)</span>
     </div>
 
-    <div class="btn-group">
-      <a id="btnGPay" href="#" class="pay-btn btn-gpay">
-        🔵 Pay with Google Pay
-      </a>
-      <a id="btnPhonePe" href="#" class="pay-btn btn-phonepe">
-        🟣 Pay with PhonePe
-      </a>
-      <a id="btnPaytm" href="#" class="pay-btn btn-paytm">
-        🔷 Pay with Paytm
-      </a>
-      <a id="btnAll" href="#" class="pay-btn btn-all">
-        ⚡ Other UPI Apps (CRED / BHIM)
-      </a>
-    </div>
-
-    <div style="font-size: 11px; color: #94a3b8; text-align: left; margin-top: 6px;">
-      Or pay directly to UPI ID:
+    <!-- 1-Click Copy UPI Section -->
+    <div style="font-size: 11px; color: #94a3b8; text-align: left; margin-top: 10px;">
+      Or Pay to UPI ID:
     </div>
     <div class="copy-box">
       <span class="upi-txt" id="displayUpi">-</span>
       <button class="btn-copy" onclick="copyUpi()">📋 Copy</button>
     </div>
-    <div id="copiedToast" style="color:#22c55e; font-size:11px; font-weight:bold; margin-top:4px; display:none;">
-      ✓ UPI ID copied!
-    </div>
+    <div id="copiedToast" class="copied-toast">✓ UPI ID copied!</div>
   </div>
 
   <script>
@@ -132,20 +139,28 @@
     document.getElementById('displayAmt').innerText = '₹' + parseFloat(am).toFixed(2);
     document.getElementById('displayUpi').innerText = pa;
 
-    var cleanAm = parseFloat(am).toFixed(2);
-    var baseQuery = 'pa=' + encodeURIComponent(pa) + '&pn=' + encodeURIComponent(pn) + '&am=' + cleanAm + '&cu=INR';
+    // Standard Clean NPCI String
+    var upiUri = 'upi://pay?pa=' + encodeURIComponent(pa) + 
+                 '&pn=' + encodeURIComponent(pn) + 
+                 '&am=' + parseFloat(am).toFixed(2) + 
+                 '&cu=INR';
 
-    document.getElementById('btnGPay').href = 'gpay://upi/pay?' + baseQuery;
-    document.getElementById('btnPaytm').href = 'paytmmp://pay?' + baseQuery;
-    document.getElementById('btnAll').href = 'upi://pay?' + baseQuery;
-    document.getElementById('btnPhonePe').href = 'upi://pay?' + baseQuery;
+    // Instant Client-Side QR Generation
+    new QRCode(document.getElementById("qrContainer"), {
+      text: upiUri,
+      width: 180,
+      height: 180,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.M
+    });
 
     function copyUpi() {
       var upi = document.getElementById('displayUpi').innerText;
       navigator.clipboard.writeText(upi);
       var toast = document.getElementById('copiedToast');
       toast.style.display = 'block';
-      setTimeout(function() { toast.style.display = 'none'; }, 2000);
+      setTimeout(function() { toast.style.display = 'none'; }, 2500);
     }
   </script>
 
