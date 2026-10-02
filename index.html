@@ -337,7 +337,8 @@
   <div class="user-header">
     <div>User: <span id="displayUser" class="user-badge"></span> (<span id="displayRole"></span>)</div>
     <div style="display:flex; align-items:center; gap: 10px;">
-      <span style="font-size: 11.5px; color: #64748b;">Session: 24h</span>
+      <!-- LIVE COUNTDOWN TIMER -->
+      <span style="font-size: 11.5px; color: #475569; font-weight: bold;">Session: <span id="sessionCountdown" style="color: #b45309; font-family: monospace; font-size: 12.5px;">24:00:00</span></span>
       <button class="logout-btn" onclick="doLogout()">Logout</button>
     </div>
   </div>
@@ -460,7 +461,7 @@
 
       <button class="btn btn-green" onclick="addItem()">+ Add Item / Charge to Bill</button>
 
-      <!-- CART TABLE WITH GST COLUMN RIGHT AFTER DISC -->
+      <!-- CART TABLE WITH GST COLUMN -->
       <div class="table-responsive">
         <table id="cartTable" style="display:none;">
           <thead>
@@ -551,6 +552,7 @@
   var cart = [];
   var lastResult = null;
   var currentAutoGstPct = 18;
+  var sessionTimerInterval = null;
   const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
   var deferredPrompt;
 
@@ -600,14 +602,49 @@
       try {
         var sess = JSON.parse(sessionData);
         var now = new Date().getTime();
-        if (sess.timestamp && (now - sess.timestamp < SESSION_TIMEOUT_MS)) {
+        var elapsed = now - sess.timestamp;
+        if (sess.timestamp && (elapsed < SESSION_TIMEOUT_MS)) {
           currentUser = sess.user;
-          renderAppForUser();
+          renderAppForUser(sess.timestamp);
           return;
         }
       } catch(e) {}
     }
     doLogout();
+  }
+
+  // LIVE COUNTDOWN TIMER ENGINE
+  function startSessionCountdown(loginTimestamp) {
+    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+
+    function updateTimer() {
+      var now = new Date().getTime();
+      var elapsed = now - loginTimestamp;
+      var remaining = SESSION_TIMEOUT_MS - elapsed;
+
+      if (remaining <= 0) {
+        clearInterval(sessionTimerInterval);
+        alert("Session Expire ho gaya hai! Kripya dubara login karein.");
+        doLogout();
+        return;
+      }
+
+      var totalSecs = Math.floor(remaining / 1000);
+      var hrs = Math.floor(totalSecs / 3600);
+      var mins = Math.floor((totalSecs % 3600) / 60);
+      var secs = totalSecs % 60;
+
+      var timeStr = 
+        (hrs < 10 ? "0" + hrs : hrs) + ":" + 
+        (mins < 10 ? "0" + mins : mins) + ":" + 
+        (secs < 10 ? "0" + secs : secs);
+
+      var timerEl = document.getElementById("sessionCountdown");
+      if (timerEl) timerEl.innerText = timeStr;
+    }
+
+    updateTimer();
+    sessionTimerInterval = setInterval(updateTimer, 1000);
   }
 
   function getTodayDateString() {
@@ -673,8 +710,9 @@
       btn.innerText = "🔐 Verify & Enter Shop ERP";
       if (res.success) {
         currentUser = res;
-        localStorage.setItem("moonlight_session", JSON.stringify({ user: res, timestamp: new Date().getTime() }));
-        renderAppForUser();
+        var loginTime = new Date().getTime();
+        localStorage.setItem("moonlight_session", JSON.stringify({ user: res, timestamp: loginTime }));
+        renderAppForUser(loginTime);
       } else {
         err.innerText = res.message;
         err.style.display = "block";
@@ -695,6 +733,7 @@
   }
 
   function doLogout() {
+    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
     localStorage.removeItem("moonlight_session");
     currentUser = null;
     document.getElementById("loginOverlay").style.display = "block";
@@ -702,13 +741,14 @@
     resetLoginStep();
   }
 
-  function renderAppForUser() {
+  function renderAppForUser(loginTimestamp) {
     document.getElementById("loginOverlay").style.display = "none";
     document.getElementById("mainDashboard").style.display = "flex";
     document.getElementById("displayUser").innerText = currentUser.name;
     document.getElementById("displayRole").innerText = currentUser.role;
     
     document.getElementById("billDate").value = getTodayDateString();
+    startSessionCountdown(loginTimestamp);
 
     if (currentUser.role === "Admin") {
       document.getElementById("tabStockBtn").style.display = "block";
@@ -927,7 +967,6 @@
     if (!document.getElementById("pItemName").contains(e.target)) document.getElementById("purchaseDropdown").style.display = "none";
   });
 
-  // SMART CALCULATION: BASE RATE - DISC + GST = FINAL TOTAL
   function calculateItemTotal() {
     var baseRate = parseFloat(document.getElementById("rateInput").value) || 0;
     var disc = parseFloat(document.getElementById("discInput").value) || 0;
