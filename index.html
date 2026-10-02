@@ -351,7 +351,7 @@
     </div>
 
     <div class="alert-box" id="alertBox">
-      <b>⚠️️ LOW STOCK ALERT:</b>
+      <b>⚠️ LOW STOCK ALERT:</b>
       <div id="alertList"></div>
     </div>
 
@@ -832,7 +832,7 @@
     }
   }
 
-  // 📒 LOAD KHATA RECORDS AND GENERATE WHATSAPP REMINDERS
+  // 📒 LOAD KHATA RECORDS (ROBUST CLEAN DATE FORMATTING)
   async function loadKhataData() {
     var tbody = document.getElementById("khataBody");
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:16px;">Loading khata records...</td></tr>`;
@@ -863,6 +863,16 @@
       var cleanPhone = (rec.phone || "").replace(/\D/g, '').slice(-10);
       var waPhone = cleanPhone ? ("91" + cleanPhone) : "";
 
+      // ⚡ ROBUST DISPLAY DATE CLEANER
+      var displayDate = rec.date || "";
+      if (displayDate.indexOf("GMT") > -1) {
+        try {
+          var d = new Date(displayDate);
+          var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          displayDate = ("0" + d.getDate()).slice(-2) + "-" + months[d.getMonth()] + "-" + d.getFullYear();
+        } catch(e) {}
+      }
+
       // ⚡ DYNAMIC UPI QR CODE LINK
       var upiId = khataBankSettings.upi || "8860706865@UPI";
       var upiString = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Moon%20Light%20Electricals&am=${rec.amount.toFixed(2)}&cu=INR`;
@@ -871,7 +881,7 @@
       // ⚡ ENGLISH REMINDER MESSAGE STARTING WITH "Hi"
       var msg = `Hi ${rec.customerName || 'Customer'},\n\n`;
       msg += `Greetings from *Moon Light Electricals*!\n\n`;
-      msg += `This is a gentle reminder that payment for Invoice/Bill *${rec.docNo}* dated *${rec.date}* is pending.\n\n`;
+      msg += `This is a gentle reminder that payment for Invoice/Bill *${rec.docNo}* dated *${displayDate}* is pending.\n\n`;
       msg += `• Pending Amount: *₹${rec.amount.toFixed(2)}*\n`;
       msg += `• Due To: *Moon Light Electricals* (Sector-121, Noida)\n\n`;
       msg += `Kindly clear the balance at your earliest convenience using UPI:\n`;
@@ -889,7 +899,7 @@
       var tr = document.createElement("tr");
       tr.style.backgroundColor = isPending ? "#ffffff" : "#f8fafc";
       tr.innerHTML = `
-        <td>${rec.date}</td>
+        <td><b>${displayDate}</b></td>
         <td><b>${rec.docNo}</b></td>
         <td><b>${rec.customerName}</b></td>
         <td>${cleanPhone || '-'}</td>
