@@ -168,6 +168,7 @@
     .tag-low { background: #fee2e2; color: #dc2626; }
 
     .badge { font-size: 11.5px; font-weight: 700; color: #d97706; margin-top: 4px; }
+    .repeat-badge { font-size: 11px; color: #059669; font-weight: bold; margin-top: 3px; display: none; }
     
     .btn { background: #0b131e; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; }
     .btn-green { background: #059669; }
@@ -338,7 +339,6 @@
   <div class="user-header">
     <div>User: <span id="displayUser" class="user-badge"></span> (<span id="displayRole"></span>)</div>
     <div style="display:flex; align-items:center; gap: 10px;">
-      <!-- ⏰ LIVE COUNTDOWN SESSION TIMER -->
       <span style="font-size: 11.5px; color: #64748b;">Session: <b id="sessionCountdown" style="color:#d97706; font-family:monospace; font-size:12.5px;">24 : 00 : 00</b></span>
       <button class="logout-btn" onclick="doLogout()">Logout</button>
     </div>
@@ -351,7 +351,7 @@
     </div>
 
     <div class="alert-box" id="alertBox">
-      <b>⚠️ LOW STOCK ALERT:</b>
+      <b>⚠️️ LOW STOCK ALERT:</b>
       <div id="alertList"></div>
     </div>
 
@@ -396,13 +396,15 @@
       </div>
 
       <div class="row">
+        <div class="col">
+          <label>WhatsApp Number</label>
+          <!-- ⚡ AUTO-LOOKUP TRIGGER ON PHONE INPUT -->
+          <input type="tel" id="custPhone" placeholder="Enter 10-digit Phone" maxlength="10" oninput="handlePhoneInput()">
+          <div id="repeatCustomerBadge" class="repeat-badge"></div>
+        </div>
         <div class="col-wide">
           <label>Customer Name</label>
           <input type="text" id="custName" placeholder="Name">
-        </div>
-        <div class="col">
-          <label>WhatsApp Number</label>
-          <input type="tel" id="custPhone" placeholder="10-digit Phone">
         </div>
       </div>
 
@@ -538,8 +540,9 @@
   var cart = [];
   var lastResult = null;
   var currentAutoGstPct = 18;
-  const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 Hours
+  const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
   var sessionTimerInterval = null;
+  var phoneLookupTimer = null;
   var deferredPrompt;
 
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -598,7 +601,6 @@
     doLogout();
   }
 
-  // ⏰ LIVE REVERSE COUNTDOWN TIMER FUNCTION
   function startSessionTimer() {
     if (sessionTimerInterval) clearInterval(sessionTimerInterval);
 
@@ -645,6 +647,40 @@
     var mm = ("0" + (istDate.getMonth() + 1)).slice(-2);
     var dd = ("0" + istDate.getDate()).slice(-2);
     return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // ⚡ INSTANT CUSTOMER AUTO-FILL ON PHONE INPUT
+  function handlePhoneInput() {
+    var phoneInput = document.getElementById("custPhone");
+    var phone = phoneInput.value.trim().replace(/\D/g, '');
+    var badge = document.getElementById("repeatCustomerBadge");
+
+    if (phone.length < 10) {
+      badge.style.display = "none";
+      return;
+    }
+
+    if (phoneLookupTimer) clearTimeout(phoneLookupTimer);
+    phoneLookupTimer = setTimeout(async function() {
+      badge.innerText = "🔍 Checking customer record...";
+      badge.style.display = "block";
+      badge.style.color = "#d97706";
+
+      var res = await apiCall("lookupCustomer", { phone: phone });
+      if (res && res.found) {
+        document.getElementById("custName").value = res.name || "";
+        document.getElementById("custAddress").value = res.address || "";
+        if (res.gstin) {
+          document.getElementById("custGstin").value = res.gstin;
+          document.getElementById("isGst").value = "Yes";
+        }
+        badge.innerText = "✅ Repeat Customer: " + res.name;
+        badge.style.color = "#059669";
+      } else {
+        badge.innerText = "✨ New Customer";
+        badge.style.color = "#64748b";
+      }
+    }, 300);
   }
 
   async function sendOtp() {
@@ -792,23 +828,21 @@
     return lower.includes("labour") || lower.includes("service") || lower.includes("charge") || lower.includes("repair") || lower.includes("fitting");
   }
 
-  // ⚡ 100% ACCURATE PRIORITY HSN DETECTOR
   function detectElectricalHsn(name) {
     var l = (name || "").toLowerCase().trim();
 
     // 1. Services & Labour -> 998519
     if (isServiceOrLabour(l)) return { hsn: "998519", gst: 18, known: true };
 
-    // 2. Pipes, Conduit & Fittings (Bends, Elbow, Coupler, Casing) -> 3917
+    // 2. Pipes, Conduit & Fittings -> 3917
     if (l.includes("pipe") || l.includes("conduit") || l.includes("bend") || l.includes("elbow") || 
         l.includes("coupler") || l.includes("casing") || l.includes("tape")) {
-      // Exception: Agar pipe ke sath "box" ho tabhi 8538
       if (!l.includes("box") && !l.includes("gang") && !l.includes("board")) {
         return { hsn: "3917", gst: 18, known: true };
       }
     }
 
-    // 3. Boxes, Enclosures, Gang & Dibbi (PVC/GI/Metal Box) -> 8538
+    // 3. Boxes, Enclosures, Gang & Dibbi -> 8538
     if (l.includes("box") || l.includes("gang") || l.includes("enclosure") || l.includes("dibbi") || l.includes("board")) {
       return { hsn: "8538", gst: 18, known: true };
     }
@@ -823,14 +857,14 @@
       return { hsn: "8414", gst: 18, known: true };
     }
 
-    // 6. Switches, Sockets, Plates, MCB, Isolators -> 8536
+    // 6. Modular Switches, Sockets, Plates, MCB -> 8536
     if (l.includes("switch") || l.includes("socket") || l.includes("mcb") || l.includes("isolator") || 
         l.includes("plate") || l.includes("regulator") || l.includes("plug") || l.includes("top") || 
         l.includes("starter") || l.includes("holder")) {
       return { hsn: "8536", gst: 18, known: true };
     }
 
-    // 7. Lighting (Bulb, LED, Panels, Battens, Tubes) -> 9405
+    // 7. Lighting -> 9405
     if (l.includes("bulb") || l.includes("led") || l.includes("batten") || l.includes("panel") || 
         l.includes("light") || l.includes("tube") || l.includes("strip") || l.includes("spot")) {
       return { hsn: "9405", gst: 18, known: true };
@@ -846,7 +880,6 @@
       return { hsn: "9028", gst: 18, known: true };
     }
 
-    // 10. Unknown / New Item -> Popup Confirmation
     return { hsn: "8538", gst: 18, known: false };
   }
 
@@ -1169,6 +1202,7 @@
     document.getElementById("custPhone").value = "";
     document.getElementById("custAddress").value = "";
     document.getElementById("custGstin").value = "";
+    document.getElementById("repeatCustomerBadge").style.display = "none";
     document.getElementById("itemInput").value = "";
     document.getElementById("serialInput").value = "";
     var hsnInput = document.getElementById("hsnInput");
@@ -1194,7 +1228,6 @@
     loadData();
   }
 
-  // 📦 STOCK INWARD SUBMIT WITH PERMANENT UNDEFINED FIX
   async function submitStockInward() {
     var name = document.getElementById("pItemName").value.trim();
     var qty = parseInt(document.getElementById("pQty").value);
@@ -1221,11 +1254,8 @@
 
     try {
       const res = await apiCall("addOrUpdateStock", { data: data, role: currentUser.role });
-      
-      // ✅ SMART FALLBACK: Hamesha actual item name show hoga!
       var displayName = (res && res.name) ? res.name : name;
       alert("✅ Stock Updated Successfully: " + displayName);
-      
       btn.disabled = false;
       btn.innerText = "📦 Update Stock in Inventory";
       document.getElementById("pItemName").value = "";
