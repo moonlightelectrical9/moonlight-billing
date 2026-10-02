@@ -168,7 +168,6 @@
     .tag-low { background: #fee2e2; color: #dc2626; }
 
     .badge { font-size: 11.5px; font-weight: 700; color: #d97706; margin-top: 4px; }
-    .repeat-badge { font-size: 11px; color: #059669; font-weight: bold; margin-top: 3px; display: none; }
     
     .btn { background: #0b131e; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; }
     .btn-green { background: #059669; }
@@ -348,6 +347,7 @@
     <div class="tab-bar">
       <div class="tab-btn active" id="tabBillingBtn" onclick="switchTab('billing')">🛒 SALE / BILLING</div>
       <div class="tab-btn" id="tabStockBtn" onclick="switchTab('stock')" style="display:none;">📦 STOCK INWARD (PURCHASE)</div>
+      <div class="tab-btn" id="tabKhataBtn" onclick="switchTab('khata')" style="display:none;">📒 UDHAAR / KHATA</div>
     </div>
 
     <div class="alert-box" id="alertBox">
@@ -396,15 +396,13 @@
       </div>
 
       <div class="row">
-        <div class="col">
-          <label>WhatsApp Number</label>
-          <!-- ⚡ AUTO-LOOKUP TRIGGER ON PHONE INPUT -->
-          <input type="tel" id="custPhone" placeholder="Enter 10-digit Phone" maxlength="10" oninput="handlePhoneInput()">
-          <div id="repeatCustomerBadge" class="repeat-badge"></div>
-        </div>
         <div class="col-wide">
           <label>Customer Name</label>
           <input type="text" id="custName" placeholder="Name">
+        </div>
+        <div class="col">
+          <label>WhatsApp Number</label>
+          <input type="tel" id="custPhone" placeholder="10-digit Phone" maxlength="10">
         </div>
       </div>
 
@@ -527,6 +525,49 @@
         📦 Update Stock in Inventory
       </button>
     </div>
+
+    <!-- TAB 3: UDHAAR / KHATA TRACKER -->
+    <div id="khataView" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+        <div style="font-size:13px; color:#475569; font-weight:700;">
+          Dukan ke pending udhaar bills aur payment reminders:
+        </div>
+        <button class="btn btn-green" onclick="loadKhataData()" style="width:auto; padding:6px 14px; font-size:12px;">
+          🔄 Refresh Khata
+        </button>
+      </div>
+
+      <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:8px; padding:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <span style="font-size:12px; font-weight:700; color:#92400e;">Total Pending Udhaar Balance:</span>
+          <div style="font-size:20px; font-weight:900; color:#b45309;" id="khataPendingTotal">₹0.00</div>
+        </div>
+        <div style="font-size:11.5px; color:#78350f;" id="khataUpiDisplay">
+          Active UPI: -
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="khataTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Bill No</th>
+              <th>Customer Name</th>
+              <th>Phone</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>WhatsApp Reminder</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="khataBody">
+            <tr><td colspan="8" style="text-align:center; padding:16px; color:#64748b;">Loading khata records...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -542,7 +583,7 @@
   var currentAutoGstPct = 18;
   const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
   var sessionTimerInterval = null;
-  var phoneLookupTimer = null;
+  var khataBankSettings = {};
   var deferredPrompt;
 
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -581,7 +622,7 @@
       return await res.json();
     } catch(err) {
       console.error("API error:", err);
-      return { success: false, items: [], alerts: [] };
+      return { success: false, items: [], alerts: [], records: [] };
     }
   }
 
@@ -647,40 +688,6 @@
     var mm = ("0" + (istDate.getMonth() + 1)).slice(-2);
     var dd = ("0" + istDate.getDate()).slice(-2);
     return `${yyyy}-${mm}-${dd}`;
-  }
-
-  // ⚡ INSTANT CUSTOMER AUTO-FILL ON PHONE INPUT
-  function handlePhoneInput() {
-    var phoneInput = document.getElementById("custPhone");
-    var phone = phoneInput.value.trim().replace(/\D/g, '');
-    var badge = document.getElementById("repeatCustomerBadge");
-
-    if (phone.length < 10) {
-      badge.style.display = "none";
-      return;
-    }
-
-    if (phoneLookupTimer) clearTimeout(phoneLookupTimer);
-    phoneLookupTimer = setTimeout(async function() {
-      badge.innerText = "🔍 Checking customer record...";
-      badge.style.display = "block";
-      badge.style.color = "#d97706";
-
-      var res = await apiCall("lookupCustomer", { phone: phone });
-      if (res && res.found) {
-        document.getElementById("custName").value = res.name || "";
-        document.getElementById("custAddress").value = res.address || "";
-        if (res.gstin) {
-          document.getElementById("custGstin").value = res.gstin;
-          document.getElementById("isGst").value = "Yes";
-        }
-        badge.innerText = "✅ Repeat Customer: " + res.name;
-        badge.style.color = "#059669";
-      } else {
-        badge.innerText = "✨ New Customer";
-        badge.style.color = "#64748b";
-      }
-    }, 300);
   }
 
   async function sendOtp() {
@@ -776,9 +783,11 @@
 
     if (currentUser.role === "Admin") {
       document.getElementById("tabStockBtn").style.display = "block";
+      document.getElementById("tabKhataBtn").style.display = "block";
       document.getElementById("familyRateOpt").style.display = "block";
     } else {
       document.getElementById("tabStockBtn").style.display = "none";
+      document.getElementById("tabKhataBtn").style.display = "none";
       document.getElementById("familyRateOpt").style.display = "none";
       document.getElementById("alertBox").style.display = "none";
     }
@@ -801,20 +810,124 @@
   }
 
   function switchTab(tab) {
+    document.getElementById('billingView').style.display = 'none';
+    document.getElementById('stockView').style.display = 'none';
+    document.getElementById('khataView').style.display = 'none';
+    document.getElementById('tabBillingBtn').className = 'tab-btn';
+    document.getElementById('tabStockBtn').className = 'tab-btn';
+    document.getElementById('tabKhataBtn').className = 'tab-btn';
+
     if (tab === 'billing') {
       document.getElementById('billingView').style.display = 'block';
-      document.getElementById('stockView').style.display = 'none';
       document.getElementById('tabBillingBtn').className = 'tab-btn active';
-      document.getElementById('tabStockBtn').className = 'tab-btn';
-    } else {
-      if (currentUser.role !== "Admin") {
-        alert("Access Denied! Sirf Admin access kar sakta hai.");
-        return;
-      }
-      document.getElementById('billingView').style.display = 'none';
+    } else if (tab === 'stock') {
+      if (currentUser.role !== "Admin") return alert("Access Denied!");
       document.getElementById('stockView').style.display = 'block';
-      document.getElementById('tabBillingBtn').className = 'tab-btn';
       document.getElementById('tabStockBtn').className = 'tab-btn active';
+    } else if (tab === 'khata') {
+      if (currentUser.role !== "Admin") return alert("Access Denied!");
+      document.getElementById('khataView').style.display = 'block';
+      document.getElementById('tabKhataBtn').className = 'tab-btn active';
+      loadKhataData();
+    }
+  }
+
+  // 📒 LOAD KHATA RECORDS AND GENERATE WHATSAPP REMINDERS
+  async function loadKhataData() {
+    var tbody = document.getElementById("khataBody");
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:16px;">Loading khata records...</td></tr>`;
+
+    const res = await apiCall("getKhataRecords", { role: currentUser.role });
+    if (!res.success) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">Failed to load khata data!</td></tr>`;
+      return;
+    }
+
+    khataBankSettings = res.settings || { upi: "8860706865@UPI" };
+    document.getElementById("khataUpiDisplay").innerText = "Active Shop UPI: " + (khataBankSettings.upi || "8860706865@UPI");
+
+    var records = res.records || [];
+    if (records.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:18px; color:#64748b;">No pending credit (udhaar) records! All clear.</td></tr>`;
+      document.getElementById("khataPendingTotal").innerText = "₹0.00";
+      return;
+    }
+
+    var pendingSum = 0;
+    tbody.innerHTML = "";
+
+    records.forEach(function(rec) {
+      var isPending = (rec.status.toLowerCase() === "pending");
+      if (isPending) pendingSum += rec.amount;
+
+      var cleanPhone = (rec.phone || "").replace(/\D/g, '').slice(-10);
+      var waPhone = cleanPhone ? ("91" + cleanPhone) : "";
+
+      // ⚡ DYNAMIC UPI QR CODE LINK
+      var upiId = khataBankSettings.upi || "8860706865@UPI";
+      var upiString = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Moon%20Light%20Electricals&am=${rec.amount.toFixed(2)}&cu=INR`;
+      var qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiString)}`;
+
+      // ⚡ ENGLISH REMINDER MESSAGE STARTING WITH "Hi"
+      var msg = `Hi ${rec.customerName || 'Customer'},\n\n`;
+      msg += `Greetings from *Moon Light Electricals*!\n\n`;
+      msg += `This is a gentle reminder that payment for Invoice/Bill *${rec.docNo}* dated *${rec.date}* is pending.\n\n`;
+      msg += `• Pending Amount: *₹${rec.amount.toFixed(2)}*\n`;
+      msg += `• Due To: *Moon Light Electricals* (Sector-121, Noida)\n\n`;
+      msg += `Kindly clear the balance at your earliest convenience using UPI:\n`;
+      msg += `• *UPI ID:* ${upiId}\n`;
+      msg += `• *Scan & Pay QR Code:*\n${qrUrl}\n\n`;
+      msg += `Thank you for your business!\n`;
+      msg += `*MOON LIGHT ELECTRICALS*\n`;
+      msg += `Shop No 1, Sadbhavna Market, Sector-121, Noida\n`;
+      msg += `Contact: 9650897965 / 8860706865`;
+
+      var waLink = waPhone
+        ? `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(msg)}`
+        : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+
+      var tr = document.createElement("tr");
+      tr.style.backgroundColor = isPending ? "#ffffff" : "#f8fafc";
+      tr.innerHTML = `
+        <td>${rec.date}</td>
+        <td><b>${rec.docNo}</b></td>
+        <td><b>${rec.customerName}</b></td>
+        <td>${cleanPhone || '-'}</td>
+        <td style="font-weight:900; color:${isPending ? '#b45309' : '#059669'};">₹${rec.amount.toFixed(2)}</td>
+        <td>
+          <span style="padding:3px 8px; border-radius:4px; font-weight:bold; font-size:11px; background:${isPending ? '#fee2e2' : '#dcfce7'}; color:${isPending ? '#dc2626' : '#15803d'};">
+            ${isPending ? 'PENDING' : 'PAID (' + rec.paidDate + ')'}
+          </span>
+        </td>
+        <td style="text-align:center;">
+          ${isPending ? `
+            <a href="${waLink}" target="_blank" style="background:#25D366; color:white; padding:6px 10px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:11.5px; display:inline-block;">
+              💬 Send Reminder
+            </a>
+          ` : `<span style="color:#64748b; font-size:11px;">Completed</span>`}
+        </td>
+        <td>
+          ${isPending ? `
+            <button onclick="markKhataPaid('${rec.docNo}')" style="background:#059669; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:11px;">
+              ✓ Mark Paid
+            </button>
+          ` : `<span style="color:#15803d; font-weight:bold;">Cleared</span>`}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("khataPendingTotal").innerText = `₹${pendingSum.toFixed(2)}`;
+  }
+
+  async function markKhataPaid(docNo) {
+    if (!confirm(`Kya Bill ${docNo} ka payment receive ho gaya hai? Isse 'PAID' mark karein?`)) return;
+    const res = await apiCall("markKhataPaid", { docNo: docNo, role: currentUser.role });
+    if (res.success) {
+      alert(`Bill ${docNo} successfully marked as PAID!`);
+      loadKhataData();
+    } else {
+      alert("Failed: " + (res.message || "Error updating"));
     }
   }
 
@@ -831,10 +944,8 @@
   function detectElectricalHsn(name) {
     var l = (name || "").toLowerCase().trim();
 
-    // 1. Services & Labour -> 998519
     if (isServiceOrLabour(l)) return { hsn: "998519", gst: 18, known: true };
 
-    // 2. Pipes, Conduit & Fittings -> 3917
     if (l.includes("pipe") || l.includes("conduit") || l.includes("bend") || l.includes("elbow") || 
         l.includes("coupler") || l.includes("casing") || l.includes("tape")) {
       if (!l.includes("box") && !l.includes("gang") && !l.includes("board")) {
@@ -842,40 +953,33 @@
       }
     }
 
-    // 3. Boxes, Enclosures, Gang & Dibbi -> 8538
     if (l.includes("box") || l.includes("gang") || l.includes("enclosure") || l.includes("dibbi") || l.includes("board")) {
       return { hsn: "8538", gst: 18, known: true };
     }
 
-    // 4. Wires & Cables -> 8544
     if (l.includes("wire") || l.includes("cable") || l.includes("copper") || l.includes("dori")) {
       return { hsn: "8544", gst: 18, known: true };
     }
 
-    // 5. Fans & Coolers -> 8414
     if (l.includes("fan") || l.includes("cooler") || l.includes("exhaust")) {
       return { hsn: "8414", gst: 18, known: true };
     }
 
-    // 6. Modular Switches, Sockets, Plates, MCB -> 8536
     if (l.includes("switch") || l.includes("socket") || l.includes("mcb") || l.includes("isolator") || 
         l.includes("plate") || l.includes("regulator") || l.includes("plug") || l.includes("top") || 
         l.includes("starter") || l.includes("holder")) {
       return { hsn: "8536", gst: 18, known: true };
     }
 
-    // 7. Lighting -> 9405
     if (l.includes("bulb") || l.includes("led") || l.includes("batten") || l.includes("panel") || 
         l.includes("light") || l.includes("tube") || l.includes("strip") || l.includes("spot")) {
       return { hsn: "9405", gst: 18, known: true };
     }
 
-    // 8. Heating & Appliances -> 8516
     if (l.includes("geyser") || l.includes("heater") || l.includes("iron") || l.includes("element") || l.includes("rod")) {
       return { hsn: "8516", gst: 18, known: true };
     }
 
-    // 9. Meters & Testing -> 9028
     if (l.includes("meter") || l.includes("sub-meter") || l.includes("tester")) {
       return { hsn: "9028", gst: 18, known: true };
     }
@@ -1202,7 +1306,6 @@
     document.getElementById("custPhone").value = "";
     document.getElementById("custAddress").value = "";
     document.getElementById("custGstin").value = "";
-    document.getElementById("repeatCustomerBadge").style.display = "none";
     document.getElementById("itemInput").value = "";
     document.getElementById("serialInput").value = "";
     var hsnInput = document.getElementById("hsnInput");
