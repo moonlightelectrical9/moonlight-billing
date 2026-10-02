@@ -832,7 +832,7 @@
     }
   }
 
-  // 📒 LOAD KHATA RECORDS (ROBUST CLEAN DATE FORMATTING)
+  // 📒 LOAD KHATA RECORDS (DIRECT 1-TAP UPI INTENT INTEGRATION)
   async function loadKhataData() {
     var tbody = document.getElementById("khataBody");
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:16px;">Loading khata records...</td></tr>`;
@@ -863,7 +863,6 @@
       var cleanPhone = (rec.phone || "").replace(/\D/g, '').slice(-10);
       var waPhone = cleanPhone ? ("91" + cleanPhone) : "";
 
-      // ⚡ ROBUST DISPLAY DATE CLEANER
       var displayDate = rec.date || "";
       if (displayDate.indexOf("GMT") > -1) {
         try {
@@ -873,20 +872,18 @@
         } catch(e) {}
       }
 
-      // ⚡ DYNAMIC UPI QR CODE LINK
+      // ⚡ DIRECT 1-TAP UPI APP INTENT LINK (PHONEPE / GPAY / PAYTM REDIRECTION)
       var upiId = khataBankSettings.upi || "8860706865@UPI";
-      var upiString = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Moon%20Light%20Electricals&am=${rec.amount.toFixed(2)}&cu=INR`;
-      var qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiString)}`;
+      var payLink = "https://upiqr.in/pay/" + encodeURIComponent(upiId) + "/" + rec.amount.toFixed(2);
 
-      // ⚡ ENGLISH REMINDER MESSAGE STARTING WITH "Hi"
+      // ⚡ ENGLISH REMINDER MESSAGE (STARTING WITH "Hi")
       var msg = `Hi ${rec.customerName || 'Customer'},\n\n`;
       msg += `Greetings from *Moon Light Electricals*!\n\n`;
       msg += `This is a gentle reminder that payment for Invoice/Bill *${rec.docNo}* dated *${displayDate}* is pending.\n\n`;
       msg += `• Pending Amount: *₹${rec.amount.toFixed(2)}*\n`;
       msg += `• Due To: *Moon Light Electricals* (Sector-121, Noida)\n\n`;
-      msg += `Kindly clear the balance at your earliest convenience using UPI:\n`;
-      msg += `• *UPI ID:* ${upiId}\n`;
-      msg += `• *Scan & Pay QR Code:*\n${qrUrl}\n\n`;
+      msg += `⚡ *Tap below to Pay directly via GPay / PhonePe / Paytm:*\n${payLink}\n\n`;
+      msg += `Or pay manually using UPI ID: *${upiId}*\n\n`;
       msg += `Thank you for your business!\n`;
       msg += `*MOON LIGHT ELECTRICALS*\n`;
       msg += `Shop No 1, Sadbhavna Market, Sector-121, Noida\n`;
