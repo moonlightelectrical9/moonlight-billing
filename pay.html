@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Moon Light Electricals - Quick Pay</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Moon Light Electricals - Pay</title>
   <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #0b131e;
       color: #ffffff;
       display: flex;
@@ -15,50 +15,102 @@
       justify-content: center;
       min-height: 100vh;
       margin: 0;
-      padding: 20px;
-      box-sizing: border-box;
+      padding: 16px;
       text-align: center;
     }
     .card {
       background: #111c2a;
       border: 1px solid #1e293b;
-      border-radius: 12px;
-      padding: 28px 24px;
-      max-width: 400px;
+      border-radius: 14px;
+      padding: 24px 20px;
+      max-width: 380px;
       width: 100%;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
-    .brand { font-size: 20px; font-weight: 900; margin-bottom: 4px; }
+    .brand { font-size: 20px; font-weight: 900; margin-bottom: 2px; }
     .brand span { color: #f59e0b; }
-    .amt-label { font-size: 13px; color: #94a3b8; margin-top: 14px; }
-    .amt { font-size: 32px; font-weight: 900; color: #f59e0b; margin: 4px 0 18px 0; }
-    .btn {
-      display: block;
-      background: #22c55e;
-      color: #ffffff;
-      font-weight: 900;
-      text-decoration: none;
-      padding: 14px;
+    .sub { font-size: 11px; color: #f59e0b; font-style: italic; margin-bottom: 16px; }
+    
+    .amt-box {
+      background: #1e293b;
       border-radius: 8px;
-      font-size: 16px;
-      margin-bottom: 12px;
+      padding: 12px;
+      margin-bottom: 20px;
     }
-    .upi-info { font-size: 12px; color: #64748b; margin-top: 10px; }
+    .amt-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; font-weight: 700; }
+    .amt { font-size: 32px; font-weight: 900; color: #f59e0b; margin-top: 2px; }
+
+    .btn-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    
+    .pay-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 14.5px;
+      font-weight: 800;
+      text-decoration: none;
+      color: #ffffff;
+      transition: 0.2s;
+    }
+    .btn-gpay { background: #1a73e8; }
+    .btn-phonepe { background: #5f259f; }
+    .btn-paytm { background: #00baf2; color: #070d14; font-weight: 900; }
+    .btn-default { background: #059669; }
+
+    .upi-details {
+      font-size: 11.5px;
+      color: #64748b;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .upi-badge {
+      display: inline-block;
+      background: #1e293b;
+      color: #cbd5e1;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
 
   <div class="card">
     <div class="brand">MOON<span>LIGHT</span> ELECTRICALS</div>
-    <div style="font-size: 11px; color:#f59e0b; font-style:italic;">Brightening Lives, Powering Trust</div>
+    <div class="sub">Brightening Lives, Powering Trust</div>
 
-    <div class="amt-label">Total Payable Amount:</div>
-    <div class="amt" id="displayAmt">₹0.00</div>
+    <div class="amt-box">
+      <div class="amt-label">Payable Amount</div>
+      <div class="amt" id="displayAmt">₹0.00</div>
+    </div>
 
-    <a id="payBtn" href="#" class="btn">⚡ Pay via GPay / PhonePe / Paytm</a>
+    <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px; font-weight: 700;">
+      Choose your payment app:
+    </div>
 
-    <div class="upi-info">
-      UPI ID: <b id="displayUpi" style="color:#cbd5e1;">-</b>
+    <div class="btn-group">
+      <a id="btnPhonePe" href="#" class="pay-btn btn-phonepe">
+        🟣 Pay with PhonePe
+      </a>
+      <a id="btnGPay" href="#" class="pay-btn btn-gpay">
+        🔵 Pay with Google Pay
+      </a>
+      <a id="btnPaytm" href="#" class="pay-btn btn-paytm">
+        🔷 Pay with Paytm
+      </a>
+      <a id="btnGeneric" href="#" class="pay-btn btn-default">
+        ⚡ Other UPI Apps
+      </a>
+    </div>
+
+    <div class="upi-details">
+      Verified Shop UPI ID:<br>
+      <span class="upi-badge" id="displayUpi">-</span>
     </div>
   </div>
 
@@ -71,15 +123,13 @@
     document.getElementById('displayAmt').innerText = '₹' + parseFloat(am).toFixed(2);
     document.getElementById('displayUpi').innerText = pa;
 
-    var upiUri = 'upi://pay?pa=' + encodeURIComponent(pa) + '&pn=' + encodeURIComponent(pn) + '&am=' + encodeURIComponent(am) + '&cu=INR';
-    document.getElementById('payBtn').href = upiUri;
+    var commonQuery = 'pa=' + encodeURIComponent(pa) + '&pn=' + encodeURIComponent(pn) + '&am=' + encodeURIComponent(am) + '&cu=INR';
 
-    // Auto-trigger UPI Apps on mobile
-    window.onload = function() {
-      setTimeout(function() {
-        window.location.href = upiUri;
-      }, 300);
-    };
+    // Direct Intent links for iOS & Android
+    document.getElementById('btnPhonePe').href = 'phonepe://pay?' + commonQuery;
+    document.getElementById('btnGPay').href = 'gpay://upi/pay?' + commonQuery;
+    document.getElementById('btnPaytm').href = 'paytmmp://pay?' + commonQuery;
+    document.getElementById('btnGeneric').href = 'upi://pay?' + commonQuery;
   </script>
 
 </body>
