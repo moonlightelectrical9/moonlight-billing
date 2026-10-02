@@ -257,8 +257,8 @@
   </div>
 
   <script>
-    // ⚙️ APPS SCRIPT URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby53dD-xMhDqT-8k8N7iB9E6fM3WkP_nJ1qA/exec";
+    // ⚙️ LIVE GOOGLE APPS SCRIPT URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
 
     let currentUser = JSON.parse(localStorage.getItem("mle_user")) || null;
     let cachedItems = JSON.parse(localStorage.getItem("mle_items")) || [];
@@ -308,7 +308,7 @@
           syncBtn.innerText = "🔄 Refresh";
         }
       } catch(e) {
-        syncBtn.innerText = "⚠️️ Failed";
+        syncBtn.innerText = "⚠ Failed";
       }
 
       setTimeout(() => {
