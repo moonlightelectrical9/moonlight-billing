@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Moon Light Billing">
   <link rel="icon" type="image/png" href="./logo.png">
-<link rel="apple-touch-icon" href="./logo.png">
+  <link rel="apple-touch-icon" href="./logo.png">
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
@@ -181,7 +181,7 @@
     .total-bar { display: flex; justify-content: space-between; font-weight: bold; font-size: 16px; margin: 16px 0; padding: 10px 16px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; color: #78350f; }
 
     /* Success Pop-up Modal */
-    #successModal {
+    #successModal, #hsnConfirmModal {
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -244,6 +244,28 @@
 <div id="installBanner">
   <div style="font-size: 12px; font-weight: bold;">📲 Install Moon Light Billing App</div>
   <button onclick="installPWA()">Install Now</button>
+</div>
+
+<!-- SMART HSN POPUP MODAL FOR UNKNOWN ITEMS -->
+<div id="hsnConfirmModal">
+  <div class="modal-content" style="border-top-color: #d97706; text-align: left;">
+    <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 10px;">
+      <span style="font-size: 24px;">⚡</span>
+      <div style="font-size: 17px; font-weight: 900; color: #0f172a;">New / Unknown Item Detected</div>
+    </div>
+    <div style="font-size: 13px; color: #334155; line-height: 1.5; margin-bottom: 14px;">
+      Item: <b id="modalUnknownItemName" style="color: #b45309;"></b><br>
+      Is item ka standard HSN Code match nahi hua. Kya aap standard Electrical HSN <b>8538 (GST 18%)</b> use karna chahte hain?
+    </div>
+    <div style="display: flex; gap: 10px; margin-top: 14px;">
+      <button class="btn btn-green" onclick="confirmDefaultHsn(true)" style="padding: 10px; font-size: 13px;">
+        ✓ Yes, Use 8538
+      </button>
+      <button class="btn" onclick="confirmDefaultHsn(false)" style="background: #334155; padding: 10px; font-size: 13px;">
+        ✕ No, Manual Enter
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- SUCCESS SHARING MODAL POPUP -->
@@ -399,7 +421,7 @@
       <div class="row">
         <div class="col-wide">
           <label>Item / Service Name</label>
-          <input type="text" id="itemInput" placeholder="Search item or type Labour Charge..." autocomplete="off" oninput="filterItems('sale')" onclick="filterItems('sale')" onfocus="filterItems('sale')">
+          <input type="text" id="itemInput" placeholder="Search item or type Labour Charge..." autocomplete="off" oninput="filterItems('sale')" onclick="filterItems('sale')" onfocus="filterItems('sale')" onblur="handleItemBlur()">
           <div id="saleDropdown" class="autocomplete-list"></div>
           <div id="stockBadge" class="badge"></div>
         </div>
@@ -408,8 +430,8 @@
           <input type="text" id="serialInput" placeholder="e.g. Fan Fitting / SN1092">
         </div>
         <div class="col-small">
-          <label>HSN / SAC</label>
-          <input type="text" id="hsnInput" placeholder="e.g. 998519" class="field-locked">
+          <label id="hsnLabel">HSN / SAC</label>
+          <input type="text" id="hsnInput" placeholder="Auto" class="field-locked">
         </div>
       </div>
 
@@ -462,13 +484,13 @@
       <div class="row">
         <div class="col-wide">
           <label>Item Name</label>
-          <input type="text" id="pItemName" placeholder="Item name..." autocomplete="off" oninput="filterItems('purchase')" onclick="filterItems('purchase')" onfocus="filterItems('purchase')">
+          <input type="text" id="pItemName" placeholder="Item name..." autocomplete="off" oninput="filterItems('purchase')" onclick="filterItems('purchase')" onfocus="filterItems('purchase')" onblur="handlePurchaseItemBlur()">
           <div id="purchaseDropdown" class="autocomplete-list"></div>
           <div id="pCurrentStockInfo" class="badge"></div>
         </div>
         <div class="col">
           <label>HSN Code</label>
-          <input type="text" id="pHsn" placeholder="e.g. 8544">
+          <input type="text" id="pHsn" placeholder="Auto / Enter HSN">
         </div>
       </div>
 
@@ -514,6 +536,7 @@
   var selectedSaleItem = null;
   var cart = [];
   var lastResult = null;
+  var currentAutoGstPct = 18;
   const SESSION_TIMEOUT_MS = 24 * 60 * 60 * 1000;
   var deferredPrompt;
 
@@ -725,6 +748,65 @@
     return lower.includes("labour") || lower.includes("service") || lower.includes("charge") || lower.includes("repair") || lower.includes("fitting");
   }
 
+  // SMART ELECTRICAL HSN DETECTOR
+  function detectElectricalHsn(name) {
+    var l = (name || "").toLowerCase();
+    if (isServiceOrLabour(l)) return { hsn: "998519", gst: 18, known: true };
+    if (l.includes("wire") || l.includes("cable") || l.includes("copper") || l.includes("dori")) return { hsn: "8544", gst: 18, known: true };
+    if (l.includes("fan") || l.includes("cooler") || l.includes("exhaust")) return { hsn: "8414", gst: 18, known: true };
+    if (l.includes("switch") || l.includes("socket") || l.includes("mcb") || l.includes("isolator") || l.includes("plate") || l.includes("regulator") || l.includes("plug") || l.includes("top") || l.includes("starter")) return { hsn: "8536", gst: 18, known: true };
+    if (l.includes("bulb") || l.includes("led") || l.includes("batten") || l.includes("panel") || l.includes("light") || l.includes("tube") || l.includes("concealed")) return { hsn: "9405", gst: 18, known: true };
+    if (l.includes("pipe") || l.includes("casing") || l.includes("conduit") || l.includes("bend") || l.includes("tape") || l.includes("pvc")) return { hsn: "3917", gst: 18, known: true };
+    if (l.includes("meter") || l.includes("sub-meter") || l.includes("tester")) return { hsn: "9028", gst: 18, known: true };
+    if (l.includes("geyser") || l.includes("heater") || l.includes("iron") || l.includes("element") || l.includes("rod")) return { hsn: "8516", gst: 18, known: true };
+    
+    // Unknown item
+    return { hsn: "8538", gst: 18, known: false };
+  }
+
+  function handleItemBlur() {
+    var name = document.getElementById("itemInput").value.trim();
+    if (!name || selectedSaleItem) return;
+
+    var detection = detectElectricalHsn(name);
+    currentAutoGstPct = detection.gst;
+
+    if (detection.known) {
+      var hsnInput = document.getElementById("hsnInput");
+      hsnInput.value = detection.hsn;
+      hsnInput.className = "field-locked";
+      hsnInput.readOnly = true;
+    } else {
+      // Trigger Popup for Unknown Item
+      document.getElementById("modalUnknownItemName").innerText = name;
+      document.getElementById("hsnConfirmModal").style.display = "flex";
+    }
+  }
+
+  function handlePurchaseItemBlur() {
+    var name = document.getElementById("pItemName").value.trim();
+    var curHsn = document.getElementById("pHsn").value.trim();
+    if (!name || curHsn) return;
+    var detection = detectElectricalHsn(name);
+    document.getElementById("pHsn").value = detection.hsn;
+  }
+
+  function confirmDefaultHsn(useDefault) {
+    document.getElementById("hsnConfirmModal").style.display = "none";
+    var hsnInput = document.getElementById("hsnInput");
+    if (useDefault) {
+      hsnInput.value = "8538";
+      hsnInput.className = "field-locked";
+      hsnInput.readOnly = true;
+      currentAutoGstPct = 18;
+    } else {
+      hsnInput.value = "";
+      hsnInput.className = "field-unlocked";
+      hsnInput.readOnly = false;
+      hsnInput.focus();
+    }
+  }
+
   function filterItems(context) {
     var inputId = (context === 'sale') ? 'itemInput' : 'pItemName';
     var listId = (context === 'sale') ? 'saleDropdown' : 'purchaseDropdown';
@@ -764,7 +846,16 @@
   function selectSaleItem(item) {
     selectedSaleItem = item;
     document.getElementById("itemInput").value = item.name;
-    document.getElementById("hsnInput").value = item.hsn || (isServiceOrLabour(item.name) ? "998519" : "");
+    
+    var autoDet = detectElectricalHsn(item.name);
+    var finalHsn = item.hsn || autoDet.hsn;
+    currentAutoGstPct = item.gstPct || autoDet.gst;
+
+    var hsnInput = document.getElementById("hsnInput");
+    hsnInput.value = finalHsn;
+    hsnInput.className = "field-locked";
+    hsnInput.readOnly = true;
+
     var cat = document.getElementById("rateCategory").value;
     var r = item.custRate;
     if (cat === "Electrician") r = item.elecRate;
@@ -811,7 +902,7 @@
 
   function selectPurchaseItem(item) {
     document.getElementById("pItemName").value = item.name;
-    document.getElementById("pHsn").value = item.hsn;
+    document.getElementById("pHsn").value = item.hsn || detectElectricalHsn(item.name).hsn;
     document.getElementById("pCustRate").value = item.custRate;
     document.getElementById("pElecRate").value = item.elecRate;
     document.getElementById("pFamRate").value = item.famRate;
@@ -842,6 +933,11 @@
     var billMode = document.getElementById("billMode").value;
 
     if (!name) return alert("Item ya Service ka naam enter karein!");
+    if (!hsn) {
+      var det = detectElectricalHsn(name);
+      hsn = det.hsn;
+      currentAutoGstPct = det.gst;
+    }
     if (baseRate <= 0) return alert("Kripya sahi Rate / Charge enter karein!");
 
     var isLabour = isServiceOrLabour(name);
@@ -854,14 +950,18 @@
 
     var finalRate = Math.max(0, baseRate - disc);
     var total = finalRate * qty;
-    var gstPct = selectedSaleItem ? (selectedSaleItem.gstPct || 18) : 18;
+    var gstPct = selectedSaleItem ? (selectedSaleItem.gstPct || currentAutoGstPct) : currentAutoGstPct;
 
     cart.push({ name, serialNo, hsn, baseRate, discount: disc, finalRate, qty, total, gstPct });
     selectedSaleItem = null;
     
     document.getElementById("itemInput").value = "";
     document.getElementById("serialInput").value = "";
-    document.getElementById("hsnInput").value = "";
+    var hsnInput = document.getElementById("hsnInput");
+    hsnInput.value = "";
+    hsnInput.className = "field-locked";
+    hsnInput.readOnly = true;
+
     var rateInput = document.getElementById("rateInput");
     rateInput.value = "";
     rateInput.readOnly = true;
@@ -942,7 +1042,6 @@
         var isEst = (lastResult.billMode === "Estimate");
         var docType = isEst ? "Estimate Invoice" : "Invoice";
 
-        // Safe URL Encoded Symbols (100% Guaranteed No Question Mark Glitch)
         var docEmoji = "%F0%9F%93%84"; // 📄 Document icon
         var phoneEmoji = "%F0%9F%93%9E"; // 📞 Phone icon
 
@@ -987,7 +1086,10 @@
     document.getElementById("custGstin").value = "";
     document.getElementById("itemInput").value = "";
     document.getElementById("serialInput").value = "";
-    document.getElementById("hsnInput").value = "";
+    var hsnInput = document.getElementById("hsnInput");
+    hsnInput.value = "";
+    hsnInput.className = "field-locked";
+    hsnInput.readOnly = true;
     
     document.getElementById("billDate").value = getTodayDateString();
 
@@ -1016,9 +1118,14 @@
     btn.disabled = true;
     btn.innerText = "Updating Stock...";
 
+    var hsnVal = document.getElementById("pHsn").value.trim();
+    if (!hsnVal) {
+      hsnVal = detectElectricalHsn(name).hsn;
+    }
+
     var data = {
       name, qty,
-      hsn: document.getElementById("pHsn").value.trim(),
+      hsn: hsnVal,
       custRate: document.getElementById("pCustRate").value,
       elecRate: document.getElementById("pElecRate").value,
       famRate: document.getElementById("pFamRate").value,
