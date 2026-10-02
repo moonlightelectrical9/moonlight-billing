@@ -6,349 +6,470 @@
   <title>Moon Light Electricals - ERP & Billing</title>
   <style>
     :root {
-      --bg: #0b131e;
-      --card: #111c2a;
-      --border: #1e293b;
-      --text: #f8fafc;
-      --subtext: #94a3b8;
+      --bg: #070d17;
+      --card: #0f172a;
+      --card-border: #1e293b;
       --accent: #f59e0b;
+      --text: #ffffff;
+      --sub: #94a3b8;
       --success: #10b981;
       --danger: #ef4444;
-      --blue: #3b82f6;
+      --primary: #3b82f6;
     }
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 40px; min-height: 100vh; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 50px; min-height: 100vh; }
     
-    .header {
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 16px;
+    .navbar {
+      background: #09111e;
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 50;
     }
-    .brand { font-size: 17px; font-weight: 900; }
+    .brand { font-size: 19px; font-weight: 900; letter-spacing: 0.5px; }
     .brand span { color: var(--accent); }
-    
-    .header-actions { display: flex; align-items: center; gap: 8px; }
-    .btn-sync {
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .sync-btn {
       background: #1e293b;
       color: #38bdf8;
       border: 1px solid #334155;
-      padding: 6px 10px;
+      padding: 6px 12px;
       border-radius: 6px;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 700;
+      cursor: pointer;
+    }
+    .user-tag { background: #1e293b; border: 1px solid #334155; padding: 5px 12px; border-radius: 20px; font-size: 12px; color: var(--sub); }
+
+    .main-container { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+    
+    .tabs-header {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: #cbd5e1;
+      font-size: 14px;
+      font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
+      justify-content: center;
+      gap: 8px;
+      transition: 0.2s;
     }
-    .btn-sync:active { transform: scale(0.95); background: #334155; }
-    .user-pill { font-size: 11px; background: #1e293b; padding: 5px 9px; border-radius: 20px; color: var(--subtext); border: 1px solid var(--border); }
+    .tab-btn.active {
+      background: #1e293b;
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+    }
+
+    .box-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+    .sec-head {
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .grid-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .form-ctrl { display: flex; flex-direction: column; gap: 6px; }
+    .form-ctrl label { font-size: 12px; font-weight: 800; color: var(--sub); text-transform: uppercase; }
+    .form-ctrl label span { color: var(--danger); }
     
-    .container { max-width: 900px; margin: 16px auto; padding: 0 14px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
-    .card-title { font-size: 14.5px; font-weight: 800; color: var(--accent); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-    .form-group { display: flex; flex-direction: column; gap: 5px; }
-    label { font-size: 12px; font-weight: 700; color: var(--subtext); }
-    .req { color: var(--danger); }
-    input, select, textarea { background: #0b131e; border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 13.5px; outline: none; }
+    input, select, textarea {
+      background: #070d17;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 11px 13px;
+      color: #ffffff;
+      font-size: 13.5px;
+      outline: none;
+    }
     input:focus, select:focus { border-color: var(--accent); }
-    select option { background: #0b131e; color: #ffffff; }
+    select option { background: #0f172a; color: #ffffff; }
 
-    .btn { background: var(--accent); color: #000; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 800; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
-    .btn:active { transform: scale(0.98); }
-    .btn-blue { background: var(--blue); color: #fff; }
+    .btn-act {
+      background: var(--accent);
+      color: #070d17;
+      border: none;
+      padding: 11px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: 0.2s;
+    }
+    .btn-act:hover { opacity: 0.92; }
+    .btn-blue { background: var(--primary); color: #fff; }
     .btn-green { background: var(--success); color: #fff; }
-    .btn-red { background: var(--danger); color: #fff; }
+    .btn-del { background: var(--danger); color: #fff; padding: 5px 9px; font-size: 11.5px; border-radius: 4px; }
 
-    .item-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
-    .item-table th { background: #1e293b; padding: 10px 8px; text-align: left; color: var(--subtext); }
-    .item-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
+    .tbl-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 13.5px;
+    }
+    .tbl-table th {
+      background: #141f32;
+      color: var(--sub);
+      padding: 11px 10px;
+      text-align: left;
+      font-size: 11.5px;
+      font-weight: 900;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .tbl-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
 
-    .totals-box { margin-top: 16px; padding: 14px; background: #0b131e; border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .grand-total { font-size: 22px; font-weight: 900; color: var(--accent); }
+    .bill-summary {
+      background: #070d17;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+    }
+    .gt-text { font-size: 26px; font-weight: 900; color: var(--accent); }
 
-    /* Login Screen Modal */
-    #loginModal { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
-    .login-box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: 100%; max-width: 380px; text-align: center; }
-
-    .nav-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-    .nav-btn { flex: 1; padding: 9px; background: #1e293b; color: var(--subtext); border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 13px; }
-    .nav-btn.active { background: var(--accent); color: #000; }
+    /* Login Modal */
+    #authOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .auth-card {
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 🔒 LOGIN OVERLAY -->
-  <div id="loginModal" style="display: none;">
-    <div class="login-box">
-      <div class="brand" style="font-size: 20px; margin-bottom: 4px;">MOON<span>LIGHT</span> ELECTRICALS</div>
-      <div style="font-size: 11px; color: var(--accent); font-style: italic; margin-bottom: 18px;">Brightening Lives, Powering Trust</div>
-      
-      <div id="stepPhone">
-        <label style="display:block; text-align:left; margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
-        <input type="tel" id="loginPhone" placeholder="Enter 10-digit number" style="width: 100%; margin-bottom: 12px; font-size: 16px;">
-        <div id="loginErr" style="color: var(--danger); font-size: 12px; margin-bottom: 10px; display: none;"></div>
-        <button class="btn" id="sendOtpBtn" onclick="sendOtp()" style="width: 100%;">📲 SEND OTP ON WHATSAPP</button>
+  <!-- 🔒 AUTHENTICATION MODAL -->
+  <div id="authOverlay" style="display: none;">
+    <div class="auth-card">
+      <div class="brand" style="font-size: 22px;">MOON<span>LIGHT</span> ELECTRICALS</div>
+      <div style="font-size: 11.5px; color: var(--accent); font-style: italic; margin-top: 3px; margin-bottom: 22px;">Brightening Lives, Powering Trust</div>
+
+      <div id="stepNum">
+        <label style="display:block; text-align:left; font-size:11px; font-weight:900; color:var(--sub); margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
+        <input type="tel" id="userPhoneInput" placeholder="Enter 10-digit number" style="width: 100%; margin-bottom: 14px; font-size: 16px;">
+        <div id="authErrMsg" style="color: var(--danger); font-size: 12px; margin-bottom: 12px; display: none;"></div>
+        <button class="btn-act" id="btnRequestOtp" onclick="handleSendOtp()" style="width: 100%;">📲 SEND OTP ON WHATSAPP</button>
       </div>
 
-      <div id="stepOtp" style="display: none;">
-        <div style="font-size: 12px; color: var(--subtext); margin-bottom: 10px;">
-          OTP sent for: <b id="displaySentPhone" style="color: #fff;"></b>
-        </div>
-        <input type="number" id="loginOtpInput" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 18px; text-align:center;">
-        <button class="btn btn-green" onclick="verifyOtp()" style="width: 100%; margin-bottom: 8px;">VERIFY & LOGIN</button>
-        <div style="margin-top: 10px;">
-          <a id="waDirectBtn" href="#" target="_blank" style="font-size: 11px; color: var(--accent); text-decoration: underline;">Open WhatsApp chat for OTP</a>
+      <div id="stepCode" style="display: none;">
+        <div style="font-size: 12px; color: var(--sub); margin-bottom: 12px;">OTP sent for: <b id="lblSentPhone" style="color:#fff;"></b></div>
+        <input type="number" id="userOtpInput" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 14px; font-size: 20px; text-align: center; letter-spacing: 4px;">
+        <button class="btn-act btn-green" onclick="handleVerifyOtp()" style="width: 100%; margin-bottom: 12px;">VERIFY & LOGIN</button>
+        <div>
+          <a id="lnkDirectWa" href="#" target="_blank" style="font-size: 11.5px; color: var(--accent); text-decoration: underline;">Direct open WhatsApp for OTP</a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 🏠 TOP NAVBAR WITH REFRESH BUTTON -->
-  <div class="header">
+  <!-- 🏠 HEADER NAVIGATION -->
+  <div class="navbar">
     <div class="brand">MOON<span>LIGHT</span> ELECTRICALS</div>
-    <div class="header-actions">
-      <button class="btn-sync" id="btnSync" onclick="manualSyncItems()" title="Refresh Sheet Inventory">
-        🔄 Refresh
-      </button>
-      <div id="userDisplay" class="user-pill">Session...</div>
+    <div class="nav-right">
+      <button class="sync-btn" id="btnSync" onclick="refreshInventoryData()">🔄 Syncing...</button>
+      <div class="user-tag" id="lblUserHeader">Varun Sharma (Owner) (Admin)</div>
     </div>
   </div>
 
-  <div class="container">
-    <div class="nav-tabs">
-      <button class="nav-btn active" onclick="switchTab('billing')">🧾 Create Bill</button>
-      <button class="nav-btn" id="khataTabBtn" onclick="switchTab('khata')">📒 Udhar Khata</button>
-      <button class="nav-btn" id="stockTabBtn" onclick="switchTab('stock')">📦 Inventory</button>
+  <div class="main-container">
+    <!-- NAVIGATION TABS -->
+    <div class="tabs-header">
+      <button class="tab-btn active" id="tabBillingBtn" onclick="switchMainTab('billing')">📜 Create Bill</button>
+      <button class="tab-btn" id="tabKhataBtn" onclick="switchMainTab('khata')">📒 Udhar Khata</button>
+      <button class="tab-btn" id="tabInventoryBtn" onclick="switchMainTab('inventory')">📦 Inventory</button>
     </div>
 
-    <!-- 🧾 BILLING VIEW -->
-    <div id="viewBilling">
-      <div class="card">
-        <div class="card-title">1. Customer & Bill Information</div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Customer Name <span class="req">*</span></label>
-            <input type="text" id="custName" placeholder="e.g. Ramesh Kumar">
+    <!-- 🧾 BILLING WORKSPACE -->
+    <div id="tabBillingView">
+      <div class="box-card">
+        <div class="sec-head">1. Customer & Bill Information</div>
+        <div class="grid-row">
+          <!-- Date Picker (Today Date Default + Changeable) -->
+          <div class="form-ctrl">
+            <label>Bill Date <span>*</span></label>
+            <input type="date" id="billDateInput">
           </div>
-          <div class="form-group">
+
+          <!-- Customer Name (Forced Blank) -->
+          <div class="form-ctrl">
+            <label>Customer Name <span>*</span></label>
+            <input type="text" id="custNameInput" placeholder="Enter customer name">
+          </div>
+
+          <div class="form-ctrl">
             <label>Mobile Number</label>
-            <input type="tel" id="custPhone" placeholder="10-digit number">
+            <input type="tel" id="custPhoneInput" placeholder="10-digit number">
           </div>
-          <div class="form-group">
-            <label>Rate Type <span class="req">*</span></label>
-            <select id="rateType" onchange="onRateTypeChange()">
+
+          <!-- Rate Type (Forced Blank Select) -->
+          <div class="form-ctrl">
+            <label>Rate Type <span>*</span></label>
+            <select id="rateTypeSelect" onchange="applyRateTypeToForm()">
               <option value="" disabled selected>-- Select Rate Type --</option>
               <option value="Customer">Normal Customer</option>
               <option value="Electrician">Electrician Rate</option>
               <option value="Wholesale">Wholesale / Special</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Payment Mode <span class="req">*</span></label>
-            <select id="payMode">
+
+          <!-- Payment Mode (Forced Blank Select) -->
+          <div class="form-ctrl">
+            <label>Payment Mode <span>*</span></label>
+            <select id="paymentModeSelect">
               <option value="" disabled selected>-- Select Payment Mode --</option>
               <option value="Cash">Cash</option>
               <option value="UPI / Online">UPI / Online</option>
               <option value="Credit / Udhar">Credit / Udhar</option>
             </select>
           </div>
-          <div class="form-group">
+
+          <div class="form-ctrl">
             <label>Document Type</label>
-            <select id="billMode">
+            <select id="docTypeSelect">
               <option value="Invoice">Retail Invoice</option>
               <option value="Estimate">Quotation / Estimate</option>
             </select>
           </div>
-          <div class="form-group">
+
+          <div class="form-ctrl" style="grid-column: span 2;">
             <label>Address</label>
-            <input type="text" id="custAddr" value="Sector-121, Noida">
+            <input type="text" id="custAddressInput" value="Sector-121, Noida">
           </div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-title">2. Add Items</div>
-        <div class="form-grid">
-          <div class="form-group" style="grid-column: span 2;">
-            <label>Select Item / Service</label>
-            <input list="itemsList" id="itemSearch" placeholder="Type item name..." onchange="onItemSelect()">
-            <datalist id="itemsList"></datalist>
+      <div class="box-card">
+        <div class="sec-head">2. Add Items</div>
+        <div class="grid-row">
+          <div class="form-ctrl" style="grid-column: span 2;">
+            <label>Search & Select Item</label>
+            <input list="dlItems" id="itemSearchInput" placeholder="Start typing item..." onchange="handleItemSelect()">
+            <datalist id="dlItems"></datalist>
           </div>
-          <div class="form-group">
+          <div class="form-ctrl">
             <label>Rate (₹)</label>
-            <input type="number" id="itemRate" value="0">
+            <input type="number" id="itemRateInput" value="0">
           </div>
-          <div class="form-group">
+          <div class="form-ctrl">
             <label>Quantity</label>
-            <input type="number" id="itemQty" value="1" min="1">
+            <input type="number" id="itemQtyInput" value="1" min="1">
           </div>
-          <div class="form-group">
-            <label>Serial / Note</label>
-            <input type="text" id="itemSerial" placeholder="Optional">
+          <div class="form-ctrl" style="grid-column: span 2;">
+            <label>Serial Number / Warranty Note</label>
+            <input type="text" id="itemSerialInput" placeholder="Optional note or serial number">
           </div>
         </div>
-        <button class="btn btn-blue" onclick="addItemToTable()" style="margin-top: 14px; width: 100%;">+ Add Item To Bill</button>
 
-        <table class="item-table" id="billTable">
+        <button class="btn-act btn-blue" onclick="addItemToCurrentBill()" style="margin-top: 16px; width: 100%;">
+          + Add Item To Bill
+        </button>
+
+        <table class="tbl-table">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Item</th>
-              <th>Rate</th>
-              <th>Qty</th>
-              <th>Total</th>
-              <th>Action</th>
+              <th style="width: 35px;">#</th>
+              <th>Description</th>
+              <th style="width: 100px;">Rate</th>
+              <th style="width: 60px;">Qty</th>
+              <th style="width: 110px;">Total</th>
+              <th style="width: 45px;"></th>
             </tr>
           </thead>
-          <tbody id="billBody"></tbody>
+          <tbody id="billItemsBody"></tbody>
         </table>
 
-        <div class="totals-box">
+        <div class="bill-summary">
           <div>
-            <div style="font-size: 11px; color: var(--subtext); text-transform: uppercase;">Total Items</div>
-            <div id="totalItemsCount" style="font-weight: 800; font-size: 16px;">0</div>
+            <div style="font-size: 11px; color: var(--sub); text-transform: uppercase; font-weight: 800;">Total Items</div>
+            <div id="lblTotalItems" style="font-size: 18px; font-weight: 900; margin-top: 2px;">0</div>
           </div>
           <div style="text-align: right;">
-            <div style="font-size: 11px; color: var(--subtext); text-transform: uppercase;">Grand Total</div>
-            <div class="grand-total" id="grandTotalDisplay">₹0.00</div>
+            <div style="font-size: 11px; color: var(--sub); text-transform: uppercase; font-weight: 800;">Grand Total</div>
+            <div class="gt-text" id="lblGrandTotal">₹0.00</div>
           </div>
         </div>
 
-        <button class="btn btn-green" id="btnSubmitBill" onclick="validateAndSaveBill()" style="margin-top: 16px; width: 100%; padding: 14px; font-size: 16px;">
+        <button class="btn-act btn-green" id="btnSubmitBillDoc" onclick="handleGenerateInvoice()" style="margin-top: 20px; width: 100%; padding: 15px; font-size: 16px;">
           ⚡ GENERATE & PRINT INVOICE
         </button>
       </div>
     </div>
 
-    <!-- 📒 UDHAR VIEW -->
-    <div id="viewKhata" style="display: none;">
-      <div class="card">
-        <div class="card-title">Pending Udhar Records</div>
-        <div id="khataList" style="font-size: 13px;">Loading...</div>
+    <!-- 📒 UDHAR KHATA VIEW -->
+    <div id="tabKhataView" style="display: none;">
+      <div class="box-card">
+        <div class="sec-head">Pending Udhar Records</div>
+        <div id="khataContainer">Loading...</div>
       </div>
     </div>
 
-    <!-- 📦 STOCK VIEW -->
-    <div id="viewStock" style="display: none;">
-      <div class="card">
-        <div class="card-title">Inventory Stock Update</div>
-        <div class="form-grid">
-          <div class="form-group">
+    <!-- 📦 INVENTORY VIEW -->
+    <div id="tabInventoryView" style="display: none;">
+      <div class="box-card">
+        <div class="sec-head">Update Inventory Stock</div>
+        <div class="grid-row">
+          <div class="form-ctrl">
             <label>Item Name</label>
-            <input type="text" id="newStockName">
+            <input type="text" id="txtStockName">
           </div>
-          <div class="form-group">
-            <label>Add Qty</label>
-            <input type="number" id="newStockQty" value="10">
+          <div class="form-ctrl">
+            <label>Quantity to Add</label>
+            <input type="number" id="txtStockQty" value="10">
           </div>
         </div>
-        <button class="btn btn-blue" onclick="saveStock()" style="margin-top: 12px;">Update Stock</button>
+        <button class="btn-act btn-blue" onclick="handleStockSave()" style="margin-top: 14px;">+ Update Stock</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ⚙️ EXACT DEPLOYED GOOGLE APPS SCRIPT URL
+    // ⚙️ LIVE APPS SCRIPT ENDPOINT
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
 
-    let currentUser = JSON.parse(localStorage.getItem("mle_user")) || null;
-    let cachedItems = JSON.parse(localStorage.getItem("mle_items")) || [];
-    let billItems = [];
+    let activeUser = JSON.parse(localStorage.getItem("mle_user")) || null;
+    let localInventory = JSON.parse(localStorage.getItem("mle_items")) || [];
+    let currentCart = [];
 
     window.onload = function() {
-      if (!currentUser) {
-        document.getElementById("loginModal").style.display = "flex";
+      // Set Today's Date on Date Picker
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      document.getElementById("billDateInput").value = `${yyyy}-${mm}-${dd}`;
+
+      if (!activeUser) {
+        document.getElementById("authOverlay").style.display = "flex";
       } else {
-        initApp();
+        bootstrapApp();
       }
     };
 
-    function initApp() {
-      document.getElementById("userDisplay").innerText = currentUser.name + " (" + currentUser.role + ")";
-      if (currentUser.role !== "Admin") {
-        document.getElementById("khataTabBtn").style.display = "none";
-        document.getElementById("stockTabBtn").style.display = "none";
+    function bootstrapApp() {
+      document.getElementById("lblUserHeader").innerText = `${activeUser.name} (${activeUser.role})`;
+      if (activeUser.role !== "Admin") {
+        document.getElementById("tabKhataBtn").style.display = "none";
+        document.getElementById("tabInventoryBtn").style.display = "none";
       }
-      populateItemsDropdown(cachedItems);
-      fetchAppData();
+      populateDatalist(localInventory);
+      refreshInventoryData();
     }
 
-    // ⚡ 100% CORS-COMPLIANT API CALL (BYPASSES BROWSER NETWORK ERRORS)
-    async function apiCall(action, data = {}) {
-      data.action = action;
-      try {
-        const res = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: JSON.stringify(data)
-        });
-        const text = await res.text();
-        return JSON.parse(text);
-      } catch (err) {
-        console.error("API Error:", err);
-        throw err;
-      }
+    // CORS-Safe Backend API Trigger
+    async function postBackend(action, payload = {}) {
+      payload.action = action;
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      const rawText = await res.text();
+      return JSON.parse(rawText);
     }
 
-    // ⚡ MANUAL SYNC / FRESH REFRESH BUTTON
-    async function manualSyncItems() {
+    // ⚡ Fast Background Data Sync
+    async function refreshInventoryData() {
       const syncBtn = document.getElementById("btnSync");
       syncBtn.innerText = "⏳ Syncing...";
-      syncBtn.disabled = true;
-
       try {
-        const res = await apiCall("getAppData", { role: (currentUser ? currentUser.role : "Staff") });
+        const res = await postBackend("getAppData", { role: activeUser ? activeUser.role : "Staff" });
         if (res && res.items) {
-          cachedItems = res.items;
+          localInventory = res.items;
           localStorage.setItem("mle_items", JSON.stringify(res.items));
-          populateItemsDropdown(res.items);
-          syncBtn.innerText = "✓ Updated!";
-        } else {
-          syncBtn.innerText = "🔄 Refresh";
+          populateDatalist(res.items);
+          syncBtn.innerText = "✓ Synced";
         }
       } catch(e) {
-        syncBtn.innerText = "⚠ Failed";
+        syncBtn.innerText = "🔄 Sync";
       }
-
-      setTimeout(() => {
-        syncBtn.innerText = "🔄 Refresh";
-        syncBtn.disabled = false;
-      }, 1800);
+      setTimeout(() => { syncBtn.innerText = "🔄 Sync"; }, 2000);
     }
 
-    // ⚡ LOGIN FLOW
-    async function sendOtp() {
-      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
-      const err = document.getElementById("loginErr");
-      const btn = document.getElementById("sendOtpBtn");
+    function populateDatalist(items) {
+      const dl = document.getElementById("dlItems");
+      dl.innerHTML = "";
+      items.forEach(it => {
+        const opt = document.createElement("option");
+        opt.value = it.name;
+        dl.appendChild(opt);
+      });
+    }
+
+    // ⚡ OTP Login Handlers
+    async function handleSendOtp() {
+      const phone = document.getElementById("userPhoneInput").value.trim().replace(/\D/g, '');
+      const err = document.getElementById("authErrMsg");
+      const btn = document.getElementById("btnRequestOtp");
+
       if (phone.length !== 10) {
-        err.innerText = "10-digit mobile number bharein!";
+        err.innerText = "10-digit mobile number enter karein!";
         err.style.display = "block";
         return;
       }
       err.style.display = "none";
       btn.disabled = true;
       btn.innerText = "Generating OTP...";
+
       try {
-        const res = await apiCall("requestLoginOtp", { phone: phone });
+        const res = await postBackend("requestLoginOtp", { phone: phone });
         btn.disabled = false;
         btn.innerText = "📲 SEND OTP ON WHATSAPP";
         if (res && res.success) {
-          document.getElementById("stepPhone").style.display = "none";
-          document.getElementById("stepOtp").style.display = "block";
-          document.getElementById("displaySentPhone").innerText = res.phone + " (" + res.name + ")";
-          document.getElementById("waDirectBtn").href = res.waUrl;
+          document.getElementById("stepNum").style.display = "none";
+          document.getElementById("stepCode").style.display = "block";
+          document.getElementById("lblSentPhone").innerText = `${res.phone} (${res.name})`;
+          document.getElementById("lnkDirectWa").href = res.waUrl;
           window.open(res.waUrl, '_blank');
         } else {
           err.innerText = res.message || "Unauthorized Mobile Number!";
@@ -362,187 +483,188 @@
       }
     }
 
-    async function verifyOtp() {
-      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
-      const otp = document.getElementById("loginOtpInput").value.trim();
-      const res = await apiCall("verifyLoginOtp", { phone: phone, otp: otp });
+    async function handleVerifyOtp() {
+      const phone = document.getElementById("userPhoneInput").value.trim().replace(/\D/g, '');
+      const otp = document.getElementById("userOtpInput").value.trim();
+      const res = await postBackend("verifyLoginOtp", { phone: phone, otp: otp });
       if (res && res.success) {
-        currentUser = res;
+        activeUser = res;
         localStorage.setItem("mle_user", JSON.stringify(res));
-        document.getElementById("loginModal").style.display = "none";
-        initApp();
+        document.getElementById("authOverlay").style.display = "none";
+        bootstrapApp();
       } else {
-        alert(res.message || "Galat OTP!");
+        alert(res.message || "Invalid OTP!");
       }
     }
 
-    async function fetchAppData() {
-      try {
-        const res = await apiCall("getAppData", { role: currentUser.role });
-        if (res && res.items) {
-          cachedItems = res.items;
-          localStorage.setItem("mle_items", JSON.stringify(res.items));
-          populateItemsDropdown(res.items);
-        }
-      } catch(e) {}
-    }
-
-    function populateItemsDropdown(items) {
-      const list = document.getElementById("itemsList");
-      list.innerHTML = "";
-      items.forEach(it => {
-        const opt = document.createElement("option");
-        opt.value = it.name;
-        list.appendChild(opt);
-      });
-    }
-
-    function onItemSelect() {
-      const name = document.getElementById("itemSearch").value.trim();
-      const rateType = document.getElementById("rateType").value || "Customer";
-      const item = cachedItems.find(x => x.name.toLowerCase() === name.toLowerCase());
-      if (item) {
-        let r = item.custRate;
-        if (rateType === "Electrician") r = item.elecRate;
-        if (rateType === "Wholesale" && item.famRate) r = item.famRate;
-        document.getElementById("itemRate").value = r;
+    // ⚡ Item Selection & Dynamic Rates
+    function handleItemSelect() {
+      const itemName = document.getElementById("itemSearchInput").value.trim();
+      const rateType = document.getElementById("rateTypeSelect").value;
+      const match = localInventory.find(x => x.name.toLowerCase() === itemName.toLowerCase());
+      if (match) {
+        let r = match.custRate;
+        if (rateType === "Electrician") r = match.elecRate;
+        if (rateType === "Wholesale" && match.famRate) r = match.famRate;
+        document.getElementById("itemRateInput").value = r;
       }
     }
 
-    function onRateTypeChange() {
-      onItemSelect();
+    function applyRateTypeToForm() {
+      handleItemSelect();
     }
 
-    function addItemToTable() {
-      const name = document.getElementById("itemSearch").value.trim();
-      const rate = parseFloat(document.getElementById("itemRate").value) || 0;
-      const qty = parseInt(document.getElementById("itemQty").value) || 1;
-      const serial = document.getElementById("itemSerial").value.trim();
+    // ⚡ Add Item to Table
+    function addItemToCurrentBill() {
+      const name = document.getElementById("itemSearchInput").value.trim();
+      const rate = parseFloat(document.getElementById("itemRateInput").value) || 0;
+      const qty = parseInt(document.getElementById("itemQtyInput").value) || 1;
+      const serial = document.getElementById("itemSerialInput").value.trim();
 
       if (!name) { alert("⚠️ Kripya item select karein!"); return; }
       if (rate <= 0) { alert("⚠️ Rate zero se zyada hona chahiye!"); return; }
 
       const total = rate * qty;
-      billItems.push({ name, rate, baseRate: rate, finalRate: rate, qty, discount: 0, serialNo: serial, total });
-      renderBillTable();
+      currentCart.push({ name, rate, baseRate: rate, finalRate: rate, qty, discount: 0, serialNo: serial, total });
+      renderCartTable();
 
-      document.getElementById("itemSearch").value = "";
-      document.getElementById("itemRate").value = "0";
-      document.getElementById("itemQty").value = "1";
-      document.getElementById("itemSerial").value = "";
+      document.getElementById("itemSearchInput").value = "";
+      document.getElementById("itemRateInput").value = "0";
+      document.getElementById("itemQtyInput").value = "1";
+      document.getElementById("itemSerialInput").value = "";
     }
 
-    function renderBillTable() {
-      const tbody = document.getElementById("billBody");
+    function renderCartTable() {
+      const tbody = document.getElementById("billItemsBody");
       tbody.innerHTML = "";
-      let grand = 0;
-      billItems.forEach((it, idx) => {
-        grand += it.total;
+      let totalSum = 0;
+      currentCart.forEach((it, idx) => {
+        totalSum += it.total;
         tbody.innerHTML += `
           <tr>
             <td>${idx + 1}</td>
-            <td><b>${it.name}</b> ${it.serialNo ? `<br><small style="color:var(--accent)">SN: ${it.serialNo}</small>` : ''}</td>
+            <td><b>${it.name}</b> ${it.serialNo ? `<br><small style="color:var(--accent);">Note: ${it.serialNo}</small>` : ''}</td>
             <td>₹${it.rate.toFixed(2)}</td>
             <td>${it.qty}</td>
             <td>₹${it.total.toFixed(2)}</td>
-            <td><button class="btn btn-red" style="padding:4px 8px; font-size:11px;" onclick="removeItem(${idx})">X</button></td>
+            <td><button class="btn-del" onclick="deleteCartRow(${idx})">✕</button></td>
           </tr>
         `;
       });
-      document.getElementById("totalItemsCount").innerText = billItems.length;
-      document.getElementById("grandTotalDisplay").innerText = "₹" + grand.toFixed(2);
+      document.getElementById("lblTotalItems").innerText = currentCart.length;
+      document.getElementById("lblGrandTotal").innerText = `₹${totalSum.toFixed(2)}`;
     }
 
-    function removeItem(idx) {
-      billItems.splice(idx, 1);
-      renderBillTable();
+    function deleteCartRow(idx) {
+      currentCart.splice(idx, 1);
+      renderCartTable();
     }
 
-    async function validateAndSaveBill() {
-      const custName = document.getElementById("custName").value.trim();
-      const rateType = document.getElementById("rateType").value;
-      const payMode = document.getElementById("payMode").value;
+    // ⚡ Bill Save with Mandatory Field Checks
+    async function handleGenerateInvoice() {
+      const custName = document.getElementById("custNameInput").value.trim();
+      const rateType = document.getElementById("rateTypeSelect").value;
+      const paymentMode = document.getElementById("paymentModeSelect").value;
 
+      // Force Validations
       if (!custName) {
         alert("⚠️ Galti: Kripya Customer ka Naam enter karein!");
-        document.getElementById("custName").focus();
+        document.getElementById("custNameInput").focus();
         return;
       }
       if (!rateType) {
-        alert("⚠️ Galti: Kripya Rate Type select karein!");
-        document.getElementById("rateType").focus();
+        alert("⚠️ Galti: Kripya Rate Type (Customer/Electrician) select karein!");
+        document.getElementById("rateTypeSelect").focus();
         return;
       }
-      if (!payMode) {
-        alert("⚠️ Galti: Kripya Payment Mode (Cash / UPI / Udhar) select karein!");
-        document.getElementById("payMode").focus();
+      if (!paymentMode) {
+        alert("⚠️ Galti: Kripya Payment Mode (Cash/UPI/Udhar) select karein!");
+        document.getElementById("paymentModeSelect").focus();
         return;
       }
-      if (billItems.length === 0) {
+      if (currentCart.length === 0) {
         alert("⚠️ Galti: Bill me kam se kam 1 item zaroor add karein!");
         return;
       }
 
-      const btn = document.getElementById("btnSubmitBill");
+      const btn = document.getElementById("btnSubmitBillDoc");
       btn.disabled = true;
-      btn.innerText = "⏳ Saving Bill & Generating PDF...";
+      btn.innerText = "⏳ Generating Invoice PDF...";
+
+      // Format clean date from input
+      const rawDate = document.getElementById("billDateInput").value;
+      let cleanDate = "";
+      if (rawDate) {
+        const parts = rawDate.split("-");
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        cleanDate = `${parts[2]}-${months[parseInt(parts[1])-1]}-${parts[0]}`;
+      }
 
       const payload = {
         customerName: custName,
-        phone: document.getElementById("custPhone").value.trim(),
-        address: document.getElementById("custAddr").value.trim(),
-        paymentMode: payMode,
-        billMode: document.getElementById("billMode").value,
-        items: billItems,
-        grandTotal: billItems.reduce((acc, curr) => acc + curr.total, 0)
+        phone: document.getElementById("custPhoneInput").value.trim(),
+        address: document.getElementById("custAddressInput").value.trim(),
+        paymentMode: paymentMode,
+        billMode: document.getElementById("docTypeSelect").value,
+        billDate: cleanDate,
+        rawDateInput: rawDate,
+        items: currentCart,
+        grandTotal: currentCart.reduce((acc, c) => acc + c.total, 0)
       };
 
       try {
-        const res = await apiCall("processBillOrEstimate", payload);
+        const res = await postBackend("processBillOrEstimate", payload);
         btn.disabled = false;
         btn.innerText = "⚡ GENERATE & PRINT INVOICE";
 
         if (res && res.success) {
-          alert("✓ Bill Generated Successfully! Doc No: " + res.docNo);
+          alert(`✓ Invoice Generated! Doc No: ${res.docNo}`);
           if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
-          
-          billItems = [];
-          renderBillTable();
-          document.getElementById("custName").value = "";
-          document.getElementById("custPhone").value = "";
-          document.getElementById("rateType").selectedIndex = 0;
-          document.getElementById("payMode").selectedIndex = 0;
+
+          // Reset fields to blank
+          currentCart = [];
+          renderCartTable();
+          document.getElementById("custNameInput").value = "";
+          document.getElementById("custPhoneInput").value = "";
+          document.getElementById("rateTypeSelect").selectedIndex = 0;
+          document.getElementById("paymentModeSelect").selectedIndex = 0;
         } else {
-          alert("Error: " + (res.message || "Failed to save bill"));
+          alert("Error: " + (res.message || "Failed to generate bill"));
         }
       } catch(e) {
         btn.disabled = false;
         btn.innerText = "⚡ GENERATE & PRINT INVOICE";
-        alert("Server error. Please retry!");
+        alert("Server communication error. Please retry!");
       }
     }
 
-    function switchTab(tab) {
-      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
-      document.getElementById("viewBilling").style.display = (tab === 'billing') ? 'block' : 'none';
-      document.getElementById("viewKhata").style.display = (tab === 'khata') ? 'block' : 'none';
-      document.getElementById("viewStock").style.display = (tab === 'stock') ? 'block' : 'none';
-      
-      if (tab === 'khata') loadKhata();
+    // ⚡ Tab Switcher
+    function switchMainTab(tab) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("tabBillingView").style.display = (tab === 'billing') ? 'block' : 'none';
+      document.getElementById("tabKhataView").style.display = (tab === 'khata') ? 'block' : 'none';
+      document.getElementById("tabInventoryView").style.display = (tab === 'inventory') ? 'block' : 'none';
+
+      if (tab === 'billing') document.getElementById("tabBillingBtn").classList.add("active");
+      if (tab === 'khata') {
+        document.getElementById("tabKhataBtn").classList.add("active");
+        renderKhataView();
+      }
+      if (tab === 'inventory') document.getElementById("tabInventoryBtn").classList.add("active");
     }
 
-    async function loadKhata() {
-      const el = document.getElementById("khataList");
-      el.innerHTML = "Fetching pending records...";
-      const res = await apiCall("getKhataRecords", { role: currentUser.role });
+    async function renderKhataView() {
+      const container = document.getElementById("khataContainer");
+      container.innerHTML = "Fetching pending udhar records...";
+      const res = await postBackend("getKhataRecords", { role: activeUser.role });
       if (res && res.records) {
-        if (res.records.length === 0) { el.innerHTML = "No pending records!"; return; }
-        let html = '<table class="item-table"><thead><tr><th>Doc No</th><th>Date</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead><tbody>';
+        if (res.records.length === 0) { container.innerHTML = "No pending records!"; return; }
+        let html = '<table class="tbl-table"><thead><tr><th>Doc No</th><th>Date</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead><tbody>';
         res.records.forEach(r => {
           html += `<tr><td>${r.docNo}</td><td>${r.date}</td><td>${r.customerName}</td><td>₹${r.amount}</td><td><b style="color:${r.status==='Paid'?'#10b981':'#f59e0b'}">${r.status}</b></td></tr>`;
         });
         html += '</tbody></table>';
-        el.innerHTML = html;
+        container.innerHTML = html;
       }
     }
   </script>
