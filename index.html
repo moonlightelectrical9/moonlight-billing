@@ -333,11 +333,11 @@
       margin-top: 10px;
     }
 
-    /* 🔒 100% Solid Opacity Login Overlay (No Background Leak) */
+    /* 🔒 Solid Opacity Authentication Overlay */
     #authOverlay {
       position: fixed;
       inset: 0;
-      background: #0f172a; /* 100% Solid Background */
+      background: #0f172a;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -358,7 +358,7 @@
 </head>
 <body>
 
-  <!-- 🔒 100% SOLID AUTHENTICATION SCREEN -->
+  <!-- 🔒 AUTHENTICATION SCREEN -->
   <div id="authOverlay" style="display: flex;">
     <div class="auth-box">
       <div class="brand-title" style="font-size: 20px;">MOON<span>LIGHT</span> ELECTRICALS</div>
@@ -382,7 +382,7 @@
     </div>
   </div>
 
-  <!-- 🏠 MAIN APPLICATION CONTAINER (Initially Hidden Until Login) -->
+  <!-- 🏠 MAIN APPLICATION CONTAINER -->
   <div class="container" id="mainAppWrapper" style="display: none;">
     <!-- Top Nav with View Tabs, 24H Timer, PWA Install, Refresh & Logout -->
     <div class="top-nav">
@@ -649,13 +649,13 @@
       const dd = String(now.getDate()).padStart(2, '0');
       document.getElementById("billDate").value = `${yyyy}-${mm}-${dd}`;
 
-      // 🔒 Complete Hide/Show Logic
+      // Solid Overlay Login Verification
       if (!currentUser) {
         document.getElementById("authOverlay").style.display = "flex";
-        document.getElementById("mainAppWrapper").style.display = "none"; // Hide completely
+        document.getElementById("mainAppWrapper").style.display = "none";
       } else {
         document.getElementById("authOverlay").style.display = "none";
-        document.getElementById("mainAppWrapper").style.display = "block"; // Show only on login
+        document.getElementById("mainAppWrapper").style.display = "block";
         initSession();
       }
 
@@ -664,7 +664,7 @@
       }
     };
 
-    // Outside Click for Dropdowns
+    // Close Dropdowns on Click Outside
     document.addEventListener("click", function(e) {
       if (!e.target.closest("#itemSearch") && !e.target.closest("#billingItemMenu")) {
         document.getElementById("billingItemMenu").style.display = "none";
@@ -723,8 +723,8 @@
       localStorage.removeItem("mle_user");
       localStorage.removeItem("mle_login_time");
       currentUser = null;
-      document.getElementById("mainAppWrapper").style.display = "none"; // Hide completely
-      document.getElementById("authOverlay").style.display = "flex";    // Solid Overlay
+      document.getElementById("mainAppWrapper").style.display = "none";
+      document.getElementById("authOverlay").style.display = "flex";
       document.getElementById("stepPhone").style.display = "block";
       document.getElementById("stepOtp").style.display = "none";
       document.getElementById("loginPhone").value = "";
@@ -770,27 +770,75 @@
       }, 1500);
     }
 
+    // ⚡ 60+ EXPANDED ELECTRICAL HSN DICTIONARY (MATCHES INDICATOR, ROMA, ANCHOR ETC.)
     function detectHsnFromName(name) {
       var n = name.toLowerCase().trim();
       if (!n) return "";
-      if (n.includes("labour") || n.includes("service") || n.includes("repair") || n.includes("fitting") || n.includes("charge")) return "998519";
-      if (n.includes("fan") || n.includes("exhaust")) return "8414";
-      if (n.includes("wire") || n.includes("cable") || n.includes("cord")) return "8544";
-      if (n.includes("switch") || n.includes("socket") || n.includes("mcb") || n.includes("rccb") || n.includes("plug") || n.includes("holder") || n.includes("fuse")) return "8536";
-      if (n.includes("board") || n.includes("box") || n.includes("sheet") || n.includes("plate") || n.includes("panel")) return "8538";
-      if (n.includes("led") || n.includes("bulb") || n.includes("tube") || n.includes("light") || n.includes("lamp") || n.includes("batten")) return "8539";
-      if (n.includes("iron") || n.includes("press") || n.includes("geyser") || n.includes("heater") || n.includes("element") || n.includes("rod")) return "8516";
-      if (n.includes("tape")) return "3919";
-      if (n.includes("pipe") || n.includes("casing") || n.includes("pvc")) return "3917";
-      return "";
+
+      // 1. Labour / Service Charges
+      if (n.includes("labour") || n.includes("service") || n.includes("repair") || n.includes("fitting") || n.includes("charge") || n.includes("installation")) {
+        return "998519";
+      }
+
+      // 2. Fans & Air Flow (8414)
+      if (n.includes("fan") || n.includes("exhaust") || n.includes("cooler") || n.includes("blower") || n.includes("ventilator")) {
+        return "8414";
+      }
+
+      // 3. Wires & Cables (8544)
+      if (n.includes("wire") || n.includes("cable") || n.includes("cord") || n.includes("submersible wire") || n.includes("coaxial") || n.includes("cat6") || n.includes("cctv wire")) {
+        return "8544";
+      }
+
+      // 4. Switches, Indicators, Sockets, Regulators, MCBs (8536)
+      if (n.includes("switch") || n.includes("socket") || n.includes("indicator") || n.includes("mcb") || n.includes("rccb") || 
+          n.includes("isolator") || n.includes("plug") || n.includes("top") || n.includes("holder") || n.includes("fuse") || 
+          n.includes("regulator") || n.includes("dimmer") || n.includes("roma") || n.includes("anchor") || n.includes("modular") ||
+          n.includes("bell push") || n.includes("step regulator") || n.includes("starter") || n.includes("contactor")) {
+        return "8536";
+      }
+
+      // 5. Boards, Sheets, Gang Boxes, DB Panels (8538)
+      if (n.includes("board") || n.includes("gang box") || n.includes("sheet") || n.includes("plate") || n.includes("panel") || 
+          n.includes("distribution board") || n.includes("db box") || n.includes("mcb box") || n.includes("metal box") || 
+          n.includes("concealed box") || n.includes("wooden board")) {
+        return "8538";
+      }
+
+      // 6. Lighting & Fixtures (8539)
+      if (n.includes("led") || n.includes("bulb") || n.includes("tube") || n.includes("light") || n.includes("lamp") || 
+          n.includes("batten") || n.includes("panel light") || n.includes("downlight") || n.includes("flood light") || 
+          n.includes("cob") || n.includes("strip light") || n.includes("surface light")) {
+        return "8539";
+      }
+
+      // 7. Heating & Domestic Appliances (8516)
+      if (n.includes("iron") || n.includes("press") || n.includes("geyser") || n.includes("heater") || n.includes("water heater") || 
+          n.includes("element") || n.includes("immersion") || n.includes("rod") || n.includes("kettle") || n.includes("room heater")) {
+        return "8516";
+      }
+
+      // 8. Tapes & Insulations (3919)
+      if (n.includes("tape") || n.includes("steel grip") || n.includes("insulation tape")) {
+        return "3919";
+      }
+
+      // 9. PVC Pipes & Conduit (3917)
+      if (n.includes("pipe") || n.includes("casing") || n.includes("conduit") || n.includes("pvc pipe") || n.includes("caping")) {
+        return "3917";
+      }
+
+      return ""; // Blank if completely unknown item
     }
 
+    // ⚡ 1-CLICK INSTANT CLEAR (CELL BLANK + HSN RESET ON DIRECT CLICK)
     function handleItemDirectClick() {
       const input = document.getElementById("itemSearch");
       if (input.value.trim() !== "") {
         lastSelectedBillingItem = input.value;
       }
       input.value = "";
+      document.getElementById("itemHsn").value = ""; // Reset old HSN immediately
       renderBillingDropdown(cachedItems);
     }
 
@@ -799,6 +847,9 @@
         const input = document.getElementById("itemSearch");
         if (input.value.trim() === "" && lastSelectedBillingItem) {
           input.value = lastSelectedBillingItem;
+          // Restore correct HSN
+          const match = cachedItems.find(x => x.name.toLowerCase() === lastSelectedBillingItem.toLowerCase());
+          document.getElementById("itemHsn").value = (match && match.hsn && match.hsn !== "-") ? match.hsn : detectHsnFromName(lastSelectedBillingItem);
         }
       }, 200);
     }
@@ -808,9 +859,7 @@
       const lower = val.toLowerCase();
       
       const suggestedHsn = detectHsnFromName(val);
-      if (suggestedHsn) {
-        document.getElementById("itemHsn").value = suggestedHsn;
-      }
+      document.getElementById("itemHsn").value = suggestedHsn; // Auto-update as you type
 
       const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
       renderBillingDropdown(filtered);
@@ -839,9 +888,10 @@
       }
 
       items.forEach(item => {
+        const itemHsn = (item.hsn && item.hsn !== "-") ? item.hsn : detectHsnFromName(item.name);
         const div = document.createElement("div");
         div.className = "dropdown-item";
-        div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock: ${item.stock} | ₹${item.custRate} | HSN: ${item.hsn || '-'}</small>`;
+        div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock: ${item.stock} | ₹${item.custRate} | HSN: ${itemHsn || '-'}</small>`;
         div.onmousedown = function(e) {
           e.preventDefault();
           selectBillingItem(item);
@@ -856,18 +906,24 @@
       lastSelectedBillingItem = item.name;
       document.getElementById("billingItemMenu").style.display = "none";
       currentItemObj = item;
-      document.getElementById("itemHsn").value = (item.hsn && item.hsn !== "-") ? item.hsn : detectHsnFromName(item.name);
+      
+      // Auto-set HSN accurately (First check sheet, then fallback to intelligent engine)
+      const resolvedHsn = (item.hsn && item.hsn !== "-" && item.hsn.trim() !== "") ? item.hsn : detectHsnFromName(item.name);
+      document.getElementById("itemHsn").value = resolvedHsn;
+      
       document.getElementById("itemRate").readOnly = true;
       resolveRate();
       calculateItemTotal();
     }
 
+    // ⚡ 1-CLICK INSTANT CLEAR (STOCK INWARD)
     function handleStockDirectClick() {
       const input = document.getElementById("stkName");
       if (input.value.trim() !== "") {
         lastSelectedStockItem = input.value;
       }
       input.value = "";
+      document.getElementById("stkHsn").value = ""; // Reset old HSN immediately
       renderStockDropdown(cachedItems);
     }
 
@@ -876,6 +932,8 @@
         const input = document.getElementById("stkName");
         if (input.value.trim() === "" && lastSelectedStockItem) {
           input.value = lastSelectedStockItem;
+          const match = cachedItems.find(x => x.name.toLowerCase() === lastSelectedStockItem.toLowerCase());
+          document.getElementById("stkHsn").value = (match && match.hsn && match.hsn !== "-") ? match.hsn : detectHsnFromName(lastSelectedStockItem);
         }
       }, 200);
     }
@@ -885,9 +943,7 @@
       const lower = val.toLowerCase();
       
       const suggestedHsn = detectHsnFromName(val);
-      if (suggestedHsn) {
-        document.getElementById("stkHsn").value = suggestedHsn;
-      }
+      document.getElementById("stkHsn").value = suggestedHsn;
 
       const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
       renderStockDropdown(filtered);
@@ -901,14 +957,15 @@
         return;
       }
       items.forEach(item => {
+        const itemHsn = (item.hsn && item.hsn !== "-") ? item.hsn : detectHsnFromName(item.name);
         const div = document.createElement("div");
         div.className = "dropdown-item";
-        div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock: ${item.stock} | HSN: ${item.hsn || '-'}</small>`;
+        div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock: ${item.stock} | HSN: ${itemHsn || '-'}</small>`;
         div.onmousedown = function(e) {
           e.preventDefault();
           document.getElementById("stkName").value = item.name;
           lastSelectedStockItem = item.name;
-          document.getElementById("stkHsn").value = (item.hsn && item.hsn !== "-") ? item.hsn : detectHsnFromName(item.name);
+          document.getElementById("stkHsn").value = itemHsn;
           document.getElementById("stkCustRate").value = item.custRate || 0;
           document.getElementById("stkElecRate").value = item.elecRate || 0;
           document.getElementById("stkFamRate").value = item.famRate || 0;
@@ -990,7 +1047,8 @@
       if (baseRate <= 0) { alert("⚠️ Rate 0 se zyada hona chahiye!"); return; }
 
       if (!hsn) {
-        var userHsn = prompt("⚠️ Item ke liye HSN Code enter karein (Optional):", "8538");
+        var autoDetected = detectHsnFromName(name);
+        var userHsn = prompt("⚠️ Item ke liye HSN Code enter karein:", autoDetected || "8536");
         hsn = userHsn ? userHsn.trim() : "-";
       }
 
@@ -1197,6 +1255,7 @@
       }
     }
 
+    // ⚡ STOCK INWARD HANDLER (CLEAN HSN PERSISTENCE)
     async function submitStockInward() {
       const name = document.getElementById("stkName").value.trim();
       const qty = parseFloat(document.getElementById("stkQty").value) || 0;
@@ -1208,13 +1267,11 @@
       }
 
       if (!hsn) {
-        const askHsn = prompt(`"${name}" ke liye HSN code confirm karein:`, detectHsnFromName(name) || "8538");
+        const autoHsn = detectHsnFromName(name);
+        const askHsn = prompt(`"${name}" ke liye HSN code confirm karein:`, autoHsn || "8536");
         if (askHsn === null) return;
         hsn = askHsn.trim();
         document.getElementById("stkHsn").value = hsn;
-      } else {
-        const confirmHsn = confirm(`Item: ${name}\nHSN Code: ${hsn}\n\nKya yeh HSN sahi hai? Update karein?`);
-        if (!confirmHsn) return;
       }
 
       const data = {
@@ -1290,7 +1347,6 @@
         currentUser = res;
         localStorage.setItem("mle_user", JSON.stringify(res));
         localStorage.setItem("mle_login_time", new Date().getTime());
-        // Show App, Hide Login
         document.getElementById("authOverlay").style.display = "none";
         document.getElementById("mainAppWrapper").style.display = "block";
         initSession();
