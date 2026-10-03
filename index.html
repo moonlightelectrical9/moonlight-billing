@@ -7,7 +7,6 @@
   <style>
     :root {
       --bg: #050c16;
-      --card-bg: #0b1524;
       --border: #162438;
       --input-bg: #eef4ff;
       --input-text: #0f172a;
@@ -78,7 +77,7 @@
 
     .container { max-width: 1350px; margin: 0 auto; }
 
-    /* Alert Box */
+    /* Low Stock Alert Banner */
     .alert-box {
       background: var(--danger-bg);
       border: 1px solid var(--danger-border);
@@ -116,7 +115,7 @@
     }
     .form-col label span { color: #ef4444; }
 
-    /* Soft Blue Tinted Inputs */
+    /* Soft Blue Tinted Inputs (Matching original theme) */
     input, select {
       background: var(--input-bg);
       border: 1px solid #cbd5e1;
@@ -220,11 +219,11 @@
       transition: all 0.2s ease;
     }
     .btn-save:disabled {
-      background: #1e293b;
-      color: #64748b;
-      cursor: not-allowed;
-      border: 1px solid #334155;
-      box-shadow: none;
+      background: #1e293b !important;
+      color: #64748b !important;
+      cursor: not-allowed !important;
+      border: 1px solid #334155 !important;
+      box-shadow: none !important;
     }
     .btn-save:not(:disabled) {
       box-shadow: 0 4px 14px rgba(194, 94, 0, 0.4);
@@ -233,7 +232,7 @@
 
     /* Inward Stock / Khata Boxes */
     .aux-card {
-      background: var(--card-bg);
+      background: #0b1524;
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 20px;
@@ -734,7 +733,7 @@
       const qty = parseFloat(document.getElementById("itemQty").value) || 1;
 
       if (!name) { alert("⚠️ Kripya Item select karein!"); return; }
-      if (baseRate <= 0) { alert("⚠️ Rate 0 se zyada hona chahiye!"); return; }
+      if (baseRate <= 0) { alert("⚠️️ Rate 0 se zyada hona chahiye!"); return; }
 
       const calc = calculateItemTotal();
       const isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
@@ -803,7 +802,7 @@
       checkFormState();
     }
 
-    // ⚡ FORM VALIDATION & AUTO-HIGHLIGHT BUTTON
+    // ⚡ FORM VALIDATION & AUTO-HIGHLIGHT BUTTON (8 Mandatory Conditions)
     function checkFormState() {
       const mode = document.getElementById("billMode").value;
       const rateType = document.getElementById("rateType").value;
