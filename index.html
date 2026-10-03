@@ -423,11 +423,11 @@
 
       <div class="separator"></div>
 
-      <!-- ROW 4: Item Name (Auto-Blank on Focus + Instant Search), Work Note, HSN -->
+      <!-- ROW 4: Item Name (Direct Instant Auto-Clear on Click), Work Note, HSN -->
       <div class="grid-row row-item-top">
         <div class="form-col">
           <label>ITEM / SERVICE NAME</label>
-          <input type="text" id="itemSearch" placeholder="Search item or type Labour Charge..." autocomplete="off" onfocus="handleItemFocus()" oninput="onItemSearchInput()" onblur="handleItemBlur()">
+          <input type="text" id="itemSearch" placeholder="Search item or type Labour Charge..." autocomplete="off" onclick="handleItemDirectClick()" oninput="onItemSearchInput()" onblur="handleItemBlur()">
           <div class="dropdown-menu" id="billingItemMenu"></div>
         </div>
         <div class="form-col">
@@ -513,7 +513,7 @@
         <div class="grid-row row-2">
           <div class="form-col">
             <label>Item Name <span>*</span></label>
-            <input type="text" id="stkName" placeholder="Full Item Description (Search or Type New)" autocomplete="off" onfocus="handleStockFocus()" oninput="onStockSearchInput()" onblur="handleStockBlur()">
+            <input type="text" id="stkName" placeholder="Full Item Description (Search or Type New)" autocomplete="off" onclick="handleStockDirectClick()" oninput="onStockSearchInput()" onblur="handleStockBlur()">
             <div class="dropdown-menu" id="stockItemMenu"></div>
           </div>
           <div class="form-col">
@@ -574,7 +574,7 @@
       }
     };
 
-    // Document click to close menu
+    // Close Dropdowns on Click Outside
     document.addEventListener("click", function(e) {
       if (!e.target.closest("#itemSearch") && !e.target.closest("#billingItemMenu")) {
         document.getElementById("billingItemMenu").style.display = "none";
@@ -647,22 +647,21 @@
       return "8538";
     }
 
-    // ⚡ 1-CLICK AUTO-BLANK & DROPDOWN DISPLAY LOGIC (BILLING)
-    function handleItemFocus() {
+    // ⚡ INSTANT DIRECT-CLICK AUTO-CLEAR (Bina Bahar Jaaye)
+    function handleItemDirectClick() {
       const input = document.getElementById("itemSearch");
       if (input.value.trim() !== "") {
         lastSelectedBillingItem = input.value;
       }
-      input.value = ""; // Cell turant blank ho jayega
-      renderBillingDropdown(cachedItems); // Poori list open hogi
+      input.value = ""; // Har click par turant blank
+      renderBillingDropdown(cachedItems); // Turant full dropdown open
     }
 
     function handleItemBlur() {
-      // 200ms delay taaki click event trigger ho sake
       setTimeout(() => {
         const input = document.getElementById("itemSearch");
         if (input.value.trim() === "" && lastSelectedBillingItem) {
-          input.value = lastSelectedBillingItem; // Agar kuch naya type/select nahi kiya toh restore
+          input.value = lastSelectedBillingItem;
         }
       }, 200);
     }
@@ -725,8 +724,8 @@
       calculateItemTotal();
     }
 
-    // ⚡ 1-CLICK AUTO-BLANK & DROPDOWN DISPLAY LOGIC (STOCK INWARD)
-    function handleStockFocus() {
+    // ⚡ INSTANT DIRECT-CLICK AUTO-CLEAR (STOCK INWARD)
+    function handleStockDirectClick() {
       const input = document.getElementById("stkName");
       if (input.value.trim() !== "") {
         lastSelectedStockItem = input.value;
