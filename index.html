@@ -333,35 +333,36 @@
       margin-top: 10px;
     }
 
+    /* 🔒 100% Solid Opacity Login Overlay (No Background Leak) */
     #authOverlay {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.75);
+      background: #0f172a; /* 100% Solid Background */
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 2000;
+      z-index: 99999;
       padding: 14px;
     }
     .auth-box {
       background: #ffffff;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 26px;
+      border-radius: 14px;
+      padding: 30px 24px;
       width: 100%;
       max-width: 380px;
       text-align: center;
-      box-shadow: 0 20px 30px rgba(0,0,0,0.15);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
     }
   </style>
 </head>
 <body>
 
-  <!-- 🔒 LOGIN OVERLAY -->
-  <div id="authOverlay" style="display: none;">
+  <!-- 🔒 100% SOLID AUTHENTICATION SCREEN -->
+  <div id="authOverlay" style="display: flex;">
     <div class="auth-box">
       <div class="brand-title" style="font-size: 20px;">MOON<span>LIGHT</span> ELECTRICALS</div>
-      <div class="brand-tagline" style="margin-bottom: 20px;">Brightening Lives, Powering Trust</div>
+      <div class="brand-tagline" style="margin-bottom: 22px;">Brightening Lives, Powering Trust</div>
 
       <div id="stepPhone">
         <label style="display:block; text-align:left; font-size:11px; font-weight:800; color:#475569; margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
@@ -381,7 +382,8 @@
     </div>
   </div>
 
-  <div class="container">
+  <!-- 🏠 MAIN APPLICATION CONTAINER (Initially Hidden Until Login) -->
+  <div class="container" id="mainAppWrapper" style="display: none;">
     <!-- Top Nav with View Tabs, 24H Timer, PWA Install, Refresh & Logout -->
     <div class="top-nav">
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
@@ -394,9 +396,7 @@
         <button class="nav-tab-btn" id="tabStockBtn" onclick="switchView('stock')">📦 Stock Inward</button>
       </div>
       <div class="nav-actions">
-        <!-- 📲 PWA App Install Button -->
         <button class="btn-install" id="btnInstallApp" onclick="triggerPwaInstall()">📲 Install App</button>
-        <!-- ⏳ Live 24H Session Countdown Timer -->
         <div class="timer-pill" id="sessionTimerBadge" title="Session Timeout">⏳ 24:00:00</div>
         <button class="btn-refresh" id="btnRefresh" onclick="refreshAppData()" title="Sync Items From Sheet">
           🔄 Refresh
@@ -620,7 +620,7 @@
     let sessionTimerInterval = null;
     let deferredPwaPrompt = null;
 
-    // 📲 PWA INSTALL EVENT LISTENER
+    // 📲 PWA Install Trigger
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPwaPrompt = e;
@@ -638,7 +638,7 @@
           deferredPwaPrompt = null;
         });
       } else {
-        alert("PWA Install prompt: Browser menu (3 dots) par click karke 'Add to Home screen' ya 'Install app' chunein!");
+        alert("PWA Install: Browser menu (3 dots) par click karke 'Add to Home screen' ya 'Install app' chunein!");
       }
     }
 
@@ -649,19 +649,22 @@
       const dd = String(now.getDate()).padStart(2, '0');
       document.getElementById("billDate").value = `${yyyy}-${mm}-${dd}`;
 
+      // 🔒 Complete Hide/Show Logic
       if (!currentUser) {
         document.getElementById("authOverlay").style.display = "flex";
+        document.getElementById("mainAppWrapper").style.display = "none"; // Hide completely
       } else {
+        document.getElementById("authOverlay").style.display = "none";
+        document.getElementById("mainAppWrapper").style.display = "block"; // Show only on login
         initSession();
       }
 
-      // Register Service Worker if supported
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(() => {});
       }
     };
 
-    // Close Dropdowns on Click Outside
+    // Outside Click for Dropdowns
     document.addEventListener("click", function(e) {
       if (!e.target.closest("#itemSearch") && !e.target.closest("#billingItemMenu")) {
         document.getElementById("billingItemMenu").style.display = "none";
@@ -719,6 +722,12 @@
       if (sessionTimerInterval) clearInterval(sessionTimerInterval);
       localStorage.removeItem("mle_user");
       localStorage.removeItem("mle_login_time");
+      currentUser = null;
+      document.getElementById("mainAppWrapper").style.display = "none"; // Hide completely
+      document.getElementById("authOverlay").style.display = "flex";    // Solid Overlay
+      document.getElementById("stepPhone").style.display = "block";
+      document.getElementById("stepOtp").style.display = "none";
+      document.getElementById("loginPhone").value = "";
       location.reload();
     }
 
@@ -978,7 +987,7 @@
       const qty = parseFloat(document.getElementById("itemQty").value) || 1;
 
       if (!name) { alert("⚠️ Kripya Item select ya enter karein!"); return; }
-      if (baseRate <= 0) { alert("⚠️️ Rate 0 se zyada hona chahiye!"); return; }
+      if (baseRate <= 0) { alert("⚠️ Rate 0 se zyada hona chahiye!"); return; }
 
       if (!hsn) {
         var userHsn = prompt("⚠️ Item ke liye HSN Code enter karein (Optional):", "8538");
@@ -1281,7 +1290,9 @@
         currentUser = res;
         localStorage.setItem("mle_user", JSON.stringify(res));
         localStorage.setItem("mle_login_time", new Date().getTime());
+        // Show App, Hide Login
         document.getElementById("authOverlay").style.display = "none";
+        document.getElementById("mainAppWrapper").style.display = "block";
         initSession();
       } else {
         alert(res.message || "Invalid OTP!");
