@@ -43,7 +43,7 @@
       border: 1px solid var(--border);
       padding: 7px 12px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 800;
       cursor: pointer;
       display: inline-flex;
@@ -102,7 +102,6 @@
     .row-item-top { grid-template-columns: 3.5fr 2.5fr 1.2fr; }
     .row-item-btm { grid-template-columns: 1.6fr 1.2fr 1.2fr 1fr 1.6fr; }
 
-    /* Auto-fit Phone Screen Adjustments */
     @media (max-width: 820px) {
       body { padding: 8px 10px; }
       .brand-title { font-size: 16px; }
@@ -143,29 +142,6 @@
     }
     input::placeholder { color: #94a3b8; font-weight: normal; }
     input[readonly] { background: #f1f5f9; color: #475569; }
-
-    /* Input with quick clear icon */
-    .input-clear-wrapper { position: relative; width: 100%; }
-    .input-clear-wrapper input { padding-right: 32px; }
-    .btn-quick-clear {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: #e2e8f0;
-      border: none;
-      color: #64748b;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 900;
-      cursor: pointer;
-    }
-    .btn-quick-clear:hover { background: #cbd5e1; color: #0f172a; }
 
     /* Full-Width Mobile-Adapted Dropdown Menu */
     .dropdown-menu {
@@ -220,7 +196,7 @@
     }
     .btn-add:hover { background: #047857; }
 
-    /* Table Container with Horizontal Scroll on Mobile */
+    /* Table Container */
     .table-wrap {
       background: #ffffff;
       border: 1.5px solid var(--border);
@@ -447,14 +423,11 @@
 
       <div class="separator"></div>
 
-      <!-- ROW 4: Item Name (Auto-Select on Focus + 1-Click Clear), Work Note, HSN -->
+      <!-- ROW 4: Item Name (Auto-Blank on Focus + Instant Search), Work Note, HSN -->
       <div class="grid-row row-item-top">
         <div class="form-col">
           <label>ITEM / SERVICE NAME</label>
-          <div class="input-clear-wrapper">
-            <input type="text" id="itemSearch" placeholder="Search item or type Labour Charge..." autocomplete="off" onfocus="handleItemInputFocus()" oninput="onItemSearchInput()">
-            <button class="btn-quick-clear" type="button" onclick="clearItemInput()" title="Clear">✕</button>
-          </div>
+          <input type="text" id="itemSearch" placeholder="Search item or type Labour Charge..." autocomplete="off" onfocus="handleItemFocus()" oninput="onItemSearchInput()" onblur="handleItemBlur()">
           <div class="dropdown-menu" id="billingItemMenu"></div>
         </div>
         <div class="form-col">
@@ -540,10 +513,7 @@
         <div class="grid-row row-2">
           <div class="form-col">
             <label>Item Name <span>*</span></label>
-            <div class="input-clear-wrapper">
-              <input type="text" id="stkName" placeholder="Full Item Description (Search or Type New)" autocomplete="off" onfocus="handleStockInputFocus()" oninput="onStockSearchInput()">
-              <button class="btn-quick-clear" type="button" onclick="clearStockInput()" title="Clear">✕</button>
-            </div>
+            <input type="text" id="stkName" placeholder="Full Item Description (Search or Type New)" autocomplete="off" onfocus="handleStockFocus()" oninput="onStockSearchInput()" onblur="handleStockBlur()">
             <div class="dropdown-menu" id="stockItemMenu"></div>
           </div>
           <div class="form-col">
@@ -587,6 +557,8 @@
     let billItems = [];
     let currentItemObj = null;
     let bankSettings = null;
+    let lastSelectedBillingItem = null;
+    let lastSelectedStockItem = null;
 
     window.onload = function() {
       const now = new Date();
@@ -602,12 +574,12 @@
       }
     };
 
-    // Outside Click Handling
+    // Document click to close menu
     document.addEventListener("click", function(e) {
-      if (!e.target.closest("#itemSearch") && !e.target.closest("#billingItemMenu") && !e.target.closest(".btn-quick-clear")) {
+      if (!e.target.closest("#itemSearch") && !e.target.closest("#billingItemMenu")) {
         document.getElementById("billingItemMenu").style.display = "none";
       }
-      if (!e.target.closest("#stkName") && !e.target.closest("#stockItemMenu") && !e.target.closest(".btn-quick-clear")) {
+      if (!e.target.closest("#stkName") && !e.target.closest("#stockItemMenu")) {
         document.getElementById("stockItemMenu").style.display = "none";
       }
     });
@@ -622,7 +594,6 @@
       checkFormState();
     }
 
-    // CORS Safe API Trigger
     async function apiCall(action, payload = {}) {
       payload.action = action;
       const res = await fetch(SCRIPT_URL, {
@@ -676,56 +647,38 @@
       return "8538";
     }
 
-    // ⚡ QUICK SELECT / CLEAR HANDLERS (No Backspace Wasted Time)
-    function handleItemInputFocus() {
+    // ⚡ 1-CLICK AUTO-BLANK & DROPDOWN DISPLAY LOGIC (BILLING)
+    function handleItemFocus() {
       const input = document.getElementById("itemSearch");
-      input.select(); // Auto-selects full text instantly
-      onItemSearchInput();
+      if (input.value.trim() !== "") {
+        lastSelectedBillingItem = input.value;
+      }
+      input.value = ""; // Cell turant blank ho jayega
+      renderBillingDropdown(cachedItems); // Poori list open hogi
     }
 
-    function clearItemInput() {
-      const input = document.getElementById("itemSearch");
-      input.value = "";
-      document.getElementById("itemHsn").value = "";
-      document.getElementById("itemRate").value = "Locked";
-      document.getElementById("itemRate").readOnly = true;
-      document.getElementById("itemTotal").value = "0.00";
-      currentItemObj = null;
-      input.focus();
-      onItemSearchInput();
+    function handleItemBlur() {
+      // 200ms delay taaki click event trigger ho sake
+      setTimeout(() => {
+        const input = document.getElementById("itemSearch");
+        if (input.value.trim() === "" && lastSelectedBillingItem) {
+          input.value = lastSelectedBillingItem; // Agar kuch naya type/select nahi kiya toh restore
+        }
+      }, 200);
     }
 
-    function handleStockInputFocus() {
-      const input = document.getElementById("stkName");
-      input.select();
-      onStockSearchInput();
-    }
-
-    function clearStockInput() {
-      const input = document.getElementById("stkName");
-      input.value = "";
-      document.getElementById("stkHsn").value = "";
-      input.focus();
-      onStockSearchInput();
-    }
-
-    // ⚡ FULL-WIDTH DROPDOWN FOR BILLING
     function onItemSearchInput() {
-      const input = document.getElementById("itemSearch");
-      const val = input.value.trim();
+      const val = document.getElementById("itemSearch").value.trim();
       const lower = val.toLowerCase();
-      const menu = document.getElementById("billingItemMenu");
-      menu.innerHTML = "";
-
+      
       if (val.length > 0) {
         document.getElementById("itemHsn").value = detectHsnFromName(val);
       }
 
-      // Show full list if empty, or filtered list
-      const filtered = val.length === 0 ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
+      const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
+      renderBillingDropdown(filtered);
 
       if (filtered.length === 0) {
-        menu.style.display = "none";
         if (lower.includes("labour") || lower.includes("service")) {
           currentItemObj = { name: val, hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
           document.getElementById("itemRate").value = "0.00";
@@ -736,10 +689,19 @@
           document.getElementById("itemRate").readOnly = false;
         }
         calculateItemTotal();
+      }
+    }
+
+    function renderBillingDropdown(items) {
+      const menu = document.getElementById("billingItemMenu");
+      menu.innerHTML = "";
+
+      if (items.length === 0) {
+        menu.style.display = "none";
         return;
       }
 
-      filtered.forEach(item => {
+      items.forEach(item => {
         const div = document.createElement("div");
         div.className = "dropdown-item";
         div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock: ${item.stock} | ₹${item.custRate} | HSN: ${item.hsn || '-'}</small>`;
@@ -754,6 +716,7 @@
 
     function selectBillingItem(item) {
       document.getElementById("itemSearch").value = item.name;
+      lastSelectedBillingItem = item.name;
       document.getElementById("billingItemMenu").style.display = "none";
       currentItemObj = item;
       document.getElementById("itemHsn").value = item.hsn && item.hsn !== "-" ? item.hsn : detectHsnFromName(item.name);
@@ -762,30 +725,50 @@
       calculateItemTotal();
     }
 
-    // ⚡ FULL-WIDTH DROPDOWN FOR STOCK INWARD
+    // ⚡ 1-CLICK AUTO-BLANK & DROPDOWN DISPLAY LOGIC (STOCK INWARD)
+    function handleStockFocus() {
+      const input = document.getElementById("stkName");
+      if (input.value.trim() !== "") {
+        lastSelectedStockItem = input.value;
+      }
+      input.value = "";
+      renderStockDropdown(cachedItems);
+    }
+
+    function handleStockBlur() {
+      setTimeout(() => {
+        const input = document.getElementById("stkName");
+        if (input.value.trim() === "" && lastSelectedStockItem) {
+          input.value = lastSelectedStockItem;
+        }
+      }, 200);
+    }
+
     function onStockSearchInput() {
       const val = document.getElementById("stkName").value.trim();
       const lower = val.toLowerCase();
-      const menu = document.getElementById("stockItemMenu");
-      menu.innerHTML = "";
-
       if (val.length > 0) {
         document.getElementById("stkHsn").value = detectHsnFromName(val);
       }
+      const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
+      renderStockDropdown(filtered);
+    }
 
-      const filtered = val.length === 0 ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
-      if (filtered.length === 0) {
+    function renderStockDropdown(items) {
+      const menu = document.getElementById("stockItemMenu");
+      menu.innerHTML = "";
+      if (items.length === 0) {
         menu.style.display = "none";
         return;
       }
-
-      filtered.forEach(item => {
+      items.forEach(item => {
         const div = document.createElement("div");
         div.className = "dropdown-item";
         div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock: ${item.stock} | HSN: ${item.hsn || '-'}</small>`;
         div.onmousedown = function(e) {
           e.preventDefault();
           document.getElementById("stkName").value = item.name;
+          lastSelectedStockItem = item.name;
           document.getElementById("stkHsn").value = item.hsn && item.hsn !== "-" ? item.hsn : detectHsnFromName(item.name);
           document.getElementById("stkCustRate").value = item.custRate || 0;
           document.getElementById("stkElecRate").value = item.elecRate || 0;
@@ -896,6 +879,7 @@
       document.getElementById("itemQty").value = "1";
       document.getElementById("itemTotal").value = "0.00";
       currentItemObj = null;
+      lastSelectedBillingItem = null;
 
       checkFormState();
     }
@@ -971,7 +955,7 @@
         rateType: document.getElementById("rateType").value,
         isGst: document.getElementById("isGstBill").value.includes("Yes"),
         paymentMode: document.getElementById("paymentMode").value,
-        customerName: document.getElementById("custName").value.trim(),
+        customerName: custName,
         phone: document.getElementById("custPhone").value.trim(),
         address: document.getElementById("custAddress").value.trim(),
         gstin: document.getElementById("custGstin").value.trim(),
