@@ -79,7 +79,7 @@
 
     .container { max-width: 1350px; margin: 0 auto; }
 
-    /* Low Stock Alert Banner */
+    /* Alert Banner */
     .alert-box {
       background: var(--danger-bg);
       border: 1px solid var(--danger-border);
@@ -117,7 +117,7 @@
     }
     .form-col label span { color: #ef4444; }
 
-    /* Light Crisp Inputs */
+    /* Inputs */
     input, select {
       background: #ffffff;
       border: 1.5px solid var(--border);
@@ -134,9 +134,9 @@
       box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
     }
     input::placeholder { color: #94a3b8; font-weight: normal; }
-    input[readonly] { background: #f1f5f9; color: #475569; cursor: not-allowed; }
+    input[readonly] { background: #f1f5f9; color: #475569; }
 
-    /* Custom Full-Width Dropdown (Matching Column Width 100%) */
+    /* Full-Width Dropdown (100% of Column Width) */
     .dropdown-menu {
       position: absolute;
       top: 100%;
@@ -163,7 +163,7 @@
       justify-content: space-between;
       align-items: center;
     }
-    .dropdown-item:hover, .dropdown-item.active {
+    .dropdown-item:hover {
       background: #eff6ff;
       color: #1d4ed8;
     }
@@ -171,7 +171,6 @@
 
     .separator { border-bottom: 1px dashed #cbd5e1; margin: 16px 0; }
 
-    /* Green Add Item Button */
     .btn-add {
       background: var(--green);
       color: #ffffff;
@@ -188,7 +187,6 @@
     }
     .btn-add:hover { background: #047857; }
 
-    /* Table */
     .table-wrap {
       background: #ffffff;
       border: 1.5px solid var(--border);
@@ -225,7 +223,6 @@
       cursor: pointer;
     }
 
-    /* Grand Total Bar */
     .total-bar {
       background: var(--yellow-bar);
       border: 1.5px solid var(--yellow-border);
@@ -240,7 +237,6 @@
     .total-title { font-size: 15px; font-weight: 900; }
     .total-amt { font-size: 22px; font-weight: 900; }
 
-    /* Save & Print Button (Auto-Disabled / Highlighted) */
     .btn-save {
       background: var(--brown);
       color: #ffffff;
@@ -266,7 +262,6 @@
     }
     .btn-save:not(:disabled):hover { background: #9a4c03; }
 
-    /* Auxiliary Card for Khata and Inward */
     .aux-card {
       background: #ffffff;
       border: 1.5px solid var(--border);
@@ -275,7 +270,6 @@
       margin-top: 10px;
     }
 
-    /* Auth Overlay */
     #authOverlay {
       position: fixed;
       inset: 0;
@@ -325,7 +319,7 @@
   </div>
 
   <div class="container">
-    <!-- Top Nav with View Tabs and Mobile-Friendly Refresh -->
+    <!-- Top Nav with View Tabs and Refresh -->
     <div class="top-nav">
       <div style="display:flex; align-items:center; gap:12px;">
         <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
@@ -343,7 +337,6 @@
 
     <!-- 🧾 VIEW 1: BILLING WORKSPACE -->
     <div id="viewBilling">
-      <!-- Low Stock Alert Box -->
       <div class="alert-box" id="lowStockAlertBox">
         <b>⚠️ LOW STOCK ALERT:</b>
         <div id="lowStockItemsList" style="margin-top: 4px;"></div>
@@ -417,12 +410,11 @@
 
       <div class="separator"></div>
 
-      <!-- ROW 4: Item Name (Full Width Dropdown), Work Note, HSN -->
+      <!-- ROW 4: Item Name (Full Width Dropdown), Work Note, HSN (Auto & Editable) -->
       <div class="grid-row row-item-top">
         <div class="form-col">
           <label>ITEM / SERVICE NAME</label>
           <input type="text" id="itemSearch" placeholder="Search item or type Labour Charge..." autocomplete="off" oninput="onItemSearchInput()" onfocus="onItemSearchInput()">
-          <!-- 100% Column Width Dropdown Menu -->
           <div class="dropdown-menu" id="billingItemMenu"></div>
         </div>
         <div class="form-col">
@@ -430,8 +422,9 @@
           <input type="text" id="itemSerial" placeholder="e.g. Fan Fitting / SN1092">
         </div>
         <div class="form-col">
-          <label>HSN / SAC</label>
-          <input type="text" id="itemHsn" placeholder="Auto" readonly>
+          <label>HSN / SAC (EDITABLE)</label>
+          <!-- 100% Editable with Auto Suggestion -->
+          <input type="text" id="itemHsn" placeholder="Auto / Enter HSN">
         </div>
       </div>
 
@@ -487,7 +480,7 @@
         <div class="total-amt" id="lblGrandTotal">₹0.00</div>
       </div>
 
-      <!-- Save & Print Button (Auto-Disabled / Highlighted) -->
+      <!-- Save & Print Button -->
       <button class="btn-save" id="btnSubmitBill" onclick="submitBillToBackend()" disabled>
         ⚡ Save Bill & Generate PDF
       </button>
@@ -509,11 +502,10 @@
           <div class="form-col">
             <label>Item Name <span>*</span></label>
             <input type="text" id="stkName" placeholder="Full Item Description (Search or Type New)" autocomplete="off" oninput="onStockSearchInput()" onfocus="onStockSearchInput()">
-            <!-- Stock Dropdown 100% Width -->
             <div class="dropdown-menu" id="stockItemMenu"></div>
           </div>
           <div class="form-col">
-            <label>HSN / SAC</label>
+            <label>HSN / SAC (EDITABLE)</label>
             <input type="text" id="stkHsn" placeholder="e.g. 8538">
           </div>
         </div>
@@ -555,7 +547,6 @@
     let bankSettings = null;
 
     window.onload = function() {
-      // Set Today's Date automatically
       const now = new Date();
       const yyyy = now.getFullYear();
       const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -601,7 +592,6 @@
       return JSON.parse(txt);
     }
 
-    // ⚡ Fast Background Refresh
     async function refreshAppData() {
       const btn = document.getElementById("btnRefresh");
       btn.innerText = "⏳ Syncing...";
@@ -630,22 +620,73 @@
       }, 1500);
     }
 
+    // ⚡ SMART HSN AUTO-DETECTION ENGINE
+    function detectHsnFromName(name) {
+      var n = name.toLowerCase();
+      if (n.includes("labour") || n.includes("service") || n.includes("repair") || n.includes("fitting") || n.includes("charge")) {
+        return "998519";
+      }
+      if (n.includes("fan") || n.includes("exhaust")) {
+        return "8414";
+      }
+      if (n.includes("wire") || n.includes("cable") || n.includes("cord")) {
+        return "8544";
+      }
+      if (n.includes("switch") || n.includes("socket") || n.includes("mcb") || n.includes("rccb") || n.includes("plug") || n.includes("holder") || n.includes("fuse")) {
+        return "8536";
+      }
+      if (n.includes("board") || n.includes("box") || n.includes("sheet") || n.includes("plate") || n.includes("panel")) {
+        return "8538";
+      }
+      if (n.includes("led") || n.includes("bulb") || n.includes("tube") || n.includes("light") || n.includes("lamp") || n.includes("batten")) {
+        return "8539";
+      }
+      if (n.includes("iron") || n.includes("press") || n.includes("geyser") || n.includes("heater") || n.includes("element") || n.includes("rod")) {
+        return "8516";
+      }
+      if (n.includes("tape")) {
+        return "3919";
+      }
+      if (n.includes("pipe") || n.includes("casing") || n.includes("pvc")) {
+        return "3917";
+      }
+      return "8538"; // General electrical fittings default
+    }
+
     // ⚡ FULL-WIDTH DROPDOWN FOR BILLING
     function onItemSearchInput() {
-      const val = document.getElementById("itemSearch").value.trim().toLowerCase();
+      const val = document.getElementById("itemSearch").value.trim();
+      const lower = val.toLowerCase();
       const menu = document.getElementById("billingItemMenu");
       menu.innerHTML = "";
 
-      const filtered = cachedItems.filter(it => it.name.toLowerCase().includes(val));
+      // Auto predict HSN if user types custom/new name
+      if (val.length > 0) {
+        var autoHsn = detectHsnFromName(val);
+        document.getElementById("itemHsn").value = autoHsn;
+      }
+
+      const filtered = cachedItems.filter(it => it.name.toLowerCase().includes(lower));
       if (filtered.length === 0) {
         menu.style.display = "none";
+        // Manual item mode
+        if (lower.includes("labour") || lower.includes("service")) {
+          currentItemObj = { name: val, hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
+          document.getElementById("itemRate").value = "0.00";
+          document.getElementById("itemRate").readOnly = false;
+        } else {
+          currentItemObj = null;
+          document.getElementById("itemRate").value = "Enter Rate";
+          document.getElementById("itemRate").readOnly = false;
+        }
+        calculateItemTotal();
         return;
       }
 
       filtered.forEach(item => {
         const div = document.createElement("div");
         div.className = "dropdown-item";
-        div.innerHTML = `<span>${item.name}</span> <small>Stock: ${item.stock} | ₹${item.custRate}</small>`;
+        div.innerHTML = `<span>${item.name}</span> <small>Stock: ${item.stock} | ₹${item.custRate} | HSN: ${item.hsn || '-'}</small>`;
         div.onclick = function() {
           selectBillingItem(item);
         };
@@ -658,18 +699,25 @@
       document.getElementById("itemSearch").value = item.name;
       document.getElementById("billingItemMenu").style.display = "none";
       currentItemObj = item;
-      document.getElementById("itemHsn").value = item.hsn || "-";
+      // Auto fill HSN from saved sheet or detect
+      document.getElementById("itemHsn").value = item.hsn && item.hsn !== "-" ? item.hsn : detectHsnFromName(item.name);
+      document.getElementById("itemRate").readOnly = true;
       resolveRate();
       calculateItemTotal();
     }
 
     // ⚡ FULL-WIDTH DROPDOWN FOR STOCK INWARD
     function onStockSearchInput() {
-      const val = document.getElementById("stkName").value.trim().toLowerCase();
+      const val = document.getElementById("stkName").value.trim();
+      const lower = val.toLowerCase();
       const menu = document.getElementById("stockItemMenu");
       menu.innerHTML = "";
 
-      const filtered = cachedItems.filter(it => it.name.toLowerCase().includes(val));
+      if (val.length > 0) {
+        document.getElementById("stkHsn").value = detectHsnFromName(val);
+      }
+
+      const filtered = cachedItems.filter(it => it.name.toLowerCase().includes(lower));
       if (filtered.length === 0) {
         menu.style.display = "none";
         return;
@@ -678,10 +726,10 @@
       filtered.forEach(item => {
         const div = document.createElement("div");
         div.className = "dropdown-item";
-        div.innerHTML = `<span>${item.name}</span> <small>Curr Stock: ${item.stock}</small>`;
+        div.innerHTML = `<span>${item.name}</span> <small>Curr Stock: ${item.stock} | HSN: ${item.hsn || '-'}</small>`;
         div.onclick = function() {
           document.getElementById("stkName").value = item.name;
-          document.getElementById("stkHsn").value = item.hsn || "";
+          document.getElementById("stkHsn").value = item.hsn && item.hsn !== "-" ? item.hsn : detectHsnFromName(item.name);
           document.getElementById("stkCustRate").value = item.custRate || 0;
           document.getElementById("stkElecRate").value = item.elecRate || 0;
           document.getElementById("stkFamRate").value = item.famRate || 0;
@@ -746,6 +794,8 @@
     function addItemToBill() {
       const name = document.getElementById("itemSearch").value.trim();
       const serial = document.getElementById("itemSerial").value.trim();
+      const hsn = document.getElementById("itemHsn").value.trim() || "-";
+
       let baseRate = 0;
       const rateVal = document.getElementById("itemRate").value;
       if (rateVal.includes("₹")) {
@@ -757,7 +807,7 @@
       const disc = parseFloat(document.getElementById("itemDisc").value) || 0;
       const qty = parseFloat(document.getElementById("itemQty").value) || 1;
 
-      if (!name) { alert("⚠️️ Kripya Item select karein!"); return; }
+      if (!name) { alert("⚠️ Kripya Item select ya enter karein!"); return; }
       if (baseRate <= 0) { alert("⚠️ Rate 0 se zyada hona chahiye!"); return; }
 
       const calc = calculateItemTotal();
@@ -767,7 +817,7 @@
       billItems.push({
         name: name,
         serialNo: serial,
-        hsn: (currentItemObj && currentItemObj.hsn) ? currentItemObj.hsn : "-",
+        hsn: hsn,
         baseRate: baseRate,
         discount: disc,
         gstPct: isGstSelected ? gstPct : 0,
@@ -781,7 +831,7 @@
 
       document.getElementById("itemSearch").value = "";
       document.getElementById("itemSerial").value = "";
-      document.getElementById("itemHsn").value = "Auto";
+      document.getElementById("itemHsn").value = "";
       document.getElementById("itemRate").value = "Locked";
       document.getElementById("itemRate").readOnly = true;
       document.getElementById("itemDisc").value = "0";
@@ -826,7 +876,6 @@
       checkFormState();
     }
 
-    // ⚡ AUTO-HIGHLIGHT & AUTO-DISABLE SAVE BUTTON
     function checkFormState() {
       const mode = document.getElementById("billMode").value;
       const rateType = document.getElementById("rateType").value;
@@ -925,7 +974,7 @@
         if (res.records.length === 0) { c.innerHTML = "No pending records!"; return; }
 
         let html = '<div class="table-wrap"><table><thead><tr><th>Doc No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-        res.records.forEach(r => {
+        res.forEach(r => {
           const isPending = (r.status === "Pending");
           html += `
             <tr>
@@ -973,7 +1022,7 @@
 
       const data = {
         name: name,
-        hsn: document.getElementById("stkHsn").value.trim(),
+        hsn: document.getElementById("stkHsn").value.trim() || detectHsnFromName(name),
         qty: qty,
         custRate: parseFloat(document.getElementById("stkCustRate").value) || 0,
         elecRate: parseFloat(document.getElementById("stkElecRate").value) || 0,
@@ -986,6 +1035,7 @@
         if (res && res.success) {
           alert(`✓ Stock updated for ${res.name}`);
           document.getElementById("stkName").value = "";
+          document.getElementById("stkHsn").value = "";
           document.getElementById("stkQty").value = "10";
           refreshAppData();
         } else {
