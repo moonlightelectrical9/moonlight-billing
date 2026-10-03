@@ -3,176 +3,223 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Moon Light Electricals - ERP & Billing</title>
+  <title>Moon Light Electricals</title>
   <style>
     :root {
-      --bg-color: #0b1320;
-      --card-bg: #111c2e;
-      --card-border: #1c2b42;
+      --bg: #070d17;
+      --border: #1e293b;
+      --input-bg: #eef2f9;
+      --input-text: #0f172a;
       --accent: #f59e0b;
-      --text: #f8fafc;
-      --sub-text: #94a3b8;
-      --success: #10b981;
-      --danger: #ef4444;
-      --primary: #3b82f6;
+      --green: #059669;
+      --danger-bg: #fee2e2;
+      --danger-border: #fca5a5;
+      --danger-text: #b91c1c;
+      --yellow-bar: #fef3c7;
+      --yellow-border: #fde68a;
     }
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-    body { background: var(--bg-color); color: var(--text); padding-bottom: 50px; min-height: 100vh; }
-    
-    .navbar {
-      background: #0d1626;
-      border-bottom: 1px solid var(--card-border);
-      padding: 14px 24px;
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 0; }
+    body { background: var(--bg); color: #ffffff; padding: 12px; min-height: 100vh; }
+
+    /* Top Nav */
+    .top-nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      padding: 6px 10px 14px 10px;
     }
-    .brand { font-size: 20px; font-weight: 900; letter-spacing: 0.5px; }
-    .brand span { color: var(--accent); }
-    .nav-right { display: flex; align-items: center; gap: 10px; }
-    .sync-badge { background: #1e293b; color: #38bdf8; border: 1px solid #334155; padding: 5px 12px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; }
-    .user-badge { background: #1e293b; border: 1px solid #334155; padding: 5px 12px; border-radius: 20px; font-size: 12px; color: var(--sub-text); }
-
-    .main-wrapper { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
-
-    .tabs-nav {
+    .brand-title { font-size: 16px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; }
+    .brand-title span { color: var(--accent); }
+    .nav-actions { display: flex; align-items: center; gap: 8px; }
+    .btn-refresh {
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #334155;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
       display: flex;
-      gap: 12px;
-      margin-bottom: 22px;
+      align-items: center;
+      gap: 5px;
     }
-    .tab-btn {
-      flex: 1;
-      padding: 13px;
-      background: #111c2e;
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
+    .btn-refresh:active { transform: scale(0.96); background: #334155; }
+    .user-pill {
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
       color: #94a3b8;
+    }
+
+    /* Container */
+    .container { max-width: 1300px; margin: 0 auto; }
+
+    /* Low stock alert banner */
+    .alert-box {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      border-radius: 6px;
+      padding: 12px 16px;
+      color: var(--danger-text);
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .alert-box b { font-weight: 900; }
+
+    /* Grid layout */
+    .grid-row {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .row-5 { grid-template-columns: repeat(5, 1fr); }
+    .row-2 { grid-template-columns: 2fr 1fr; }
+    .row-item-top { grid-template-columns: 3fr 2fr 1fr; }
+    .row-item-btm { grid-template-columns: 2fr 1.5fr 1.5fr 1fr 2fr; }
+
+    @media (max-width: 860px) {
+      .row-5 { grid-template-columns: repeat(2, 1fr); }
+      .row-2 { grid-template-columns: 1fr; }
+      .row-item-top { grid-template-columns: 1fr; }
+      .row-item-btm { grid-template-columns: 1fr 1fr; }
+    }
+
+    .form-col { display: flex; flex-direction: column; gap: 5px; }
+    .form-col label {
+      font-size: 11px;
+      font-weight: 800;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* Light Theme inputs matching original screenshot */
+    input, select {
+      background: var(--input-bg);
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      padding: 9px 11px;
+      font-size: 13.5px;
+      color: var(--input-text);
+      outline: none;
+      font-weight: 600;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      background: #ffffff;
+    }
+    input::placeholder { color: #64748b; font-weight: normal; }
+    input:disabled, input[readonly] { background: #e2e8f0; color: #475569; }
+
+    .separator {
+      border-bottom: 1px dashed #334155;
+      margin: 16px 0;
+    }
+
+    /* Green add button */
+    .btn-add {
+      background: #059669;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
       font-size: 14px;
       font-weight: 800;
+      width: 100%;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-    }
-    .tab-btn.active {
-      background: #19273c;
-      border-color: var(--accent);
-      color: var(--accent);
-      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
-    }
-
-    .glass-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 22px;
-      margin-bottom: 22px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    }
-    .sec-title {
-      font-size: 14px;
-      font-weight: 900;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      margin-top: 6px;
       margin-bottom: 16px;
     }
+    .btn-add:hover { background: #047857; }
 
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
+    /* Table */
+    .table-wrap {
+      background: #ffffff;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 14px;
     }
-    .field-col { display: flex; flex-direction: column; gap: 6px; }
-    .field-col label { font-size: 11.5px; font-weight: 800; color: var(--sub-text); text-transform: uppercase; }
-    .field-col label span { color: var(--danger); }
-    
-    input, select, textarea {
-      background: #09101a;
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 11px 13px;
-      color: #ffffff;
-      font-size: 13.5px;
-      outline: none;
-    }
-    input:focus, select:focus { border-color: var(--accent); }
-    select option { background: #111c2e; color: #ffffff; }
-
-    .btn-main {
-      background: var(--accent);
-      color: #0b1320;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 900;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: 0.2s;
-    }
-    .btn-main:active { transform: scale(0.98); }
-    .btn-blue { background: var(--primary); color: #fff; }
-    .btn-green { background: var(--success); color: #fff; }
-    .btn-del { background: var(--danger); color: #fff; padding: 4px 9px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer; }
-
-    .data-table {
+    table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 18px;
-      font-size: 13.5px;
+      color: #0f172a;
+      font-size: 13px;
     }
-    .data-table th {
-      background: #142033;
-      color: var(--sub-text);
-      padding: 11px 10px;
+    th {
+      background: #f8fafc;
+      padding: 10px 12px;
       text-align: left;
-      font-size: 11.5px;
-      font-weight: 900;
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--card-border);
+      font-weight: 800;
+      border-bottom: 2px solid #e2e8f0;
+      font-size: 12px;
+      color: #334155;
     }
-    .data-table td {
-      padding: 12px 10px;
-      border-bottom: 1px solid var(--card-border);
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      font-weight: 600;
+    }
+    .btn-del-row {
+      color: #dc2626;
+      font-weight: 900;
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
     }
 
-    .bill-footer-bar {
-      background: #09101a;
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 16px 20px;
+    /* Grand Total Bar */
+    .total-bar {
+      background: var(--yellow-bar);
+      border: 1px solid var(--yellow-border);
+      border-radius: 6px;
+      padding: 12px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 20px;
+      color: #000000;
+      margin-bottom: 16px;
     }
-    .grand-val { font-size: 26px; font-weight: 900; color: var(--accent); }
+    .total-title { font-size: 15px; font-weight: 900; }
+    .total-amt { font-size: 19px; font-weight: 900; }
+
+    /* Save bill button */
+    .btn-save {
+      background: #c25e00;
+      color: #ffffff;
+      border: none;
+      padding: 14px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 900;
+      width: 100%;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+    .btn-save:hover { background: #9a4c03; }
+    .btn-save:disabled { background: #64748b; cursor: not-allowed; }
 
     /* Login Modal */
-    #loginModal {
+    #authOverlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.92);
+      background: rgba(0,0,0,0.92);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
       padding: 16px;
     }
-    .login-box {
-      background: #111c2e;
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 28px 24px;
+    .auth-box {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 26px;
       width: 100%;
       max-width: 380px;
       text-align: center;
@@ -182,244 +229,221 @@
 <body>
 
   <!-- 🔒 LOGIN OVERLAY -->
-  <div id="loginModal" style="display: none;">
-    <div class="login-box">
-      <div class="brand" style="font-size: 22px;">MOON<span>LIGHT</span> ELECTRICALS</div>
-      <div style="font-size: 11.5px; color: var(--accent); font-style: italic; margin-top: 3px; margin-bottom: 22px;">Brightening Lives, Powering Trust</div>
+  <div id="authOverlay" style="display: none;">
+    <div class="auth-box">
+      <div class="brand-title" style="font-size: 20px;">MOON<span>LIGHT</span> ELECTRICALS</div>
+      <div style="font-size: 11px; color: var(--accent); font-style: italic; margin-top: 3px; margin-bottom: 20px;">Brightening Lives, Powering Trust</div>
 
       <div id="stepPhone">
-        <label style="display:block; text-align:left; font-size:11px; font-weight:900; color:var(--sub-text); margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
-        <input type="tel" id="loginPhoneInput" placeholder="Enter 10-digit number" style="width: 100%; margin-bottom: 14px; font-size: 16px;">
-        <div id="loginErrMsg" style="color: var(--danger); font-size: 12px; margin-bottom: 12px; display: none;"></div>
-        <button class="btn-main" id="btnGetOtp" onclick="sendOtp()" style="width: 100%;">📲 SEND OTP ON WHATSAPP</button>
+        <label style="display:block; text-align:left; font-size:11px; font-weight:800; color:#cbd5e1; margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
+        <input type="tel" id="loginPhone" placeholder="Enter 10-digit number" style="width: 100%; margin-bottom: 12px; font-size: 16px;">
+        <div id="loginErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
+        <button class="btn-save" id="btnSendOtp" onclick="sendOtp()" style="background:#f59e0b; color:#000;">📲 SEND OTP ON WHATSAPP</button>
       </div>
 
       <div id="stepOtp" style="display: none;">
-        <div style="font-size: 12px; color: var(--sub-text); margin-bottom: 12px;">OTP sent for: <b id="displaySentPhone" style="color:#fff;"></b></div>
-        <input type="number" id="loginOtpVal" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 14px; font-size: 20px; text-align: center; letter-spacing: 4px;">
-        <button class="btn-main btn-green" onclick="verifyOtp()" style="width: 100%; margin-bottom: 12px;">VERIFY & LOGIN</button>
-        <div>
-          <a id="waDirectBtn" href="#" target="_blank" style="font-size: 11.5px; color: var(--accent); text-decoration: underline;">Open WhatsApp chat for OTP</a>
+        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone" style="color:#fff;"></b></div>
+        <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;">
+        <button class="btn-save" onclick="verifyOtp()" style="background:#10b981;">VERIFY & LOGIN</button>
+        <div style="margin-top: 12px;">
+          <a id="waDirectBtn" href="#" target="_blank" style="font-size: 11px; color: var(--accent); text-decoration: underline;">Direct open WhatsApp for OTP</a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 🏠 TOP NAVBAR -->
-  <div class="navbar">
-    <div class="brand">MOON<span>LIGHT</span> ELECTRICALS</div>
-    <div class="nav-right">
-      <button class="sync-badge" id="btnSyncData" onclick="syncDataBackground()">🔄 Refresh</button>
-      <div class="user-badge" id="userHeaderTag">Loading User...</div>
-    </div>
-  </div>
-
-  <div class="main-wrapper">
-    <!-- TABS NAVIGATION -->
-    <div class="tabs-nav">
-      <button class="tab-btn active" id="tabBillBtn" onclick="switchTab('billing')">📜 Create Bill</button>
-      <button class="tab-btn" id="tabKhataBtn" onclick="switchTab('khata')">📒 Udhar Khata</button>
-      <button class="tab-btn" id="tabStockBtn" onclick="switchTab('stock')">📦 Inventory</button>
-    </div>
-
-    <!-- 🧾 BILLING WORKSPACE -->
-    <div id="viewBilling">
-      <div class="glass-card">
-        <div class="sec-title">1. Customer & Bill Information</div>
-        <div class="form-grid">
-          <!-- Date Field (Auto Today + Changeable) -->
-          <div class="field-col">
-            <label>Bill Date <span>*</span></label>
-            <input type="date" id="billDate">
-          </div>
-
-          <!-- Customer Name (Forced Blank) -->
-          <div class="field-col">
-            <label>Customer Name <span>*</span></label>
-            <input type="text" id="custName" placeholder="Enter Customer Name">
-          </div>
-
-          <div class="field-col">
-            <label>Mobile Number</label>
-            <input type="tel" id="custPhone" placeholder="10-digit number">
-          </div>
-
-          <!-- Rate Type (Forced Blank Select) -->
-          <div class="field-col">
-            <label>Rate Type <span>*</span></label>
-            <select id="rateType" onchange="applyRateType()">
-              <option value="" disabled selected>-- Select Rate Type --</option>
-              <option value="Customer">Normal Customer</option>
-              <option value="Electrician">Electrician Rate</option>
-              <option value="Wholesale">Wholesale / Special</option>
-            </select>
-          </div>
-
-          <!-- Payment Mode (Forced Blank Select) -->
-          <div class="field-col">
-            <label>Payment Mode <span>*</span></label>
-            <select id="payMode">
-              <option value="" disabled selected>-- Select Payment Mode --</option>
-              <option value="Cash">Cash</option>
-              <option value="UPI / Online">UPI / Online</option>
-              <option value="Credit / Udhar">Credit / Udhar</option>
-            </select>
-          </div>
-
-          <div class="field-col">
-            <label>Document Type</label>
-            <select id="billMode">
-              <option value="Invoice">Retail Invoice</option>
-              <option value="Estimate">Quotation / Estimate</option>
-            </select>
-          </div>
-
-          <div class="field-col" style="grid-column: span 2;">
-            <label>Address</label>
-            <input type="text" id="custAddress" value="Sector-121, Noida">
-          </div>
-        </div>
-      </div>
-
-      <div class="glass-card">
-        <div class="sec-title">2. Add Items</div>
-        <div class="form-grid">
-          <div class="field-col" style="grid-column: span 2;">
-            <label>Search & Select Item</label>
-            <input list="dlItems" id="itemSearch" placeholder="Type item name..." onchange="onItemPick()">
-            <datalist id="dlItems"></datalist>
-          </div>
-          <div class="field-col">
-            <label>Rate (₹)</label>
-            <input type="number" id="itemRate" value="0">
-          </div>
-          <div class="field-col">
-            <label>Quantity</label>
-            <input type="number" id="itemQty" value="1" min="1">
-          </div>
-          <div class="field-col" style="grid-column: span 2;">
-            <label>Serial Number / Warranty Note</label>
-            <input type="text" id="itemSerial" placeholder="Optional note or serial number">
-          </div>
-        </div>
-
-        <button class="btn-main btn-blue" onclick="addItem()" style="margin-top: 16px; width: 100%;">
-          + Add Item To Bill
+  <div class="container">
+    <!-- Top Nav with Phone Refresh -->
+    <div class="top-nav">
+      <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
+      <div class="nav-actions">
+        <button class="btn-refresh" id="btnRefresh" onclick="refreshAppData()" title="Sync Items & Low Stock Alerts">
+          🔄 Refresh
         </button>
-
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th style="width: 35px;">#</th>
-              <th>Description</th>
-              <th style="width: 100px;">Rate</th>
-              <th style="width: 60px;">Qty</th>
-              <th style="width: 110px;">Total</th>
-              <th style="width: 45px;"></th>
-            </tr>
-          </thead>
-          <tbody id="cartItemsBody"></tbody>
-        </table>
-
-        <div class="bill-footer-bar">
-          <div>
-            <div style="font-size: 11px; color: var(--sub-text); text-transform: uppercase; font-weight: 800;">Total Items</div>
-            <div id="lblCartCount" style="font-size: 18px; font-weight: 900; margin-top: 2px;">0</div>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-size: 11px; color: var(--sub-text); text-transform: uppercase; font-weight: 800;">Grand Total</div>
-            <div class="grand-val" id="lblGrandTotal">₹0.00</div>
-          </div>
-        </div>
-
-        <button class="btn-main btn-green" id="btnSaveInvoice" onclick="generateAndSaveBill()" style="margin-top: 20px; width: 100%; padding: 15px; font-size: 16px;">
-          ⚡ GENERATE & PRINT INVOICE
-        </button>
+        <div class="user-pill" id="lblUser">Session...</div>
       </div>
     </div>
 
-    <!-- 📒 UDHAR KHATA VIEW (ORIGINAL COMPLETE VIEW) -->
-    <div id="viewKhata" style="display: none;">
-      <div class="glass-card">
-        <div class="sec-title">Pending Udhar Records & Reminders</div>
-        <div id="khataContainer" style="font-size: 13.5px;">Loading Khata...</div>
+    <!-- Low Stock Alert Box -->
+    <div class="alert-box" id="lowStockAlertBox">
+      <b>⚠️ LOW STOCK ALERT:</b>
+      <div id="lowStockItemsList" style="margin-top: 4px;"></div>
+    </div>
+
+    <!-- ROW 1: 5 Columns (Date, Mode, Rate Type, GST Bill?, Payment) -->
+    <div class="grid-row row-5">
+      <div class="form-col">
+        <label>BILL DATE</label>
+        <input type="date" id="billDate">
+      </div>
+      <div class="form-col">
+        <label>MODE <span style="color:#ef4444;">*</span></label>
+        <select id="billMode">
+          <option value="" disabled selected>-- Select Mode --</option>
+          <option value="Final Bill (Tax_Invoices)">Final Bill (Tax_Invoices)</option>
+          <option value="Estimate (Estimates)">Estimate (Estimates)</option>
+        </select>
+      </div>
+      <div class="form-col">
+        <label>RATE TYPE <span style="color:#ef4444;">*</span></label>
+        <select id="rateType" onchange="onRateTypeChange()">
+          <option value="" disabled selected>-- Select Rate Type --</option>
+          <option value="Customer Rate">Customer Rate</option>
+          <option value="Electrician Rate">Electrician Rate</option>
+          <option value="Wholesale Rate">Wholesale Rate</option>
+        </select>
+      </div>
+      <div class="form-col">
+        <label>GST BILL? <span style="color:#ef4444;">*</span></label>
+        <select id="isGstBill" onchange="calculateItemTotal()">
+          <option value="" disabled selected>-- Select GST Bill --</option>
+          <option value="Yes (GST Invoice)">Yes (GST Invoice)</option>
+          <option value="No (Regular Bill)">No (Regular Bill)</option>
+        </select>
+      </div>
+      <div class="form-col">
+        <label>PAYMENT <span style="color:#ef4444;">*</span></label>
+        <select id="paymentMode">
+          <option value="" disabled selected>-- Select Payment --</option>
+          <option value="Cash">Cash</option>
+          <option value="UPI / Online">UPI / Online</option>
+          <option value="Credit / Udhar">Credit / Udhar</option>
+        </select>
       </div>
     </div>
 
-    <!-- 📦 INVENTORY / STOCK INWARD (ORIGINAL COMPLETE FIELDS) -->
-    <div id="viewStock" style="display: none;">
-      <div class="glass-card">
-        <div class="sec-title">Add / Inward Stock Entry</div>
-        <div class="form-grid">
-          <div class="field-col" style="grid-column: span 2;">
-            <label>Item Name <span>*</span></label>
-            <input type="text" id="stkName" placeholder="Enter Full Item Name">
-          </div>
-          <div class="field-col">
-            <label>HSN / SAC</label>
-            <input type="text" id="stkHsn" placeholder="e.g. 8538">
-          </div>
-          <div class="field-col">
-            <label>Inward Quantity <span>*</span></label>
-            <input type="number" id="stkQty" value="10" min="1">
-          </div>
-          <div class="field-col">
-            <label>Customer Rate (₹)</label>
-            <input type="number" id="stkCustRate" placeholder="0">
-          </div>
-          <div class="field-col">
-            <label>Electrician Rate (₹)</label>
-            <input type="number" id="stkElecRate" placeholder="0">
-          </div>
-          <div class="field-col">
-            <label>Family / Wholesale Rate (₹)</label>
-            <input type="number" id="stkFamRate" placeholder="0">
-          </div>
-          <div class="field-col">
-            <label>Minimum Stock Alert Qty</label>
-            <input type="number" id="stkMinQty" value="2">
-          </div>
-        </div>
-        <button class="btn-main btn-blue" onclick="submitStockInward()" style="margin-top: 16px;">+ Update / Inward Stock</button>
+    <!-- ROW 2: Customer Name, WhatsApp Number -->
+    <div class="grid-row row-2">
+      <div class="form-col">
+        <label>CUSTOMER NAME <span style="color:#ef4444;">*</span></label>
+        <input type="text" id="custName" placeholder="Customer Name">
+      </div>
+      <div class="form-col">
+        <label>WHATSAPP NUMBER</label>
+        <input type="tel" id="custPhone" placeholder="10-digit number">
       </div>
     </div>
+
+    <!-- ROW 3: Customer Address, Customer GSTIN -->
+    <div class="grid-row row-2">
+      <div class="form-col">
+        <label>CUSTOMER ADDRESS</label>
+        <input type="text" id="custAddress" value="Sector-121, Noida">
+      </div>
+      <div class="form-col">
+        <label>CUSTOMER GSTIN (OPTIONAL)</label>
+        <input type="text" id="custGstin" placeholder="09XXXXX...">
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ROW 4: Item Name, Work Note, HSN -->
+    <div class="grid-row row-item-top">
+      <div class="form-col">
+        <label>ITEM / SERVICE NAME</label>
+        <input list="dlItems" id="itemSearch" placeholder="Search item or type Labour Charge..." onchange="onItemSelect()">
+        <datalist id="dlItems"></datalist>
+      </div>
+      <div class="form-col">
+        <label>WORK NOTE / SERIAL / WARRANTY</label>
+        <input type="text" id="itemSerial" placeholder="e.g. Fan Fitting / SN1092">
+      </div>
+      <div class="form-col">
+        <label>HSN / SAC</label>
+        <input type="text" id="itemHsn" placeholder="Auto" readonly>
+      </div>
+    </div>
+
+    <!-- ROW 5: Rate, Disc, GST Added (Right of Disc), Qty, Total -->
+    <div class="grid-row row-item-btm">
+      <div class="form-col">
+        <label>RATE (₹) [🔒 LOCKED]</label>
+        <input type="text" id="itemRate" value="Locked" readonly>
+      </div>
+      <div class="form-col">
+        <label>DISC (₹/PC)</label>
+        <input type="number" id="itemDisc" value="0" min="0" oninput="calculateItemTotal()">
+      </div>
+      <div class="form-col">
+        <label>GST (₹) [ADDED]</label>
+        <input type="text" id="itemGstAdded" value="0.00" readonly style="color:#b45309; font-weight:800;">
+      </div>
+      <div class="form-col">
+        <label>QTY</label>
+        <input type="number" id="itemQty" value="1" min="1" oninput="calculateItemTotal()">
+      </div>
+      <div class="form-col">
+        <label>TOTAL (₹)</label>
+        <input type="text" id="itemTotal" value="0.00" readonly>
+      </div>
+    </div>
+
+    <!-- Add Item Button -->
+    <button class="btn-add" onclick="addItemToBill()">+ Add Item / Charge to Bill</button>
+
+    <!-- Table with GST Column right of Disc -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Item & Description</th>
+            <th>HSN/SAC</th>
+            <th>Rate</th>
+            <th>Disc</th>
+            <th>GST (Added)</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th style="width: 30px; text-align: center;">✕</th>
+          </tr>
+        </thead>
+        <tbody id="billItemsTbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Grand Total Bar -->
+    <div class="total-bar">
+      <div class="total-title">Grand Total:</div>
+      <div class="total-amt" id="lblGrandTotal">₹0.00</div>
+    </div>
+
+    <!-- Save & Print Button -->
+    <button class="btn-save" id="btnSubmitBill" onclick="validateAndSaveBill()">
+      ⚡ Save Bill & Generate PDF
+    </button>
   </div>
 
   <script>
-    // ⚙️ LIVE BACKEND ENDPOINT
+    // ⚙️️ LIVE GOOGLE APPS SCRIPT URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
 
     let currentUser = JSON.parse(localStorage.getItem("mle_user")) || null;
     let cachedItems = JSON.parse(localStorage.getItem("mle_items")) || [];
     let billItems = [];
-    let bankSettings = null;
+    let currentItemObj = null;
 
     window.onload = function() {
-      // Default to Today's Date
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
+      // Set Today's Date automatically
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
       document.getElementById("billDate").value = `${yyyy}-${mm}-${dd}`;
 
       if (!currentUser) {
-        document.getElementById("loginModal").style.display = "flex";
+        document.getElementById("authOverlay").style.display = "flex";
       } else {
         initSession();
       }
     };
 
     function initSession() {
-      document.getElementById("userHeaderTag").innerText = `${currentUser.name} (${currentUser.role})`;
-      if (currentUser.role !== "Admin") {
-        document.getElementById("tabKhataBtn").style.display = "none";
-        document.getElementById("tabStockBtn").style.display = "none";
-      }
-      fillDatalist(cachedItems);
-      syncDataBackground();
+      document.getElementById("lblUser").innerText = `${currentUser.name} (${currentUser.role})`;
+      populateDatalist(cachedItems);
+      refreshAppData();
     }
 
-    // CORS Safe API Handler
+    // CORS Safe Request
     async function apiCall(action, payload = {}) {
       payload.action = action;
       const res = await fetch(SCRIPT_URL, {
@@ -431,24 +455,37 @@
       return JSON.parse(txt);
     }
 
-    async function syncDataBackground() {
-      const btn = document.getElementById("btnSyncData");
+    // ⚡ Phone Refresh Sync
+    async function refreshAppData() {
+      const btn = document.getElementById("btnRefresh");
       btn.innerText = "⏳ Syncing...";
+      btn.disabled = true;
+
       try {
         const res = await apiCall("getAppData", { role: currentUser ? currentUser.role : "Staff" });
         if (res && res.items) {
           cachedItems = res.items;
           localStorage.setItem("mle_items", JSON.stringify(res.items));
-          fillDatalist(res.items);
+          populateDatalist(res.items);
+
+          if (res.alerts && res.alerts.length > 0) {
+            document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(a => `• ${a}`).join("<br>");
+            document.getElementById("lowStockAlertBox").style.display = "block";
+          } else {
+            document.getElementById("lowStockAlertBox").style.display = "none";
+          }
           btn.innerText = "✓ Synced";
         }
       } catch(e) {
         btn.innerText = "🔄 Refresh";
       }
-      setTimeout(() => { btn.innerText = "🔄 Refresh"; }, 2000);
+      setTimeout(() => {
+        btn.innerText = "🔄 Refresh";
+        btn.disabled = false;
+      }, 1500);
     }
 
-    function fillDatalist(items) {
+    function populateDatalist(items) {
       const dl = document.getElementById("dlItems");
       dl.innerHTML = "";
       items.forEach(it => {
@@ -458,14 +495,14 @@
       });
     }
 
-    // ⚡ OTP Login Flow
+    // ⚡ OTP Login Handlers
     async function sendOtp() {
-      const phone = document.getElementById("loginPhoneInput").value.trim().replace(/\D/g, '');
-      const err = document.getElementById("loginErrMsg");
-      const btn = document.getElementById("btnGetOtp");
+      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
+      const err = document.getElementById("loginErr");
+      const btn = document.getElementById("btnSendOtp");
 
       if (phone.length !== 10) {
-        err.innerText = "10-digit mobile number enter karein!";
+        err.innerText = "10-digit number enter karein!";
         err.style.display = "block";
         return;
       }
@@ -496,127 +533,254 @@
     }
 
     async function verifyOtp() {
-      const phone = document.getElementById("loginPhoneInput").value.trim().replace(/\D/g, '');
-      const otp = document.getElementById("loginOtpVal").value.trim();
+      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
+      const otp = document.getElementById("loginOtp").value.trim();
       const res = await apiCall("verifyLoginOtp", { phone: phone, otp: otp });
       if (res && res.success) {
         currentUser = res;
         localStorage.setItem("mle_user", JSON.stringify(res));
-        document.getElementById("loginModal").style.display = "none";
+        document.getElementById("authOverlay").style.display = "none";
         initSession();
       } else {
         alert(res.message || "Invalid OTP!");
       }
     }
 
-    // ⚡ Rate Type & Item Selector
-    function onItemPick() {
+    // ⚡ Item Selection
+    function onItemSelect() {
       const name = document.getElementById("itemSearch").value.trim();
-      const rateType = document.getElementById("rateType").value;
       const match = cachedItems.find(x => x.name.toLowerCase() === name.toLowerCase());
+
       if (match) {
-        let r = match.custRate;
-        if (rateType === "Electrician") r = match.elecRate;
-        if (rateType === "Wholesale" && match.famRate) r = match.famRate;
-        document.getElementById("itemRate").value = r;
+        currentItemObj = match;
+        document.getElementById("itemHsn").value = match.hsn || "-";
+        resolveRate();
+      } else if (name.toLowerCase().includes("labour") || name.toLowerCase().includes("service")) {
+        currentItemObj = { name: name, hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
+        document.getElementById("itemHsn").value = "998519";
+        document.getElementById("itemRate").value = "0";
+        document.getElementById("itemRate").readOnly = false;
+      } else {
+        currentItemObj = null;
+        document.getElementById("itemHsn").value = "Auto";
+        document.getElementById("itemRate").value = "Locked";
+        document.getElementById("itemRate").readOnly = true;
       }
+      calculateItemTotal();
     }
 
-    function applyRateType() {
-      onItemPick();
+    function onRateTypeChange() {
+      resolveRate();
+      calculateItemTotal();
     }
 
-    function addItem() {
+    function resolveRate() {
+      if (!currentItemObj) return;
+      const rateType = document.getElementById("rateType").value;
+      let r = currentItemObj.custRate || 0;
+      if (rateType === "Electrician Rate") r = currentItemObj.elecRate || r;
+      if (rateType === "Wholesale Rate" && currentItemObj.famRate) r = currentItemObj.famRate;
+
+      document.getElementById("itemRate").value = `₹${r}`;
+    }
+
+    // ⚡ GST ADDITION AFTER DISCOUNT LOGIC
+    function calculateItemTotal() {
+      let baseRate = 0;
+      const rateVal = document.getElementById("itemRate").value;
+      if (rateVal.includes("₹")) {
+        baseRate = parseFloat(rateVal.replace("₹", "")) || 0;
+      } else {
+        baseRate = parseFloat(rateVal) || 0;
+      }
+
+      const disc = parseFloat(document.getElementById("itemDisc").value) || 0;
+      const qty = parseFloat(document.getElementById("itemQty").value) || 1;
+      const discountedRate = Math.max(0, baseRate - disc);
+
+      const isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
+      let gstPerPc = 0;
+
+      if (isGstSelected) {
+        const gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
+        gstPerPc = (discountedRate * gstPct) / 100;
+      }
+
+      document.getElementById("itemGstAdded").value = `+₹${gstPerPc.toFixed(2)}`;
+      const finalUnitRate = discountedRate + gstPerPc;
+      const total = finalUnitRate * qty;
+
+      document.getElementById("itemTotal").value = total.toFixed(2);
+    }
+
+    // ⚡ Add Item to Table
+    function addItemToBill() {
       const name = document.getElementById("itemSearch").value.trim();
-      const rate = parseFloat(document.getElementById("itemRate").value) || 0;
-      const qty = parseInt(document.getElementById("itemQty").value) || 1;
+      const hsn = document.getElementById("itemHsn").value.trim();
       const serial = document.getElementById("itemSerial").value.trim();
 
-      if (!name) { alert("⚠️ Kripya item select karein!"); return; }
-      if (rate <= 0) { alert("⚠️ Rate zero se zyada hona chahiye!"); return; }
+      let baseRate = 0;
+      const rateVal = document.getElementById("itemRate").value;
+      if (rateVal.includes("₹")) {
+        baseRate = parseFloat(rateVal.replace("₹", "")) || 0;
+      } else {
+        baseRate = parseFloat(rateVal) || 0;
+      }
 
-      const total = rate * qty;
-      billItems.push({ name, rate, baseRate: rate, finalRate: rate, qty, discount: 0, serialNo: serial, total });
-      renderCart();
+      const disc = parseFloat(document.getElementById("itemDisc").value) || 0;
+      const qty = parseFloat(document.getElementById("itemQty").value) || 1;
+      const discountedRate = Math.max(0, baseRate - disc);
 
+      const isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
+      let gstPerPc = 0;
+      const gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
+
+      if (isGstSelected) {
+        gstPerPc = (discountedRate * gstPct) / 100;
+      }
+
+      const finalUnitRate = discountedRate + gstPerPc;
+      const total = finalUnitRate * qty;
+
+      if (!name) { alert("⚠️ Kripya Item select karein!"); return; }
+      if (baseRate <= 0) { alert("⚠️ Rate 0 se zyada hona chahiye!"); return; }
+
+      billItems.push({
+        name: name,
+        serialNo: serial,
+        hsn: hsn,
+        baseRate: baseRate,
+        discount: disc,
+        gstPct: isGstSelected ? gstPct : 0,
+        gstPerPc: gstPerPc,
+        finalRate: finalUnitRate,
+        qty: qty,
+        total: total
+      });
+
+      renderBillTable();
+
+      // Reset item inputs
       document.getElementById("itemSearch").value = "";
-      document.getElementById("itemRate").value = "0";
-      document.getElementById("itemQty").value = "1";
       document.getElementById("itemSerial").value = "";
+      document.getElementById("itemHsn").value = "Auto";
+      document.getElementById("itemRate").value = "Locked";
+      document.getElementById("itemRate").readOnly = true;
+      document.getElementById("itemDisc").value = "0";
+      document.getElementById("itemGstAdded").value = "0.00";
+      document.getElementById("itemQty").value = "1";
+      document.getElementById("itemTotal").value = "0.00";
+      currentItemObj = null;
     }
 
-    function renderCart() {
-      const tbody = document.getElementById("cartItemsBody");
+    function renderBillTable() {
+      const tbody = document.getElementById("billItemsTbody");
       tbody.innerHTML = "";
       let grand = 0;
+
       billItems.forEach((it, idx) => {
         grand += it.total;
         tbody.innerHTML += `
           <tr>
-            <td>${idx + 1}</td>
-            <td><b>${it.name}</b> ${it.serialNo ? `<br><small style="color:var(--accent);">Note: ${it.serialNo}</small>` : ''}</td>
-            <td>₹${it.rate.toFixed(2)}</td>
+            <td>
+              <b>${it.name}</b>
+              ${it.serialNo ? `<br><small style="color:#d97706;">${it.serialNo}</small>` : ''}
+            </td>
+            <td>${it.hsn || '-'}</td>
+            <td>₹${it.baseRate.toFixed(2)}</td>
+            <td style="color:#059669;">-₹${it.discount.toFixed(2)}</td>
+            <td style="color:#b45309; font-weight:bold;">+₹${it.gstPerPc.toFixed(2)}</td>
             <td>${it.qty}</td>
             <td>₹${it.total.toFixed(2)}</td>
-            <td><button class="btn-del" onclick="deleteItem(${idx})">✕</button></td>
+            <td style="text-align:center;"><button class="btn-del-row" onclick="deleteBillItem(${idx})">✕</button></td>
           </tr>
         `;
       });
-      document.getElementById("lblCartCount").innerText = billItems.length;
+
       document.getElementById("lblGrandTotal").innerText = `₹${grand.toFixed(2)}`;
     }
 
-    function deleteItem(idx) {
+    function deleteBillItem(idx) {
       billItems.splice(idx, 1);
-      renderCart();
+      renderBillTable();
     }
 
-    // ⚡ Strict Validations: Customer Name, Rate Type, Payment Mode
-    async function generateAndSaveBill() {
-      const custName = document.getElementById("custName").value.trim();
+    // ⚡ STRICT FORCE-BLANK VALIDATIONS
+    async function validateAndSaveBill() {
+      const billDateRaw = document.getElementById("billDate").value;
+      const mode = document.getElementById("billMode").value;
       const rateType = document.getElementById("rateType").value;
-      const payMode = document.getElementById("payMode").value;
+      const isGst = document.getElementById("isGstBill").value;
+      const payMode = document.getElementById("paymentMode").value;
+      const custName = document.getElementById("custName").value.trim();
 
-      if (!custName) {
-        alert("⚠️️ Galti: Kripya Customer ka Naam enter karein!");
-        document.getElementById("custName").focus();
+      // 1. Mandatory Bill Date
+      if (!billDateRaw) {
+        alert("⚠️ Galti: Kripya Bill Date select karein!");
+        document.getElementById("billDate").focus();
         return;
       }
+
+      // 2. Mandatory Mode
+      if (!mode) {
+        alert("⚠️ Galti: Kripya Mode (Final Bill / Estimate) select karein!");
+        document.getElementById("billMode").focus();
+        return;
+      }
+
+      // 3. Mandatory Rate Type
       if (!rateType) {
-        alert("⚠️ Galti: Kripya Rate Type (Customer/Electrician) select karein!");
+        alert("⚠️ Galti: Kripya Rate Type select karein!");
         document.getElementById("rateType").focus();
         return;
       }
-      if (!payMode) {
-        alert("⚠️ Galti: Kripya Payment Mode (Cash/UPI/Udhar) select karein!");
-        document.getElementById("payMode").focus();
+
+      // 4. Mandatory GST Bill?
+      if (!isGst) {
+        alert("⚠️ Galti: Kripya GST Bill? (Yes/No) select karein!");
+        document.getElementById("isGstBill").focus();
         return;
       }
+
+      // 5. Mandatory Payment Mode
+      if (!payMode) {
+        alert("⚠️ Galti: Kripya Payment Mode (Cash / UPI / Udhar) select karein!");
+        document.getElementById("paymentMode").focus();
+        return;
+      }
+
+      // 6. Mandatory Customer Name
+      if (!custName) {
+        alert("⚠ Galti: Kripya Customer ka Naam enter karein!");
+        document.getElementById("custName").focus();
+        return;
+      }
+
+      // 7. Mandatory Items
       if (billItems.length === 0) {
         alert("⚠️ Galti: Bill me kam se kam 1 item zaroor add karein!");
         return;
       }
 
-      const btn = document.getElementById("btnSaveInvoice");
+      const btn = document.getElementById("btnSubmitBill");
       btn.disabled = true;
-      btn.innerText = "⏳ Generating Invoice PDF...";
+      btn.innerText = "⏳ Saving Bill & Generating PDF...";
 
-      const rawDate = document.getElementById("billDate").value;
-      let cleanDate = "";
-      if (rawDate) {
-        const parts = rawDate.split("-");
-        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-        cleanDate = `${parts[2]}-${months[parseInt(parts[1])-1]}-${parts[0]}`;
-      }
+      // Format clean date DD-MMM-YYYY
+      const parts = billDateRaw.split("-");
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const formattedDate = `${parts[2]}-${months[parseInt(parts[1])-1]}-${parts[0]}`;
 
       const payload = {
+        billMode: mode.includes("Estimate") ? "Estimate" : "Invoice",
+        billDate: formattedDate,
+        rateType: rateType,
+        isGst: isGst.includes("Yes"),
+        paymentMode: payMode,
         customerName: custName,
         phone: document.getElementById("custPhone").value.trim(),
         address: document.getElementById("custAddress").value.trim(),
-        paymentMode: payMode,
-        billMode: document.getElementById("billMode").value,
-        billDate: cleanDate,
-        rawDateInput: rawDate,
+        gstin: document.getElementById("custGstin").value.trim(),
         items: billItems,
         grandTotal: billItems.reduce((acc, c) => acc + c.total, 0)
       };
@@ -624,122 +788,29 @@
       try {
         const res = await apiCall("processBillOrEstimate", payload);
         btn.disabled = false;
-        btn.innerText = "⚡ GENERATE & PRINT INVOICE";
+        btn.innerText = "⚡ Save Bill & Generate PDF";
 
         if (res && res.success) {
-          alert(`✓ Invoice Generated! Doc No: ${res.docNo}`);
+          alert(`✓ Bill Generated Successfully! Doc No: ${res.docNo}`);
           if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
 
-          // Reset inputs to clean blank state
+          // Reset cart & forced-blank fields
           billItems = [];
-          renderCart();
+          renderBillTable();
           document.getElementById("custName").value = "";
           document.getElementById("custPhone").value = "";
+          document.getElementById("custGstin").value = "";
+          document.getElementById("billMode").selectedIndex = 0;
           document.getElementById("rateType").selectedIndex = 0;
-          document.getElementById("payMode").selectedIndex = 0;
+          document.getElementById("isGstBill").selectedIndex = 0;
+          document.getElementById("paymentMode").selectedIndex = 0;
         } else {
-          alert("Error: " + (res.message || "Failed to generate bill"));
+          alert("Error: " + (res.message || "Failed to save bill"));
         }
       } catch(e) {
         btn.disabled = false;
-        btn.innerText = "⚡ GENERATE & PRINT INVOICE";
-        alert("Server error. Please retry!");
-      }
-    }
-
-    // ⚡ Stock Inward Handler
-    async function submitStockInward() {
-      const name = document.getElementById("stkName").value.trim();
-      const qty = parseFloat(document.getElementById("stkQty").value) || 0;
-      if (!name || qty <= 0) {
-        alert("⚠️ Item name aur quantity sahi se bharein!");
-        return;
-      }
-
-      const data = {
-        name: name,
-        hsn: document.getElementById("stkHsn").value.trim(),
-        qty: qty,
-        custRate: parseFloat(document.getElementById("stkCustRate").value) || 0,
-        elecRate: parseFloat(document.getElementById("stkElecRate").value) || 0,
-        famRate: parseFloat(document.getElementById("stkFamRate").value) || 0,
-        minQty: parseFloat(document.getElementById("stkMinQty").value) || 2
-      };
-
-      try {
-        const res = await apiCall("addOrUpdateStock", { data: data, role: currentUser.role });
-        if (res && res.success) {
-          alert(`✓ Stock updated for ${res.name}`);
-          document.getElementById("stkName").value = "";
-          document.getElementById("stkQty").value = "10";
-          syncDataBackground();
-        } else {
-          alert("Error updating stock");
-        }
-      } catch(e) {
-        alert("Failed to update stock");
-      }
-    }
-
-    // ⚡ Tab Switcher & Udhar Khata Flow
-    function switchTab(tab) {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.getElementById("viewBilling").style.display = (tab === 'billing') ? 'block' : 'none';
-      document.getElementById("viewKhata").style.display = (tab === 'khata') ? 'block' : 'none';
-      document.getElementById("viewStock").style.display = (tab === 'stock') ? 'block' : 'none';
-
-      if (tab === 'billing') document.getElementById("tabBillBtn").classList.add("active");
-      if (tab === 'khata') {
-        document.getElementById("tabKhataBtn").classList.add("active");
-        renderKhata();
-      }
-      if (tab === 'stock') document.getElementById("tabStockBtn").classList.add("active");
-    }
-
-    async function renderKhata() {
-      const c = document.getElementById("khataContainer");
-      c.innerHTML = "Fetching pending udhar records...";
-      const res = await apiCall("getKhataRecords", { role: currentUser.role });
-      if (res && res.records) {
-        bankSettings = res.settings;
-        if (res.records.length === 0) { c.innerHTML = "No pending records!"; return; }
-        
-        let html = '<table class="data-table"><thead><tr><th>Doc No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-        res.records.forEach(r => {
-          const isPending = (r.status === "Pending");
-          html += `
-            <tr>
-              <td><b>${r.docNo}</b></td>
-              <td>${r.date}</td>
-              <td>${r.customerName}</td>
-              <td>${r.phone || '-'}</td>
-              <td><b>₹${r.amount}</b></td>
-              <td><b style="color:${isPending ? '#f59e0b' : '#10b981'}">${r.status}</b></td>
-              <td>
-                ${isPending && r.phone ? `<button class="btn-main" style="padding:4px 8px; font-size:11px; margin-right:4px;" onclick="sendKhataReminder('${r.docNo}', '${r.customerName}', '${r.phone}', ${r.amount}, '${r.date}')">📲 WhatsApp</button>` : ''}
-                ${isPending ? `<button class="btn-main btn-green" style="padding:4px 8px; font-size:11px;" onclick="markPaid('${r.docNo}')">✓ Paid</button>` : ''}
-              </td>
-            </tr>
-          `;
-        });
-        html += '</tbody></table>';
-        c.innerHTML = html;
-      }
-    }
-
-    function sendKhataReminder(docNo, name, phone, amount, date) {
-      const upi = (bankSettings && bankSettings.upi) ? bankSettings.upi : "8860880453@kotak";
-      const payUrl = `https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=${encodeURIComponent(upi)}&am=${amount}`;
-      const msg = `*Greetings from Moon Light Electricals!*\n\nHi ${name},\nThis is a gentle reminder that payment for Invoice/Bill *${docNo}* dated *${date}* is pending.\n\n• *Pending Amount:* ₹${amount}\n• *Due To:* Moon Light Electricals (Sector-121, Noida)\n\n👉 *Tap below to Pay directly via GPay / PhonePe / Paytm:*\n${payUrl}\n\nOr pay manually using UPI ID:\n*${upi}*\n\nThank you for your business!\n*MOON LIGHT ELECTRICALS*\nShop No 1, Sadbhavna Market, Sector-121, Noida\nContact: 9650897965 / 8860706865`;
-      window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    async function markPaid(docNo) {
-      if (!confirm(`Mark ${docNo} as Paid?`)) return;
-      const res = await apiCall("markKhataPaid", { docNo: docNo, role: currentUser.role });
-      if (res && res.success) {
-        alert("Marked as Paid!");
-        renderKhata();
+        btn.innerText = "⚡ Save Bill & Generate PDF";
+        alert("Server communication error. Please retry!");
       }
     }
   </script>
