@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Moon Light Electricals</title>
+  
+  <!-- PWA & Mobile Install Meta Tags -->
+  <meta name="theme-color" content="#d97706">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MoonLight ERP">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
   <style>
     :root {
       --bg: #f8fafc;
@@ -58,6 +68,21 @@
       color: #000000;
       border-color: #d97706;
     }
+    .btn-install {
+      background: #fef08a;
+      color: #854d0e;
+      border: 1px solid #fde047;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-install:active { transform: scale(0.96); }
+
     .btn-refresh {
       background: #e0f2fe;
       color: #0284c7;
@@ -357,7 +382,7 @@
   </div>
 
   <div class="container">
-    <!-- Top Nav with View Tabs, 24H Timer, Refresh & Logout -->
+    <!-- Top Nav with View Tabs, 24H Timer, PWA Install, Refresh & Logout -->
     <div class="top-nav">
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <div class="brand-wrap">
@@ -369,13 +394,14 @@
         <button class="nav-tab-btn" id="tabStockBtn" onclick="switchView('stock')">📦 Stock Inward</button>
       </div>
       <div class="nav-actions">
+        <!-- 📲 PWA App Install Button -->
+        <button class="btn-install" id="btnInstallApp" onclick="triggerPwaInstall()">📲 Install App</button>
         <!-- ⏳ Live 24H Session Countdown Timer -->
         <div class="timer-pill" id="sessionTimerBadge" title="Session Timeout">⏳ 24:00:00</div>
         <button class="btn-refresh" id="btnRefresh" onclick="refreshAppData()" title="Sync Items From Sheet">
           🔄 Refresh
         </button>
         <div class="user-pill" id="lblUser">Session...</div>
-        <!-- 🚪 Logout Button -->
         <button class="btn-logout" onclick="userLogout()" title="Logout from System">🚪 Logout</button>
       </div>
     </div>
@@ -592,6 +618,29 @@
     let lastSelectedBillingItem = null;
     let lastSelectedStockItem = null;
     let sessionTimerInterval = null;
+    let deferredPwaPrompt = null;
+
+    // 📲 PWA INSTALL EVENT LISTENER
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      const installBtn = document.getElementById("btnInstallApp");
+      if (installBtn) installBtn.style.display = "flex";
+    });
+
+    function triggerPwaInstall() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            document.getElementById("btnInstallApp").style.display = "none";
+          }
+          deferredPwaPrompt = null;
+        });
+      } else {
+        alert("PWA Install prompt: Browser menu (3 dots) par click karke 'Add to Home screen' ya 'Install app' chunein!");
+      }
+    }
 
     window.onload = function() {
       const now = new Date();
@@ -604,6 +653,11 @@
         document.getElementById("authOverlay").style.display = "flex";
       } else {
         initSession();
+      }
+
+      // Register Service Worker if supported
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
       }
     };
 
@@ -628,7 +682,6 @@
       startSessionTimer();
     }
 
-    // ⏳ 24-HOUR COUNTDOWN TIMER LOGIC
     function startSessionTimer() {
       if (sessionTimerInterval) clearInterval(sessionTimerInterval);
       
@@ -640,7 +693,7 @@
         loginTime = parseInt(loginTime);
       }
 
-      const totalDuration = 24 * 60 * 60 * 1000; // 24 Hours in ms
+      const totalDuration = 24 * 60 * 60 * 1000;
 
       sessionTimerInterval = setInterval(() => {
         const now = new Date().getTime();
@@ -708,7 +761,6 @@
       }, 1500);
     }
 
-    // ⚡ PRECISE HSN AUTO-DETECTION (NO BLIND DEFAULT GUESS)
     function detectHsnFromName(name) {
       var n = name.toLowerCase().trim();
       if (!n) return "";
@@ -721,7 +773,7 @@
       if (n.includes("iron") || n.includes("press") || n.includes("geyser") || n.includes("heater") || n.includes("element") || n.includes("rod")) return "8516";
       if (n.includes("tape")) return "3919";
       if (n.includes("pipe") || n.includes("casing") || n.includes("pvc")) return "3917";
-      return ""; // No blind guess if unmatched!
+      return "";
     }
 
     function handleItemDirectClick() {
@@ -926,9 +978,8 @@
       const qty = parseFloat(document.getElementById("itemQty").value) || 1;
 
       if (!name) { alert("⚠️ Kripya Item select ya enter karein!"); return; }
-      if (baseRate <= 0) { alert("⚠️ Rate 0 se zyada hona chahiye!"); return; }
+      if (baseRate <= 0) { alert("⚠️️ Rate 0 se zyada hona chahiye!"); return; }
 
-      // HSN Confirmation Prompt if auto-detected or empty
       if (!hsn) {
         var userHsn = prompt("⚠️ Item ke liye HSN Code enter karein (Optional):", "8538");
         hsn = userHsn ? userHsn.trim() : "-";
@@ -1137,7 +1188,6 @@
       }
     }
 
-    // ⚡ STOCK INWARD WITH HSN CONFIRMATION
     async function submitStockInward() {
       const name = document.getElementById("stkName").value.trim();
       const qty = parseFloat(document.getElementById("stkQty").value) || 0;
@@ -1148,10 +1198,9 @@
         return;
       }
 
-      // Check if HSN entered or prompt
       if (!hsn) {
         const askHsn = prompt(`"${name}" ke liye HSN code confirm karein:`, detectHsnFromName(name) || "8538");
-        if (askHsn === null) return; // User cancelled
+        if (askHsn === null) return;
         hsn = askHsn.trim();
         document.getElementById("stkHsn").value = hsn;
       } else {
