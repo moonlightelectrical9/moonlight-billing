@@ -354,9 +354,103 @@
       text-align: center;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
     }
+
+    /* 🎉 Bill Success Action Modal */
+    #billSuccessModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100000;
+      padding: 16px;
+    }
+    .success-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 26px 20px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .success-icon { font-size: 42px; margin-bottom: 8px; }
+    .success-title { font-size: 19px; font-weight: 900; color: #059669; }
+    .success-sub { font-size: 13px; color: #475569; margin: 4px 0 16px 0; font-weight: 600; }
+    .success-actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn-wa-share {
+      background: #25d366;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-wa-share:hover { background: #1ebd56; }
+    .btn-view-pdf {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-view-pdf:hover { background: #1d4ed8; }
+    .btn-next-bill {
+      background: #f1f5f9;
+      color: #0f172a;
+      border: 1.5px solid #cbd5e1;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-next-bill:hover { background: #e2e8f0; }
   </style>
 </head>
 <body>
+
+  <!-- 🎉 BILL SUCCESS ACTION MODAL -->
+  <div id="billSuccessModal" style="display: none;">
+    <div class="success-card">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Bill Generated Successfully!</div>
+      <div class="success-sub" id="lblSuccessDocNo">Doc No: -</div>
+      
+      <div class="success-actions">
+        <!-- 1. Send WhatsApp -->
+        <button class="btn-wa-share" id="btnShareWhatsApp" onclick="shareBillOnWhatsApp()">
+          📲 Send Invoice on WhatsApp
+        </button>
+        <!-- 2. View / Download PDF -->
+        <button class="btn-view-pdf" id="btnViewDownloadPdf" onclick="viewDownloadPdf()">
+          👁️ View / Download PDF
+        </button>
+        <!-- 3. Create Next Bill -->
+        <button class="btn-next-bill" onclick="closeSuccessAndNextBill()">
+          🧾 + Create Next Bill
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- 🔒 AUTHENTICATION SCREEN -->
   <div id="authOverlay" style="display: flex;">
@@ -620,6 +714,9 @@
     let sessionTimerInterval = null;
     let deferredPwaPrompt = null;
     let lastPromptedHsnItem = "";
+    
+    // Last Generated Bill State
+    let lastGeneratedBillData = null;
 
     // 📲 PWA Install Trigger
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -770,7 +867,6 @@
       }, 1500);
     }
 
-    // Category HSN Detection
     function detectHsnFromName(name) {
       var n = name.toLowerCase().trim();
       if (!n) return "";
@@ -813,7 +909,6 @@
       return "";
     }
 
-    // Smart HSN Engine
     function resolveSmartHsn(itemName, targetHsnInputId, allowPopup = true) {
       const cleanName = (itemName || "").trim();
       const hsnInput = document.getElementById(targetHsnInputId);
@@ -853,7 +948,6 @@
       return "";
     }
 
-    // Billing: Direct Click Instant Clear
     function handleItemDirectClick() {
       const input = document.getElementById("itemSearch");
       if (input.value.trim() !== "") {
@@ -889,7 +983,6 @@
         document.getElementById("itemHsn").value = autoHsn;
       }
 
-      // Labour Charge Unlock
       if (lower.includes("labour") || lower.includes("service")) {
         currentItemObj = { name: val, hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
         document.getElementById("itemHsn").value = "998519";
@@ -956,7 +1049,6 @@
       calculateItemTotal();
     }
 
-    // Stock Inward: Direct Click Clear & Blur
     function handleStockDirectClick() {
       const input = document.getElementById("stkName");
       if (input.value.trim() !== "") {
@@ -1193,7 +1285,7 @@
       btn.disabled = !isReady;
     }
 
-    // ⚡ FIXED: STRING SANITIZATION SO NO ".replace is not a function" ERROR
+    // ⚡ BILL GENERATION & ACTION MODAL POPUP TRIGGER
     async function submitBillToBackend() {
       const btn = document.getElementById("btnSubmitBill");
       btn.disabled = true;
@@ -1204,7 +1296,6 @@
       const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
       const formattedDate = `${parts[2]}-${months[parseInt(parts[1])-1]}-${parts[0]}`;
 
-      // Force pure String conversion for all customer & bill fields
       const cleanCustomerName = String(document.getElementById("custName").value || "").trim();
       const cleanPhone = String(document.getElementById("custPhone").value || "").trim();
       const cleanAddress = String(document.getElementById("custAddress").value || "").trim();
@@ -1212,6 +1303,7 @@
       const rawMode = String(document.getElementById("billMode").value || "");
       const cleanRateType = String(document.getElementById("rateType").value || "");
       const cleanPaymentMode = String(document.getElementById("paymentMode").value || "");
+      const totalBillAmount = billItems.reduce((acc, c) => acc + c.total, 0);
 
       const payload = {
         billMode: rawMode.includes("Estimate") ? "Estimate" : "Invoice",
@@ -1224,7 +1316,7 @@
         address: cleanAddress,
         gstin: cleanGstin,
         items: billItems,
-        grandTotal: billItems.reduce((acc, c) => acc + c.total, 0)
+        grandTotal: totalBillAmount
       };
 
       try {
@@ -1233,19 +1325,19 @@
         btn.innerText = "⚡ Save Bill & Generate PDF";
 
         if (res && res.success) {
-          alert(`✓ Bill Generated Successfully! Doc No: ${res.docNo}`);
-          if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
+          // Store generated bill info for actions
+          lastGeneratedBillData = {
+            docNo: res.docNo,
+            pdfUrl: res.pdfUrl,
+            customerName: cleanCustomerName,
+            phone: cleanPhone,
+            grandTotal: totalBillAmount,
+            date: formattedDate
+          };
 
-          billItems = [];
-          renderBillTable();
-          document.getElementById("custName").value = "";
-          document.getElementById("custPhone").value = "";
-          document.getElementById("custGstin").value = "";
-          document.getElementById("billMode").selectedIndex = 0;
-          document.getElementById("rateType").selectedIndex = 0;
-          document.getElementById("isGstBill").selectedIndex = 0;
-          document.getElementById("paymentMode").selectedIndex = 0;
-          checkFormState();
+          // Open Success Action Modal
+          document.getElementById("lblSuccessDocNo").innerText = `Doc No: ${res.docNo} | Amount: ₹${totalBillAmount.toFixed(2)}`;
+          document.getElementById("billSuccessModal").style.display = "flex";
         } else {
           alert("Error: " + (res.message || "Failed to save bill"));
         }
@@ -1254,6 +1346,44 @@
         btn.innerText = "⚡ Save Bill & Generate PDF";
         alert("Server communication error. Please retry!");
       }
+    }
+
+    // 📲 WhatsApp Share
+    function shareBillOnWhatsApp() {
+      if (!lastGeneratedBillData) return;
+      const d = lastGeneratedBillData;
+      const pdfText = d.pdfUrl ? `\n\n📄 *Download Invoice PDF:*\n${d.pdfUrl}` : "";
+      const msg = `*Namaste ${d.customerName} Ji!*\n\nThank you for shopping at *MOON LIGHT ELECTRICALS*.\n\n• *Invoice / Bill No:* ${d.docNo}\n• *Date:* ${d.date}\n• *Total Amount:* ₹${d.grandTotal.toFixed(2)}${pdfText}\n\nShop Address: Sadbhavna Market, Sector-121, Noida\nHelpline: 8860706865\n\n_Brightening Lives, Powering Trust_`;
+      window.open(`https://wa.me/91${d.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    // 👁️ View / Download PDF
+    function viewDownloadPdf() {
+      if (!lastGeneratedBillData || !lastGeneratedBillData.pdfUrl) {
+        alert("PDF link is not available!");
+        return;
+      }
+      window.open(lastGeneratedBillData.pdfUrl, '_blank');
+    }
+
+    // 🧾 Create Next Bill
+    function closeSuccessAndNextBill() {
+      document.getElementById("billSuccessModal").style.display = "none";
+      lastGeneratedBillData = null;
+
+      // Reset Table & Fields
+      billItems = [];
+      renderBillTable();
+      document.getElementById("custName").value = "";
+      document.getElementById("custPhone").value = "";
+      document.getElementById("custGstin").value = "";
+      document.getElementById("billMode").selectedIndex = 0;
+      document.getElementById("rateType").selectedIndex = 0;
+      document.getElementById("isGstBill").selectedIndex = 0;
+      document.getElementById("paymentMode").selectedIndex = 0;
+      checkFormState();
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function switchView(view) {
