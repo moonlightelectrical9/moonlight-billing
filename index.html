@@ -6,11 +6,12 @@
   <title>Moon Light Electricals</title>
   <style>
     :root {
-      --bg: #050c16;
-      --border: #162438;
-      --input-bg: #eef4ff;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #cbd5e1;
+      --input-bg: #f1f5f9;
       --input-text: #0f172a;
-      --accent: #f59e0b;
+      --accent: #d97706;
       --green: #059669;
       --brown: #c25e00;
       --danger-bg: #fee2e2;
@@ -20,46 +21,46 @@
       --yellow-border: #fde68a;
     }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 0; }
-    body { background: var(--bg); color: #ffffff; padding: 12px 16px; min-height: 100vh; }
+    body { background: var(--bg); color: #0f172a; padding: 12px 18px; min-height: 100vh; }
 
     /* Top Nav */
     .top-nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 6px 12px 6px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 12px;
+      padding: 6px 4px 14px 4px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 14px;
     }
-    .brand-title { font-size: 17px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; }
+    .brand-title { font-size: 19px; font-weight: 900; color: #0f172a; letter-spacing: 0.5px; }
     .brand-title span { color: var(--accent); }
     .nav-actions { display: flex; align-items: center; gap: 8px; }
     .nav-tab-btn {
-      background: #0f1c2e;
-      color: #cbd5e1;
+      background: #e2e8f0;
+      color: #334155;
       border: 1px solid var(--border);
-      padding: 6px 12px;
+      padding: 7px 14px;
       border-radius: 6px;
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 12.5px;
+      font-weight: 800;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 5px;
     }
     .nav-tab-btn.active {
-      background: var(--accent);
-      color: #050c16;
-      border-color: var(--accent);
+      background: #f59e0b;
+      color: #000000;
+      border-color: #d97706;
     }
     .btn-refresh {
-      background: #0d1e34;
-      color: #38bdf8;
-      border: 1px solid #1e3a5f;
-      padding: 6px 12px;
+      background: #e0f2fe;
+      color: #0284c7;
+      border: 1px solid #bae6fd;
+      padding: 7px 13px;
       border-radius: 6px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -67,12 +68,13 @@
     }
     .btn-refresh:active { transform: scale(0.96); }
     .user-pill {
-      background: #0f1c2e;
+      background: #e2e8f0;
       border: 1px solid var(--border);
-      padding: 5px 12px;
+      padding: 6px 14px;
       border-radius: 20px;
       font-size: 12px;
-      color: #94a3b8;
+      font-weight: 700;
+      color: #334155;
     }
 
     .container { max-width: 1350px; margin: 0 auto; }
@@ -105,36 +107,69 @@
       .row-item-btm { grid-template-columns: 1fr 1fr; }
     }
 
-    .form-col { display: flex; flex-direction: column; gap: 4px; }
+    .form-col { display: flex; flex-direction: column; gap: 4px; position: relative; }
     .form-col label {
       font-size: 11px;
       font-weight: 800;
-      color: #cbd5e1;
+      color: #475569;
       text-transform: uppercase;
       letter-spacing: 0.3px;
     }
     .form-col label span { color: #ef4444; }
 
-    /* Soft Blue Tinted Inputs (Matching original theme) */
+    /* Light Crisp Inputs */
     input, select {
-      background: var(--input-bg);
-      border: 1px solid #cbd5e1;
-      border-radius: 5px;
+      background: #ffffff;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
       padding: 9px 12px;
       font-size: 13.5px;
-      color: var(--input-text);
+      color: #0f172a;
       outline: none;
       font-weight: 600;
       transition: border-color 0.2s;
     }
     input:focus, select:focus {
-      border-color: var(--accent);
-      background: #ffffff;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
     }
-    input::placeholder { color: #64748b; font-weight: normal; }
-    input[readonly] { background: #e2e8f0; color: #475569; }
+    input::placeholder { color: #94a3b8; font-weight: normal; }
+    input[readonly] { background: #f1f5f9; color: #475569; cursor: not-allowed; }
 
-    .separator { border-bottom: 1px dashed #1e293b; margin: 16px 0; }
+    /* Custom Full-Width Dropdown (Matching Column Width 100%) */
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background: #ffffff;
+      border: 1.5px solid #2563eb;
+      border-radius: 6px;
+      max-height: 280px;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      z-index: 1000;
+      display: none;
+      margin-top: 4px;
+    }
+    .dropdown-item {
+      padding: 10px 14px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #0f172a;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dropdown-item:hover, .dropdown-item.active {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    .dropdown-item small { color: #64748b; font-weight: normal; }
+
+    .separator { border-bottom: 1px dashed #cbd5e1; margin: 16px 0; }
 
     /* Green Add Item Button */
     .btn-add {
@@ -147,7 +182,7 @@
       font-weight: 800;
       width: 100%;
       cursor: pointer;
-      margin-top: 4px;
+      margin-top: 6px;
       margin-bottom: 16px;
       transition: background 0.2s;
     }
@@ -156,6 +191,7 @@
     /* Table */
     .table-wrap {
       background: #ffffff;
+      border: 1.5px solid var(--border);
       border-radius: 6px;
       overflow: hidden;
       margin-bottom: 14px;
@@ -168,15 +204,15 @@
     }
     th {
       background: #f8fafc;
-      padding: 10px 12px;
+      padding: 11px 12px;
       text-align: left;
       font-weight: 800;
-      border-bottom: 2px solid #e2e8f0;
+      border-bottom: 2px solid var(--border);
       font-size: 12px;
       color: #334155;
     }
     td {
-      padding: 10px 12px;
+      padding: 11px 12px;
       border-bottom: 1px solid #f1f5f9;
       font-weight: 600;
     }
@@ -192,7 +228,7 @@
     /* Grand Total Bar */
     .total-bar {
       background: var(--yellow-bar);
-      border: 1px solid var(--yellow-border);
+      border: 1.5px solid var(--yellow-border);
       border-radius: 6px;
       padding: 12px 18px;
       display: flex;
@@ -202,7 +238,7 @@
       margin-bottom: 16px;
     }
     .total-title { font-size: 15px; font-weight: 900; }
-    .total-amt { font-size: 20px; font-weight: 900; }
+    .total-amt { font-size: 22px; font-weight: 900; }
 
     /* Save & Print Button (Auto-Disabled / Highlighted) */
     .btn-save {
@@ -219,23 +255,23 @@
       transition: all 0.2s ease;
     }
     .btn-save:disabled {
-      background: #1e293b !important;
-      color: #64748b !important;
+      background: #e2e8f0 !important;
+      color: #94a3b8 !important;
       cursor: not-allowed !important;
-      border: 1px solid #334155 !important;
+      border: 1px solid #cbd5e1 !important;
       box-shadow: none !important;
     }
     .btn-save:not(:disabled) {
-      box-shadow: 0 4px 14px rgba(194, 94, 0, 0.4);
+      box-shadow: 0 4px 14px rgba(194, 94, 0, 0.3);
     }
     .btn-save:not(:disabled):hover { background: #9a4c03; }
 
-    /* Inward Stock / Khata Boxes */
+    /* Auxiliary Card for Khata and Inward */
     .aux-card {
-      background: #0b1524;
-      border: 1px solid var(--border);
+      background: #ffffff;
+      border: 1.5px solid var(--border);
       border-radius: 8px;
-      padding: 20px;
+      padding: 22px;
       margin-top: 10px;
     }
 
@@ -243,21 +279,22 @@
     #authOverlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.92);
+      background: rgba(15, 23, 42, 0.75);
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
+      z-index: 2000;
       padding: 16px;
     }
     .auth-box {
-      background: #0b1524;
+      background: #ffffff;
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 26px;
+      padding: 28px;
       width: 100%;
       max-width: 380px;
       text-align: center;
+      box-shadow: 0 20px 30px rgba(0,0,0,0.15);
     }
   </style>
 </head>
@@ -266,22 +303,22 @@
   <!-- 🔒 LOGIN OVERLAY -->
   <div id="authOverlay" style="display: none;">
     <div class="auth-box">
-      <div class="brand-title" style="font-size: 20px;">MOON<span>LIGHT</span> ELECTRICALS</div>
-      <div style="font-size: 11px; color: var(--accent); font-style: italic; margin-top: 3px; margin-bottom: 20px;">Brightening Lives, Powering Trust</div>
+      <div class="brand-title" style="font-size: 21px;">MOON<span>LIGHT</span> ELECTRICALS</div>
+      <div style="font-size: 11.5px; color: var(--accent); font-style: italic; margin-top: 3px; margin-bottom: 20px; font-weight: bold;">Brightening Lives, Powering Trust</div>
 
       <div id="stepPhone">
-        <label style="display:block; text-align:left; font-size:11px; font-weight:800; color:#cbd5e1; margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
+        <label style="display:block; text-align:left; font-size:11px; font-weight:800; color:#475569; margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
         <input type="tel" id="loginPhone" placeholder="Enter 10-digit number" style="width: 100%; margin-bottom: 12px; font-size: 16px;">
         <div id="loginErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
         <button class="btn-save" id="btnSendOtp" onclick="sendOtp()" style="background:#f59e0b; color:#000;">📲 SEND OTP ON WHATSAPP</button>
       </div>
 
       <div id="stepOtp" style="display: none;">
-        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone" style="color:#fff;"></b></div>
+        <div style="font-size: 12px; color: #475569; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone" style="color:#0f172a;"></b></div>
         <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;">
         <button class="btn-save" onclick="verifyOtp()" style="background:#10b981;">VERIFY & LOGIN</button>
         <div style="margin-top: 12px;">
-          <a id="waDirectBtn" href="#" target="_blank" style="font-size: 11px; color: var(--accent); text-decoration: underline;">Direct open WhatsApp for OTP</a>
+          <a id="waDirectBtn" href="#" target="_blank" style="font-size: 11.5px; color: #2563eb; text-decoration: underline;">Direct open WhatsApp for OTP</a>
         </div>
       </div>
     </div>
@@ -290,7 +327,7 @@
   <div class="container">
     <!-- Top Nav with View Tabs and Mobile-Friendly Refresh -->
     <div class="top-nav">
-      <div style="display:flex; align-items:center; gap:14px;">
+      <div style="display:flex; align-items:center; gap:12px;">
         <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
         <button class="nav-tab-btn active" id="tabBillingBtn" onclick="switchView('billing')">📜 Billing</button>
         <button class="nav-tab-btn" id="tabKhataBtn" onclick="switchView('khata')">📒 Udhar Khata</button>
@@ -380,12 +417,13 @@
 
       <div class="separator"></div>
 
-      <!-- ROW 4: Item Name, Work Note, HSN -->
+      <!-- ROW 4: Item Name (Full Width Dropdown), Work Note, HSN -->
       <div class="grid-row row-item-top">
         <div class="form-col">
           <label>ITEM / SERVICE NAME</label>
-          <input list="dlItems" id="itemSearch" placeholder="Search item or type Labour Charge..." onchange="onItemSelect()">
-          <datalist id="dlItems"></datalist>
+          <input type="text" id="itemSearch" placeholder="Search item or type Labour Charge..." autocomplete="off" oninput="onItemSearchInput()" onfocus="onItemSearchInput()">
+          <!-- 100% Column Width Dropdown Menu -->
+          <div class="dropdown-menu" id="billingItemMenu"></div>
         </div>
         <div class="form-col">
           <label>WORK NOTE / SERIAL / WARRANTY</label>
@@ -458,7 +496,7 @@
     <!-- 📒 VIEW 2: UDHAR KHATA WORKSPACE -->
     <div id="viewKhata" style="display: none;">
       <div class="aux-card">
-        <h3 style="color:var(--accent); font-size:15px; margin-bottom:14px; text-transform:uppercase;">Pending Udhar Records & Reminders</h3>
+        <h3 style="color:#b45309; font-size:16px; margin-bottom:14px; text-transform:uppercase; font-weight:900;">Pending Udhar Records & Reminders</h3>
         <div id="khataListContainer" style="font-size:13.5px;">Loading Khata...</div>
       </div>
     </div>
@@ -466,11 +504,13 @@
     <!-- 📦 VIEW 3: STOCK INWARD WORKSPACE -->
     <div id="viewStock" style="display: none;">
       <div class="aux-card">
-        <h3 style="color:var(--accent); font-size:15px; margin-bottom:14px; text-transform:uppercase;">Add / Inward Stock Entry</h3>
+        <h3 style="color:#b45309; font-size:16px; margin-bottom:14px; text-transform:uppercase; font-weight:900;">Add / Inward Stock Entry</h3>
         <div class="grid-row row-2">
           <div class="form-col">
             <label>Item Name <span>*</span></label>
-            <input type="text" id="stkName" placeholder="Full Item Description">
+            <input type="text" id="stkName" placeholder="Full Item Description (Search or Type New)" autocomplete="off" oninput="onStockSearchInput()" onfocus="onStockSearchInput()">
+            <!-- Stock Dropdown 100% Width -->
+            <div class="dropdown-menu" id="stockItemMenu"></div>
           </div>
           <div class="form-col">
             <label>HSN / SAC</label>
@@ -529,13 +569,22 @@
       }
     };
 
+    // Close Dropdowns on Click Outside
+    document.addEventListener("click", function(e) {
+      if (!e.target.closest("#itemSearch") && !e.target.closest("#billingItemMenu")) {
+        document.getElementById("billingItemMenu").style.display = "none";
+      }
+      if (!e.target.closest("#stkName") && !e.target.closest("#stockItemMenu")) {
+        document.getElementById("stockItemMenu").style.display = "none";
+      }
+    });
+
     function initSession() {
       document.getElementById("lblUser").innerText = `${currentUser.name} (${currentUser.role})`;
       if (currentUser.role !== "Admin") {
         document.getElementById("tabKhataBtn").style.display = "none";
         document.getElementById("tabStockBtn").style.display = "none";
       }
-      populateDatalist(cachedItems);
       refreshAppData();
       checkFormState();
     }
@@ -552,7 +601,7 @@
       return JSON.parse(txt);
     }
 
-    // ⚡ Phone-Friendly Fast Refresh
+    // ⚡ Fast Background Refresh
     async function refreshAppData() {
       const btn = document.getElementById("btnRefresh");
       btn.innerText = "⏳ Syncing...";
@@ -563,7 +612,6 @@
         if (res && res.items) {
           cachedItems = res.items;
           localStorage.setItem("mle_items", JSON.stringify(res.items));
-          populateDatalist(res.items);
 
           if (res.alerts && res.alerts.length > 0) {
             document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(a => `• ${a}`).join("<br>");
@@ -582,88 +630,67 @@
       }, 1500);
     }
 
-    function populateDatalist(items) {
-      const dl = document.getElementById("dlItems");
-      dl.innerHTML = "";
-      items.forEach(it => {
-        const opt = document.createElement("option");
-        opt.value = it.name;
-        dl.appendChild(opt);
-      });
-    }
+    // ⚡ FULL-WIDTH DROPDOWN FOR BILLING
+    function onItemSearchInput() {
+      const val = document.getElementById("itemSearch").value.trim().toLowerCase();
+      const menu = document.getElementById("billingItemMenu");
+      menu.innerHTML = "";
 
-    // ⚡ OTP Login Handlers
-    async function sendOtp() {
-      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
-      const err = document.getElementById("loginErr");
-      const btn = document.getElementById("btnSendOtp");
-
-      if (phone.length !== 10) {
-        err.innerText = "10-digit number enter karein!";
-        err.style.display = "block";
+      const filtered = cachedItems.filter(it => it.name.toLowerCase().includes(val));
+      if (filtered.length === 0) {
+        menu.style.display = "none";
         return;
       }
-      err.style.display = "none";
-      btn.disabled = true;
-      btn.innerText = "Generating OTP...";
 
-      try {
-        const res = await apiCall("requestLoginOtp", { phone: phone });
-        btn.disabled = false;
-        btn.innerText = "📲 SEND OTP ON WHATSAPP";
-        if (res && res.success) {
-          document.getElementById("stepPhone").style.display = "none";
-          document.getElementById("stepOtp").style.display = "block";
-          document.getElementById("displaySentPhone").innerText = `${res.phone} (${res.name})`;
-          document.getElementById("waDirectBtn").href = res.waUrl;
-          window.open(res.waUrl, '_blank');
-        } else {
-          err.innerText = res.message || "Unauthorized Mobile Number!";
-          err.style.display = "block";
-        }
-      } catch(e) {
-        btn.disabled = false;
-        btn.innerText = "📲 SEND OTP ON WHATSAPP";
-        err.innerText = "Connection failed. Please retry!";
-        err.style.display = "block";
-      }
+      filtered.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "dropdown-item";
+        div.innerHTML = `<span>${item.name}</span> <small>Stock: ${item.stock} | ₹${item.custRate}</small>`;
+        div.onclick = function() {
+          selectBillingItem(item);
+        };
+        menu.appendChild(div);
+      });
+      menu.style.display = "block";
     }
 
-    async function verifyOtp() {
-      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
-      const otp = document.getElementById("loginOtp").value.trim();
-      const res = await apiCall("verifyLoginOtp", { phone: phone, otp: otp });
-      if (res && res.success) {
-        currentUser = res;
-        localStorage.setItem("mle_user", JSON.stringify(res));
-        document.getElementById("authOverlay").style.display = "none";
-        initSession();
-      } else {
-        alert(res.message || "Invalid OTP!");
-      }
-    }
-
-    // ⚡ Item Selection & Rates
-    function onItemSelect() {
-      const name = document.getElementById("itemSearch").value.trim();
-      const match = cachedItems.find(x => x.name.toLowerCase() === name.toLowerCase());
-
-      if (match) {
-        currentItemObj = match;
-        document.getElementById("itemHsn").value = match.hsn || "-";
-        resolveRate();
-      } else if (name.toLowerCase().includes("labour") || name.toLowerCase().includes("service")) {
-        currentItemObj = { name: name, hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
-        document.getElementById("itemHsn").value = "998519";
-        document.getElementById("itemRate").value = "0.00";
-        document.getElementById("itemRate").readOnly = false;
-      } else {
-        currentItemObj = null;
-        document.getElementById("itemHsn").value = "Auto";
-        document.getElementById("itemRate").value = "Locked";
-        document.getElementById("itemRate").readOnly = true;
-      }
+    function selectBillingItem(item) {
+      document.getElementById("itemSearch").value = item.name;
+      document.getElementById("billingItemMenu").style.display = "none";
+      currentItemObj = item;
+      document.getElementById("itemHsn").value = item.hsn || "-";
+      resolveRate();
       calculateItemTotal();
+    }
+
+    // ⚡ FULL-WIDTH DROPDOWN FOR STOCK INWARD
+    function onStockSearchInput() {
+      const val = document.getElementById("stkName").value.trim().toLowerCase();
+      const menu = document.getElementById("stockItemMenu");
+      menu.innerHTML = "";
+
+      const filtered = cachedItems.filter(it => it.name.toLowerCase().includes(val));
+      if (filtered.length === 0) {
+        menu.style.display = "none";
+        return;
+      }
+
+      filtered.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "dropdown-item";
+        div.innerHTML = `<span>${item.name}</span> <small>Curr Stock: ${item.stock}</small>`;
+        div.onclick = function() {
+          document.getElementById("stkName").value = item.name;
+          document.getElementById("stkHsn").value = item.hsn || "";
+          document.getElementById("stkCustRate").value = item.custRate || 0;
+          document.getElementById("stkElecRate").value = item.elecRate || 0;
+          document.getElementById("stkFamRate").value = item.famRate || 0;
+          document.getElementById("stkMinQty").value = item.minQty || 2;
+          menu.style.display = "none";
+        };
+        menu.appendChild(div);
+      });
+      menu.style.display = "block";
     }
 
     function onRateTypeChange() {
@@ -687,7 +714,6 @@
       document.getElementById("itemRate").value = `₹${parseFloat(r).toFixed(2)}`;
     }
 
-    // ⚡ GST ADDED AFTER DISCOUNT LOGIC
     function calculateItemTotal() {
       let baseRate = 0;
       const rateVal = document.getElementById("itemRate").value;
@@ -717,7 +743,6 @@
       return { finalUnitRate, total, gstPerPc, discountedRate };
     }
 
-    // ⚡ Add Item to Table
     function addItemToBill() {
       const name = document.getElementById("itemSearch").value.trim();
       const serial = document.getElementById("itemSerial").value.trim();
@@ -732,8 +757,8 @@
       const disc = parseFloat(document.getElementById("itemDisc").value) || 0;
       const qty = parseFloat(document.getElementById("itemQty").value) || 1;
 
-      if (!name) { alert("⚠️ Kripya Item select karein!"); return; }
-      if (baseRate <= 0) { alert("⚠️️ Rate 0 se zyada hona chahiye!"); return; }
+      if (!name) { alert("⚠️️ Kripya Item select karein!"); return; }
+      if (baseRate <= 0) { alert("⚠️ Rate 0 se zyada hona chahiye!"); return; }
 
       const calc = calculateItemTotal();
       const isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
@@ -754,7 +779,6 @@
 
       renderBillTable();
 
-      // Reset item inputs
       document.getElementById("itemSearch").value = "";
       document.getElementById("itemSerial").value = "";
       document.getElementById("itemHsn").value = "Auto";
@@ -802,7 +826,7 @@
       checkFormState();
     }
 
-    // ⚡ FORM VALIDATION & AUTO-HIGHLIGHT BUTTON (8 Mandatory Conditions)
+    // ⚡ AUTO-HIGHLIGHT & AUTO-DISABLE SAVE BUTTON
     function checkFormState() {
       const mode = document.getElementById("billMode").value;
       const rateType = document.getElementById("rateType").value;
@@ -858,7 +882,6 @@
           alert(`✓ Bill Generated Successfully! Doc No: ${res.docNo}`);
           if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
 
-          // Reset cart & forced-blank fields
           billItems = [];
           renderBillTable();
           document.getElementById("custName").value = "";
@@ -879,7 +902,6 @@
       }
     }
 
-    // ⚡ VIEW SWITCHER (Billing, Khata, Stock Inward)
     function switchView(view) {
       document.querySelectorAll(".nav-tab-btn").forEach(b => b.classList.remove("active"));
       document.getElementById("viewBilling").style.display = (view === 'billing') ? 'block' : 'none';
@@ -894,7 +916,6 @@
       if (view === 'stock') document.getElementById("tabStockBtn").classList.add("active");
     }
 
-    // ⚡ UDHAR KHATA RENDERING
     async function renderKhata() {
       const c = document.getElementById("khataListContainer");
       c.innerHTML = "Fetching pending udhar records...";
@@ -913,7 +934,7 @@
               <td>${r.customerName}</td>
               <td>${r.phone || '-'}</td>
               <td><b>₹${r.amount}</b></td>
-              <td><b style="color:${isPending ? '#f59e0b' : '#10b981'}">${r.status}</b></td>
+              <td><b style="color:${isPending ? '#d97706' : '#059669'}">${r.status}</b></td>
               <td>
                 ${isPending && r.phone ? `<button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px;" onclick="sendKhataReminder('${r.docNo}', '${r.customerName}', '${r.phone}', ${r.amount}, '${r.date}')">📲 WhatsApp</button>` : ''}
                 ${isPending ? `<button class="btn-add" style="display:inline-block; width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="markPaid('${r.docNo}')">✓ Paid</button>` : ''}
@@ -942,7 +963,6 @@
       }
     }
 
-    // ⚡ STOCK INWARD SUBMIT
     async function submitStockInward() {
       const name = document.getElementById("stkName").value.trim();
       const qty = parseFloat(document.getElementById("stkQty").value) || 0;
@@ -973,6 +993,56 @@
         }
       } catch(e) {
         alert("Failed to update stock");
+      }
+    }
+
+    async function sendOtp() {
+      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
+      const err = document.getElementById("loginErr");
+      const btn = document.getElementById("btnSendOtp");
+
+      if (phone.length !== 10) {
+        err.innerText = "10-digit number enter karein!";
+        err.style.display = "block";
+        return;
+      }
+      err.style.display = "none";
+      btn.disabled = true;
+      btn.innerText = "Generating OTP...";
+
+      try {
+        const res = await apiCall("requestLoginOtp", { phone: phone });
+        btn.disabled = false;
+        btn.innerText = "📲 SEND OTP ON WHATSAPP";
+        if (res && res.success) {
+          document.getElementById("stepPhone").style.display = "none";
+          document.getElementById("stepOtp").style.display = "block";
+          document.getElementById("displaySentPhone").innerText = `${res.phone} (${res.name})`;
+          document.getElementById("waDirectBtn").href = res.waUrl;
+          window.open(res.waUrl, '_blank');
+        } else {
+          err.innerText = res.message || "Unauthorized Mobile Number!";
+          err.style.display = "block";
+        }
+      } catch(e) {
+        btn.disabled = false;
+        btn.innerText = "📲 SEND OTP ON WHATSAPP";
+        err.innerText = "Connection failed. Please retry!";
+        err.style.display = "block";
+      }
+    }
+
+    async function verifyOtp() {
+      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
+      const otp = document.getElementById("loginOtp").value.trim();
+      const res = await apiCall("verifyLoginOtp", { phone: phone, otp: otp });
+      if (res && res.success) {
+        currentUser = res;
+        localStorage.setItem("mle_user", JSON.stringify(res));
+        document.getElementById("authOverlay").style.display = "none";
+        initSession();
+      } else {
+        alert(res.message || "Invalid OTP!");
       }
     }
   </script>
