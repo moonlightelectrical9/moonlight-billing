@@ -436,7 +436,7 @@
       <div class="success-sub" id="lblSuccessDocNo">Doc No: -</div>
       
       <div class="success-actions">
-        <!-- 1. Send WhatsApp -->
+        <!-- 1. Send WhatsApp Message -->
         <button class="btn-wa-share" id="btnShareWhatsApp" onclick="shareBillOnWhatsApp()">
           📲 Send Invoice on WhatsApp
         </button>
@@ -1285,7 +1285,7 @@
       btn.disabled = !isReady;
     }
 
-    // ⚡ BILL GENERATION & ACTION MODAL POPUP TRIGGER
+    // ⚡ BILL GENERATION WITH PROPER NAMING FORMAT
     async function submitBillToBackend() {
       const btn = document.getElementById("btnSubmitBill");
       btn.disabled = true;
@@ -1325,17 +1325,16 @@
         btn.innerText = "⚡ Save Bill & Generate PDF";
 
         if (res && res.success) {
-          // Store generated bill info for actions
           lastGeneratedBillData = {
             docNo: res.docNo,
             pdfUrl: res.pdfUrl,
             customerName: cleanCustomerName,
             phone: cleanPhone,
+            paymentMode: cleanPaymentMode,
             grandTotal: totalBillAmount,
             date: formattedDate
           };
 
-          // Open Success Action Modal
           document.getElementById("lblSuccessDocNo").innerText = `Doc No: ${res.docNo} | Amount: ₹${totalBillAmount.toFixed(2)}`;
           document.getElementById("billSuccessModal").style.display = "flex";
         } else {
@@ -1348,12 +1347,17 @@
       }
     }
 
-    // 📲 WhatsApp Share
+    // 📲 EXACT SCREENSHOT TEMPLATE WHATSAPP MESSAGE WITH FULL STORE ADDRESS
     function shareBillOnWhatsApp() {
       if (!lastGeneratedBillData) return;
       const d = lastGeneratedBillData;
-      const pdfText = d.pdfUrl ? `\n\n📄 *Download Invoice PDF:*\n${d.pdfUrl}` : "";
-      const msg = `*Namaste ${d.customerName} Ji!*\n\nThank you for shopping at *MOON LIGHT ELECTRICALS*.\n\n• *Invoice / Bill No:* ${d.docNo}\n• *Date:* ${d.date}\n• *Total Amount:* ₹${d.grandTotal.toFixed(2)}${pdfText}\n\nShop Address: Sadbhavna Market, Sector-121, Noida\nHelpline: 8860706865\n\n_Brightening Lives, Powering Trust_`;
+      
+      const docTypeWord = d.docNo.includes("EST") ? "Estimate" : "Invoice";
+      const pdfSection = d.pdfUrl ? `\n\n📄 *Download PDF Document:*\n${d.pdfUrl}` : "";
+
+      // Exact Message Template Matching image_9db4d8.png with Full Address
+      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docTypeWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Amount: *₹${d.grandTotal.toFixed(2)}*\n  • Payment Mode: ${d.paymentMode}${pdfSection}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
+
       window.open(`https://wa.me/91${d.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
@@ -1434,7 +1438,7 @@
     function sendKhataReminder(docNo, name, phone, amount, date) {
       const upi = (bankSettings && bankSettings.upi) ? bankSettings.upi : "8860880453@kotak";
       const payUrl = `https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=${encodeURIComponent(upi)}&am=${amount}`;
-      const msg = `*Greetings from Moon Light Electricals!*\n\nHi ${name},\nThis is a reminder that payment for Bill *${docNo}* dated *${date}* is pending.\n\n• *Pending Amount:* ₹${amount}\n• *Due To:* Moon Light Electricals (Sector-121, Noida)\n\n👉 *Tap below to Pay directly via GPay / PhonePe / Paytm:*\n${payUrl}\n\nThank you!\n*MOON LIGHT ELECTRICALS*`;
+      const msg = `*Greetings from Moon Light Electricals!*\n\nHi ${name},\nThis is a reminder that payment for Bill *${docNo}* dated *${date}* is pending.\n\n• *Pending Amount:* ₹${amount}\n• *Due To:* Moon Light Electricals (Shop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304)\n\n👉 *Tap below to Pay directly via GPay / PhonePe / Paytm:*\n${payUrl}\n\nThank you!\n*MOON LIGHT ELECTRICALS*`;
       window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
