@@ -3,41 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Moon Light Electricals - ERP & Billing</title>
+  <title>Moon Light Electricals</title>
   <style>
     :root {
-      --bg: #070d17;
-      --card: #0f172a;
-      --card-border: #1e293b;
+      --bg: #050c16;
+      --card-bg: #0b1524;
+      --border: #162438;
+      --input-bg: #eef4ff;
+      --input-text: #0f172a;
       --accent: #f59e0b;
-      --text: #ffffff;
-      --sub: #94a3b8;
-      --primary: #2563eb;
-      --green: #10b981;
-      --danger: #ef4444;
+      --green: #059669;
+      --brown: #c25e00;
+      --danger-bg: #fee2e2;
+      --danger-border: #fca5a5;
+      --danger-text: #b91c1c;
+      --yellow-bar: #fef3c7;
+      --yellow-border: #fde68a;
     }
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 40px; min-height: 100vh; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 0; }
+    body { background: var(--bg); color: #ffffff; padding: 12px 16px; min-height: 100vh; }
 
-    /* Top Navbar */
-    .navbar {
-      background: #09111e;
-      border-bottom: 1px solid var(--card-border);
-      padding: 12px 20px;
+    /* Top Nav */
+    .top-nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 50;
+      padding: 4px 6px 12px 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
     }
-    .brand { font-size: 18px; font-weight: 900; letter-spacing: 0.5px; }
-    .brand span { color: var(--accent); }
+    .brand-title { font-size: 17px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; }
+    .brand-title span { color: var(--accent); }
     .nav-actions { display: flex; align-items: center; gap: 8px; }
+    .nav-tab-btn {
+      background: #0f1c2e;
+      color: #cbd5e1;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nav-tab-btn.active {
+      background: var(--accent);
+      color: #050c16;
+      border-color: var(--accent);
+    }
     .btn-refresh {
-      background: #1e293b;
+      background: #0d1e34;
       color: #38bdf8;
-      border: 1px solid #334155;
+      border: 1px solid #1e3a5f;
       padding: 6px 12px;
       border-radius: 6px;
       font-size: 12px;
@@ -47,162 +66,182 @@
       align-items: center;
       gap: 5px;
     }
-    .btn-refresh:active { transform: scale(0.96); background: #334155; }
+    .btn-refresh:active { transform: scale(0.96); }
     .user-pill {
-      background: #1e293b;
-      border: 1px solid #334155;
+      background: #0f1c2e;
+      border: 1px solid var(--border);
       padding: 5px 12px;
       border-radius: 20px;
       font-size: 12px;
-      color: var(--sub);
+      color: #94a3b8;
     }
 
-    .container { max-width: 1150px; margin: 20px auto; padding: 0 16px; }
+    .container { max-width: 1350px; margin: 0 auto; }
 
-    /* Main Box Cards */
-    .card-box {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 22px;
-      margin-bottom: 20px;
-    }
-    .card-title {
-      font-size: 14px;
-      font-weight: 900;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    /* Alert Box */
+    .alert-box {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      border-radius: 6px;
+      padding: 12px 16px;
+      color: var(--danger-text);
+      font-size: 12px;
+      line-height: 1.5;
       margin-bottom: 16px;
+      display: none;
     }
+    .alert-box b { font-weight: 900; }
 
     /* Grid Layouts */
-    .grid-row {
-      display: grid;
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-    .row-cust-top { grid-template-columns: 1fr 1.5fr 1.2fr 1.2fr; }
-    .row-cust-btm { grid-template-columns: 1.2fr 1.2fr 1.2fr 2fr; }
-    .row-item-top { grid-template-columns: 3fr 1.2fr 1fr 1fr 1fr; }
+    .grid-row { display: grid; gap: 12px; margin-bottom: 12px; }
+    .row-5 { grid-template-columns: 1fr 1.3fr 1.2fr 1.1fr 1.2fr; }
+    .row-2 { grid-template-columns: 2fr 1fr; }
+    .row-item-top { grid-template-columns: 3.5fr 2.5fr 1.2fr; }
+    .row-item-btm { grid-template-columns: 1.6fr 1.2fr 1.2fr 1fr 1.6fr; }
 
     @media (max-width: 900px) {
-      .row-cust-top { grid-template-columns: 1fr 1fr; }
-      .row-cust-btm { grid-template-columns: 1fr 1fr; }
-      .row-item-top { grid-template-columns: 1fr 1fr; }
+      .row-5 { grid-template-columns: repeat(2, 1fr); }
+      .row-2 { grid-template-columns: 1fr; }
+      .row-item-top { grid-template-columns: 1fr; }
+      .row-item-btm { grid-template-columns: 1fr 1fr; }
     }
 
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group label {
+    .form-col { display: flex; flex-direction: column; gap: 4px; }
+    .form-col label {
       font-size: 11px;
       font-weight: 800;
-      color: var(--sub);
+      color: #cbd5e1;
       text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
-    .form-group label span { color: var(--danger); }
+    .form-col label span { color: #ef4444; }
 
-    /* Dark Input Elements */
+    /* Soft Blue Tinted Inputs */
     input, select {
-      background: #070d17;
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      color: #ffffff;
+      background: var(--input-bg);
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      padding: 9px 12px;
       font-size: 13.5px;
+      color: var(--input-text);
       outline: none;
+      font-weight: 600;
+      transition: border-color 0.2s;
     }
-    input:focus, select:focus { border-color: var(--accent); }
-    input::placeholder { color: #475569; }
-    select option { background: #0f172a; color: #ffffff; }
-    input[readonly] { background: #0b1320; color: #94a3b8; }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      background: #ffffff;
+    }
+    input::placeholder { color: #64748b; font-weight: normal; }
+    input[readonly] { background: #e2e8f0; color: #475569; }
 
-    /* Action Buttons */
-    .btn-add-item {
-      background: var(--primary);
+    .separator { border-bottom: 1px dashed #1e293b; margin: 16px 0; }
+
+    /* Green Add Item Button */
+    .btn-add {
+      background: var(--green);
       color: #ffffff;
       border: none;
       padding: 12px;
-      border-radius: 8px;
+      border-radius: 6px;
       font-size: 14px;
       font-weight: 800;
       width: 100%;
       cursor: pointer;
-      margin-top: 14px;
-      transition: 0.2s;
+      margin-top: 4px;
+      margin-bottom: 16px;
+      transition: background 0.2s;
     }
-    .btn-add-item:active { transform: scale(0.98); }
+    .btn-add:hover { background: #047857; }
 
     /* Table */
-    .table-container {
-      width: 100%;
-      margin-top: 18px;
-      border-top: 1px solid var(--card-border);
+    .table-wrap {
+      background: #ffffff;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 14px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
+      color: #0f172a;
       font-size: 13px;
     }
     th {
-      color: var(--sub);
-      padding: 12px 10px;
+      background: #f8fafc;
+      padding: 10px 12px;
       text-align: left;
-      font-size: 11px;
       font-weight: 800;
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--card-border);
+      border-bottom: 2px solid #e2e8f0;
+      font-size: 12px;
+      color: #334155;
     }
     td {
-      padding: 12px 10px;
-      border-bottom: 1px solid #142033;
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      font-weight: 600;
     }
-    .btn-del {
-      color: var(--danger);
+    .btn-del-row {
+      color: #dc2626;
+      font-weight: 900;
       background: none;
       border: none;
       font-size: 16px;
       cursor: pointer;
-      font-weight: bold;
     }
 
-    /* Summary Bar */
-    .summary-box {
-      margin-top: 18px;
-      padding: 16px 20px;
+    /* Grand Total Bar */
+    .total-bar {
+      background: var(--yellow-bar);
+      border: 1px solid var(--yellow-border);
+      border-radius: 6px;
+      padding: 12px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-top: 1px solid var(--card-border);
+      color: #000000;
+      margin-bottom: 16px;
     }
-    .grand-total-val {
-      font-size: 26px;
-      font-weight: 900;
-      color: var(--accent);
-    }
+    .total-title { font-size: 15px; font-weight: 900; }
+    .total-amt { font-size: 20px; font-weight: 900; }
 
-    /* Green Save Button */
-    .btn-save-bill {
-      background: #059669;
+    /* Save & Print Button (Auto-Disabled / Highlighted) */
+    .btn-save {
+      background: var(--brown);
       color: #ffffff;
       border: none;
-      padding: 15px;
-      border-radius: 8px;
+      padding: 14px;
+      border-radius: 6px;
       font-size: 15px;
       font-weight: 900;
       width: 100%;
       cursor: pointer;
       letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 12px;
+      transition: all 0.2s ease;
     }
-    .btn-save-bill:active { transform: scale(0.99); }
-    .btn-save-bill:disabled { background: #334155; cursor: not-allowed; }
+    .btn-save:disabled {
+      background: #1e293b;
+      color: #64748b;
+      cursor: not-allowed;
+      border: 1px solid #334155;
+      box-shadow: none;
+    }
+    .btn-save:not(:disabled) {
+      box-shadow: 0 4px 14px rgba(194, 94, 0, 0.4);
+    }
+    .btn-save:not(:disabled):hover { background: #9a4c03; }
 
-    /* Login Modal */
-    #authModal {
+    /* Inward Stock / Khata Boxes */
+    .aux-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 10px;
+    }
+
+    /* Auth Overlay */
+    #authOverlay {
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.92);
@@ -213,8 +252,8 @@
       padding: 16px;
     }
     .auth-box {
-      background: var(--card);
-      border: 1px solid var(--card-border);
+      background: #0b1524;
+      border: 1px solid var(--border);
       border-radius: 12px;
       padding: 26px;
       width: 100%;
@@ -226,22 +265,22 @@
 <body>
 
   <!-- 🔒 LOGIN OVERLAY -->
-  <div id="authModal" style="display: none;">
+  <div id="authOverlay" style="display: none;">
     <div class="auth-box">
-      <div class="brand" style="font-size: 20px;">MOON<span>LIGHT</span> ELECTRICALS</div>
-      <div style="font-size: 11px; color: var(--accent); font-style: italic; margin-top: 2px; margin-bottom: 20px;">Brightening Lives, Powering Trust</div>
+      <div class="brand-title" style="font-size: 20px;">MOON<span>LIGHT</span> ELECTRICALS</div>
+      <div style="font-size: 11px; color: var(--accent); font-style: italic; margin-top: 3px; margin-bottom: 20px;">Brightening Lives, Powering Trust</div>
 
       <div id="stepPhone">
-        <label style="display:block; text-align:left; font-size:11px; font-weight:800; color:var(--sub); margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
+        <label style="display:block; text-align:left; font-size:11px; font-weight:800; color:#cbd5e1; margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
         <input type="tel" id="loginPhone" placeholder="Enter 10-digit number" style="width: 100%; margin-bottom: 12px; font-size: 16px;">
-        <div id="loginErr" style="color: var(--danger); font-size: 12px; margin-bottom: 10px; display: none;"></div>
-        <button class="btn-save-bill" id="btnSendOtp" onclick="sendOtp()" style="background:var(--accent); color:#000;">📲 SEND OTP ON WHATSAPP</button>
+        <div id="loginErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
+        <button class="btn-save" id="btnSendOtp" onclick="sendOtp()" style="background:#f59e0b; color:#000;">📲 SEND OTP ON WHATSAPP</button>
       </div>
 
       <div id="stepOtp" style="display: none;">
-        <div style="font-size: 12px; color: var(--sub); margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone" style="color:#fff;"></b></div>
+        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone" style="color:#fff;"></b></div>
         <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;">
-        <button class="btn-save-bill" onclick="verifyOtp()">VERIFY & LOGIN</button>
+        <button class="btn-save" onclick="verifyOtp()" style="background:#10b981;">VERIFY & LOGIN</button>
         <div style="margin-top: 12px;">
           <a id="waDirectBtn" href="#" target="_blank" style="font-size: 11px; color: var(--accent); text-decoration: underline;">Direct open WhatsApp for OTP</a>
         </div>
@@ -249,37 +288,46 @@
     </div>
   </div>
 
-  <!-- 🏠 TOP NAVBAR -->
-  <div class="navbar">
-    <div class="brand">MOON<span>LIGHT</span> ELECTRICALS</div>
-    <div class="nav-actions">
-      <button class="btn-refresh" id="btnRefresh" onclick="refreshAppData()" title="Sync Items From Google Sheet">
-        🔄 Refresh
-      </button>
-      <div class="user-pill" id="lblUser">Session...</div>
-    </div>
-  </div>
-
   <div class="container">
-    <!-- 1. CUSTOMER & BILL INFORMATION -->
-    <div class="card-box">
-      <div class="card-title">1. CUSTOMER & BILL INFORMATION</div>
-      
-      <!-- Row 1 -->
-      <div class="grid-row row-cust-top">
-        <div class="form-group">
-          <label>BILL DATE <span>*</span></label>
-          <input type="date" id="billDate">
+    <!-- Top Nav with View Tabs and Mobile-Friendly Refresh -->
+    <div class="top-nav">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
+        <button class="nav-tab-btn active" id="tabBillingBtn" onclick="switchView('billing')">📜 Billing</button>
+        <button class="nav-tab-btn" id="tabKhataBtn" onclick="switchView('khata')">📒 Udhar Khata</button>
+        <button class="nav-tab-btn" id="tabStockBtn" onclick="switchView('stock')">📦 Stock Inward</button>
+      </div>
+      <div class="nav-actions">
+        <button class="btn-refresh" id="btnRefresh" onclick="refreshAppData()" title="Sync Items From Sheet">
+          🔄 Refresh
+        </button>
+        <div class="user-pill" id="lblUser">Session...</div>
+      </div>
+    </div>
+
+    <!-- 🧾 VIEW 1: BILLING WORKSPACE -->
+    <div id="viewBilling">
+      <!-- Low Stock Alert Box -->
+      <div class="alert-box" id="lowStockAlertBox">
+        <b>⚠️ LOW STOCK ALERT:</b>
+        <div id="lowStockItemsList" style="margin-top: 4px;"></div>
+      </div>
+
+      <!-- ROW 1: 5 Columns -->
+      <div class="grid-row row-5">
+        <div class="form-col">
+          <label>BILL DATE</label>
+          <input type="date" id="billDate" onchange="checkFormState()">
         </div>
-        <div class="form-group">
-          <label>CUSTOMER NAME <span>*</span></label>
-          <input type="text" id="custName" placeholder="Enter Customer Name">
+        <div class="form-col">
+          <label>MODE <span>*</span></label>
+          <select id="billMode" onchange="checkFormState()">
+            <option value="" disabled selected>-- Select Mode --</option>
+            <option value="Final Bill (Tax_Invoices)">Final Bill (Tax_Invoices)</option>
+            <option value="Estimate (Estimates)">Estimate (Estimates)</option>
+          </select>
         </div>
-        <div class="form-group">
-          <label>MOBILE NUMBER</label>
-          <input type="tel" id="custPhone" placeholder="10-digit number">
-        </div>
-        <div class="form-group">
+        <div class="form-col">
           <label>RATE TYPE <span>*</span></label>
           <select id="rateType" onchange="onRateTypeChange()">
             <option value="" disabled selected>-- Select Rate Type --</option>
@@ -288,92 +336,107 @@
             <option value="Wholesale Rate">Wholesale Rate</option>
           </select>
         </div>
-      </div>
-
-      <!-- Row 2 -->
-      <div class="grid-row row-cust-btm">
-        <div class="form-group">
-          <label>PAYMENT MODE <span>*</span></label>
-          <select id="paymentMode">
-            <option value="" disabled selected>-- Select Payment Mode --</option>
+        <div class="form-col">
+          <label>GST BILL? <span>*</span></label>
+          <select id="isGstBill" onchange="onGstBillChange()">
+            <option value="" disabled selected>-- Select GST Bill --</option>
+            <option value="Yes (GST Invoice)">Yes (GST Invoice)</option>
+            <option value="No (Regular Bill)">No (Regular Bill)</option>
+          </select>
+        </div>
+        <div class="form-col">
+          <label>PAYMENT <span>*</span></label>
+          <select id="paymentMode" onchange="checkFormState()">
+            <option value="" disabled selected>-- Select Payment --</option>
             <option value="Cash">Cash</option>
             <option value="UPI / Online">UPI / Online</option>
             <option value="Credit / Udhar">Credit / Udhar</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>GST BILL? <span>*</span></label>
-          <select id="isGstBill" onchange="calculateItemTotal()">
-            <option value="" disabled selected>-- Select GST Bill --</option>
-            <option value="Yes">Yes (GST Invoice)</option>
-            <option value="No">No (Regular Bill)</option>
-          </select>
+      </div>
+
+      <!-- ROW 2: Customer Name, WhatsApp Number -->
+      <div class="grid-row row-2">
+        <div class="form-col">
+          <label>CUSTOMER NAME <span>*</span></label>
+          <input type="text" id="custName" placeholder="Customer Name" oninput="checkFormState()">
         </div>
-        <div class="form-group">
-          <label>DOCUMENT TYPE</label>
-          <select id="docType">
-            <option value="Invoice">Retail Invoice</option>
-            <option value="Estimate">Quotation / Estimate</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>ADDRESS</label>
-          <input type="text" id="custAddress" value="Sector-121, Noida">
+        <div class="form-col">
+          <label>WHATSAPP NUMBER <span>*</span></label>
+          <input type="tel" id="custPhone" placeholder="10-digit number" oninput="checkFormState()">
         </div>
       </div>
-    </div>
 
-    <!-- 2. ADD ITEMS -->
-    <div class="card-box">
-      <div class="card-title">2. ADD ITEMS</div>
-      
-      <!-- Top Fields -->
+      <!-- ROW 3: Customer Address, Customer GSTIN -->
+      <div class="grid-row row-2">
+        <div class="form-col">
+          <label>CUSTOMER ADDRESS <span>*</span></label>
+          <input type="text" id="custAddress" value="Sector-121, Noida" oninput="checkFormState()">
+        </div>
+        <div class="form-col">
+          <label>CUSTOMER GSTIN (OPTIONAL)</label>
+          <input type="text" id="custGstin" placeholder="09XXXXX...">
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- ROW 4: Item Name, Work Note, HSN -->
       <div class="grid-row row-item-top">
-        <div class="form-group" style="grid-column: span 1;">
-          <label>SEARCH & SELECT ITEM</label>
-          <input list="dlItems" id="itemSearch" placeholder="Type item name..." onchange="onItemSelect()">
+        <div class="form-col">
+          <label>ITEM / SERVICE NAME</label>
+          <input list="dlItems" id="itemSearch" placeholder="Search item or type Labour Charge..." onchange="onItemSelect()">
           <datalist id="dlItems"></datalist>
         </div>
-        <div class="form-group">
-          <label>RATE (₹)</label>
-          <input type="text" id="itemRate" value="0.00" readonly>
+        <div class="form-col">
+          <label>WORK NOTE / SERIAL / WARRANTY</label>
+          <input type="text" id="itemSerial" placeholder="e.g. Fan Fitting / SN1092">
         </div>
-        <div class="form-group">
-          <label>DISCOUNT (₹/PC)</label>
+        <div class="form-col">
+          <label>HSN / SAC</label>
+          <input type="text" id="itemHsn" placeholder="Auto" readonly>
+        </div>
+      </div>
+
+      <!-- ROW 5: Rate, Disc, GST (Added), Qty, Total -->
+      <div class="grid-row row-item-btm">
+        <div class="form-col">
+          <label>RATE (₹) [🔒 LOCKED]</label>
+          <input type="text" id="itemRate" value="Locked" readonly>
+        </div>
+        <div class="form-col">
+          <label>DISC (₹/PC)</label>
           <input type="number" id="itemDisc" value="0" min="0" oninput="calculateItemTotal()">
         </div>
-        <div class="form-group">
+        <div class="form-col">
           <label>GST (₹) [ADDED]</label>
-          <input type="text" id="itemGstAdded" value="0.00" readonly style="color:var(--accent); font-weight:800;">
+          <input type="text" id="itemGstAdded" value="0.00" readonly style="color:#b45309; font-weight:800;">
         </div>
-        <div class="form-group">
-          <label>QUANTITY</label>
+        <div class="form-col">
+          <label>QTY</label>
           <input type="number" id="itemQty" value="1" min="1" oninput="calculateItemTotal()">
         </div>
-      </div>
-
-      <!-- Serial Note -->
-      <div class="grid-row" style="grid-template-columns: 1fr;">
-        <div class="form-group">
-          <label>SERIAL NUMBER / WARRANTY NOTE</label>
-          <input type="text" id="itemSerial" placeholder="Optional note or serial number">
+        <div class="form-col">
+          <label>TOTAL (₹)</label>
+          <input type="text" id="itemTotal" value="0.00" readonly>
         </div>
       </div>
 
-      <button class="btn-add-item" onclick="addItemToBill()">+ Add Item To Bill</button>
+      <!-- Add Item Button -->
+      <button class="btn-add" onclick="addItemToBill()">+ Add Item / Charge to Bill</button>
 
-      <!-- Bill Items Table -->
-      <div class="table-container">
+      <!-- Table with GST Added column right of Disc -->
+      <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th style="width: 30px;">#</th>
-              <th>DESCRIPTION</th>
-              <th>RATE</th>
-              <th>DISC</th>
-              <th>GST</th>
-              <th>QTY</th>
-              <th>TOTAL</th>
+              <th>Item & Description</th>
+              <th>HSN/SAC</th>
+              <th>Rate</th>
+              <th>Disc</th>
+              <th>GST (Added)</th>
+              <th>Qty</th>
+              <th>Total</th>
               <th style="width: 30px; text-align: center;">✕</th>
             </tr>
           </thead>
@@ -381,35 +444,79 @@
         </table>
       </div>
 
-      <!-- Totals Bar -->
-      <div class="summary-box">
-        <div>
-          <div style="font-size: 11px; color: var(--sub); text-transform: uppercase; font-weight: 800;">TOTAL ITEMS</div>
-          <div id="lblTotalItems" style="font-size: 18px; font-weight: 900; margin-top: 2px;">0</div>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-size: 11px; color: var(--sub); text-transform: uppercase; font-weight: 800;">GRAND TOTAL</div>
-          <div class="grand-total-val" id="lblGrandTotal">₹0.00</div>
-        </div>
+      <!-- Grand Total Bar -->
+      <div class="total-bar">
+        <div class="total-title">Grand Total:</div>
+        <div class="total-amt" id="lblGrandTotal">₹0.00</div>
       </div>
 
-      <button class="btn-save-bill" id="btnSubmitBill" onclick="validateAndSaveBill()">
-        ⚡ GENERATE & PRINT INVOICE
+      <!-- Save & Print Button (Auto-Disabled / Highlighted) -->
+      <button class="btn-save" id="btnSubmitBill" onclick="submitBillToBackend()" disabled>
+        ⚡ Save Bill & Generate PDF
       </button>
+    </div>
+
+    <!-- 📒 VIEW 2: UDHAR KHATA WORKSPACE -->
+    <div id="viewKhata" style="display: none;">
+      <div class="aux-card">
+        <h3 style="color:var(--accent); font-size:15px; margin-bottom:14px; text-transform:uppercase;">Pending Udhar Records & Reminders</h3>
+        <div id="khataListContainer" style="font-size:13.5px;">Loading Khata...</div>
+      </div>
+    </div>
+
+    <!-- 📦 VIEW 3: STOCK INWARD WORKSPACE -->
+    <div id="viewStock" style="display: none;">
+      <div class="aux-card">
+        <h3 style="color:var(--accent); font-size:15px; margin-bottom:14px; text-transform:uppercase;">Add / Inward Stock Entry</h3>
+        <div class="grid-row row-2">
+          <div class="form-col">
+            <label>Item Name <span>*</span></label>
+            <input type="text" id="stkName" placeholder="Full Item Description">
+          </div>
+          <div class="form-col">
+            <label>HSN / SAC</label>
+            <input type="text" id="stkHsn" placeholder="e.g. 8538">
+          </div>
+        </div>
+        <div class="grid-row row-5" style="margin-top:10px;">
+          <div class="form-col">
+            <label>Inward Quantity <span>*</span></label>
+            <input type="number" id="stkQty" value="10" min="1">
+          </div>
+          <div class="form-col">
+            <label>Cust Rate (₹)</label>
+            <input type="number" id="stkCustRate" placeholder="0">
+          </div>
+          <div class="form-col">
+            <label>Elec Rate (₹)</label>
+            <input type="number" id="stkElecRate" placeholder="0">
+          </div>
+          <div class="form-col">
+            <label>Wholesale Rate (₹)</label>
+            <input type="number" id="stkFamRate" placeholder="0">
+          </div>
+          <div class="form-col">
+            <label>Min Stock Alert</label>
+            <input type="number" id="stkMinQty" value="2">
+          </div>
+        </div>
+        <button class="btn-add" onclick="submitStockInward()" style="width:auto; padding:10px 24px; margin-top:14px;">+ Update / Inward Stock</button>
+      </div>
     </div>
   </div>
 
   <script>
-    // ⚙️ LIVE GOOGLE APPS SCRIPT URL
+    // ⚙️ LIVE APPS SCRIPT URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
 
     let currentUser = JSON.parse(localStorage.getItem("mle_user")) || null;
     let cachedItems = JSON.parse(localStorage.getItem("mle_items")) || [];
     let billItems = [];
     let currentItemObj = null;
+    let bankSettings = null;
 
     window.onload = function() {
-      // Set Today's Date automatically (YYYY-MM-DD)
+      // Set Today's Date automatically
       const now = new Date();
       const yyyy = now.getFullYear();
       const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -417,7 +524,7 @@
       document.getElementById("billDate").value = `${yyyy}-${mm}-${dd}`;
 
       if (!currentUser) {
-        document.getElementById("authModal").style.display = "flex";
+        document.getElementById("authOverlay").style.display = "flex";
       } else {
         initSession();
       }
@@ -425,8 +532,13 @@
 
     function initSession() {
       document.getElementById("lblUser").innerText = `${currentUser.name} (${currentUser.role})`;
+      if (currentUser.role !== "Admin") {
+        document.getElementById("tabKhataBtn").style.display = "none";
+        document.getElementById("tabStockBtn").style.display = "none";
+      }
       populateDatalist(cachedItems);
       refreshAppData();
+      checkFormState();
     }
 
     // CORS Safe API Trigger
@@ -441,7 +553,7 @@
       return JSON.parse(txt);
     }
 
-    // ⚡ Phone-Friendly Refresh Button
+    // ⚡ Phone-Friendly Fast Refresh
     async function refreshAppData() {
       const btn = document.getElementById("btnRefresh");
       btn.innerText = "⏳ Syncing...";
@@ -453,6 +565,13 @@
           cachedItems = res.items;
           localStorage.setItem("mle_items", JSON.stringify(res.items));
           populateDatalist(res.items);
+
+          if (res.alerts && res.alerts.length > 0) {
+            document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(a => `• ${a}`).join("<br>");
+            document.getElementById("lowStockAlertBox").style.display = "block";
+          } else {
+            document.getElementById("lowStockAlertBox").style.display = "none";
+          }
           btn.innerText = "✓ Synced";
         }
       } catch(e) {
@@ -474,7 +593,7 @@
       });
     }
 
-    // ⚡ Login & OTP Handlers
+    // ⚡ OTP Login Handlers
     async function sendOtp() {
       const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
       const err = document.getElementById("loginErr");
@@ -518,28 +637,31 @@
       if (res && res.success) {
         currentUser = res;
         localStorage.setItem("mle_user", JSON.stringify(res));
-        document.getElementById("authModal").style.display = "none";
+        document.getElementById("authOverlay").style.display = "none";
         initSession();
       } else {
         alert(res.message || "Invalid OTP!");
       }
     }
 
-    // ⚡ Item Selection & Rate Resolution
+    // ⚡ Item Selection & Rates
     function onItemSelect() {
       const name = document.getElementById("itemSearch").value.trim();
       const match = cachedItems.find(x => x.name.toLowerCase() === name.toLowerCase());
 
       if (match) {
         currentItemObj = match;
+        document.getElementById("itemHsn").value = match.hsn || "-";
         resolveRate();
       } else if (name.toLowerCase().includes("labour") || name.toLowerCase().includes("service")) {
         currentItemObj = { name: name, hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
+        document.getElementById("itemHsn").value = "998519";
         document.getElementById("itemRate").value = "0.00";
         document.getElementById("itemRate").readOnly = false;
       } else {
         currentItemObj = null;
-        document.getElementById("itemRate").value = "0.00";
+        document.getElementById("itemHsn").value = "Auto";
+        document.getElementById("itemRate").value = "Locked";
         document.getElementById("itemRate").readOnly = true;
       }
       calculateItemTotal();
@@ -548,6 +670,12 @@
     function onRateTypeChange() {
       resolveRate();
       calculateItemTotal();
+      checkFormState();
+    }
+
+    function onGstBillChange() {
+      calculateItemTotal();
+      checkFormState();
     }
 
     function resolveRate() {
@@ -557,20 +685,27 @@
       if (rateType === "Electrician Rate") r = currentItemObj.elecRate || r;
       if (rateType === "Wholesale Rate" && currentItemObj.famRate) r = currentItemObj.famRate;
 
-      document.getElementById("itemRate").value = parseFloat(r).toFixed(2);
+      document.getElementById("itemRate").value = `₹${parseFloat(r).toFixed(2)}`;
     }
 
-    // ⚡ GST ADDITION AFTER DISCOUNT
+    // ⚡ GST ADDED AFTER DISCOUNT LOGIC
     function calculateItemTotal() {
-      const baseRate = parseFloat(document.getElementById("itemRate").value) || 0;
+      let baseRate = 0;
+      const rateVal = document.getElementById("itemRate").value;
+      if (rateVal.includes("₹")) {
+        baseRate = parseFloat(rateVal.replace("₹", "")) || 0;
+      } else {
+        baseRate = parseFloat(rateVal) || 0;
+      }
+
       const disc = parseFloat(document.getElementById("itemDisc").value) || 0;
       const qty = parseFloat(document.getElementById("itemQty").value) || 1;
       const discountedRate = Math.max(0, baseRate - disc);
 
-      const isGst = document.getElementById("isGstBill").value === "Yes";
+      const isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
       let gstPerPc = 0;
 
-      if (isGst) {
+      if (isGstSelected) {
         const gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
         gstPerPc = (discountedRate * gstPct) / 100;
       }
@@ -578,6 +713,8 @@
       document.getElementById("itemGstAdded").value = `+₹${gstPerPc.toFixed(2)}`;
       const finalUnitRate = discountedRate + gstPerPc;
       const total = finalUnitRate * qty;
+
+      document.getElementById("itemTotal").value = total.toFixed(2);
       return { finalUnitRate, total, gstPerPc, discountedRate };
     }
 
@@ -585,7 +722,14 @@
     function addItemToBill() {
       const name = document.getElementById("itemSearch").value.trim();
       const serial = document.getElementById("itemSerial").value.trim();
-      const baseRate = parseFloat(document.getElementById("itemRate").value) || 0;
+      let baseRate = 0;
+      const rateVal = document.getElementById("itemRate").value;
+      if (rateVal.includes("₹")) {
+        baseRate = parseFloat(rateVal.replace("₹", "")) || 0;
+      } else {
+        baseRate = parseFloat(rateVal) || 0;
+      }
+
       const disc = parseFloat(document.getElementById("itemDisc").value) || 0;
       const qty = parseFloat(document.getElementById("itemQty").value) || 1;
 
@@ -593,7 +737,7 @@
       if (baseRate <= 0) { alert("⚠️ Rate 0 se zyada hona chahiye!"); return; }
 
       const calc = calculateItemTotal();
-      const isGst = document.getElementById("isGstBill").value === "Yes";
+      const isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
       const gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
 
       billItems.push({
@@ -602,7 +746,7 @@
         hsn: (currentItemObj && currentItemObj.hsn) ? currentItemObj.hsn : "-",
         baseRate: baseRate,
         discount: disc,
-        gstPct: isGst ? gstPct : 0,
+        gstPct: isGstSelected ? gstPct : 0,
         gstPerPc: calc.gstPerPc,
         finalRate: calc.finalUnitRate,
         qty: qty,
@@ -614,12 +758,16 @@
       // Reset item inputs
       document.getElementById("itemSearch").value = "";
       document.getElementById("itemSerial").value = "";
-      document.getElementById("itemRate").value = "0.00";
+      document.getElementById("itemHsn").value = "Auto";
+      document.getElementById("itemRate").value = "Locked";
       document.getElementById("itemRate").readOnly = true;
       document.getElementById("itemDisc").value = "0";
       document.getElementById("itemGstAdded").value = "0.00";
       document.getElementById("itemQty").value = "1";
+      document.getElementById("itemTotal").value = "0.00";
       currentItemObj = null;
+
+      checkFormState();
     }
 
     function renderBillTable() {
@@ -631,97 +779,73 @@
         grand += it.total;
         tbody.innerHTML += `
           <tr>
-            <td>${idx + 1}</td>
             <td>
               <b>${it.name}</b>
-              ${it.serialNo ? `<br><small style="color:var(--accent); font-weight:700;">Note: ${it.serialNo}</small>` : ''}
+              ${it.serialNo ? `<br><small style="color:#d97706;">${it.serialNo}</small>` : ''}
             </td>
+            <td>${it.hsn || '-'}</td>
             <td>₹${it.baseRate.toFixed(2)}</td>
-            <td style="color:#10b981;">-₹${it.discount.toFixed(2)}</td>
-            <td style="color:var(--accent); font-weight:bold;">+₹${it.gstPerPc.toFixed(2)}</td>
+            <td style="color:#059669;">-₹${it.discount.toFixed(2)}</td>
+            <td style="color:#b45309; font-weight:bold;">+₹${it.gstPerPc.toFixed(2)}</td>
             <td>${it.qty}</td>
             <td>₹${it.total.toFixed(2)}</td>
-            <td style="text-align:center;"><button class="btn-del" onclick="deleteBillItem(${idx})">✕</button></td>
+            <td style="text-align:center;"><button class="btn-del-row" onclick="deleteBillItem(${idx})">✕</button></td>
           </tr>
         `;
       });
 
-      document.getElementById("lblTotalItems").innerText = billItems.length;
       document.getElementById("lblGrandTotal").innerText = `₹${grand.toFixed(2)}`;
     }
 
     function deleteBillItem(idx) {
       billItems.splice(idx, 1);
       renderBillTable();
+      checkFormState();
     }
 
-    // ⚡ STRICT FORCE-BLANK VALIDATIONS (No Field Skipped)
-    async function validateAndSaveBill() {
-      const billDateRaw = document.getElementById("billDate").value;
-      const custName = document.getElementById("custName").value.trim();
+    // ⚡ FORM VALIDATION & AUTO-HIGHLIGHT BUTTON
+    function checkFormState() {
+      const mode = document.getElementById("billMode").value;
       const rateType = document.getElementById("rateType").value;
-      const payMode = document.getElementById("paymentMode").value;
       const isGst = document.getElementById("isGstBill").value;
+      const payMode = document.getElementById("paymentMode").value;
+      const custName = document.getElementById("custName").value.trim();
+      const custPhone = document.getElementById("custPhone").value.trim();
+      const custAddr = document.getElementById("custAddress").value.trim();
 
-      // 1. Mandatory Bill Date
-      if (!billDateRaw) {
-        alert("⚠️ Galti: Kripya Bill Date select karein!");
-        document.getElementById("billDate").focus();
-        return;
-      }
-
-      // 2. Mandatory Customer Name
-      if (!custName) {
-        alert("⚠️ Galti: Kripya Customer ka Naam enter karein!");
-        document.getElementById("custName").focus();
-        return;
-      }
-
-      // 3. Mandatory Rate Type
-      if (!rateType) {
-        alert("⚠️ Galti: Kripya Rate Type select karein!");
-        document.getElementById("rateType").focus();
-        return;
-      }
-
-      // 4. Mandatory Payment Mode
-      if (!payMode) {
-        alert("⚠️ Galti: Kripya Payment Mode (Cash / UPI / Udhar) select karein!");
-        document.getElementById("paymentMode").focus();
-        return;
-      }
-
-      // 5. Mandatory GST Bill?
-      if (!isGst) {
-        alert("⚠️ Galti: Kripya GST Bill? (Yes / No) select karein!");
-        document.getElementById("isGstBill").focus();
-        return;
-      }
-
-      // 6. Mandatory Items
-      if (billItems.length === 0) {
-        alert("⚠️ Galti: Bill me kam se kam 1 item zaroor add karein!");
-        return;
-      }
+      const isReady = (mode !== "" && 
+                       rateType !== "" && 
+                       isGst !== "" && 
+                       payMode !== "" && 
+                       custName !== "" && 
+                       custPhone.length >= 10 && 
+                       custAddr !== "" && 
+                       billItems.length > 0);
 
       const btn = document.getElementById("btnSubmitBill");
-      btn.disabled = true;
-      btn.innerText = "⏳ Generating Invoice & PDF...";
+      btn.disabled = !isReady;
+    }
 
-      // Format Date DD-MMM-YYYY
+    async function submitBillToBackend() {
+      const btn = document.getElementById("btnSubmitBill");
+      btn.disabled = true;
+      btn.innerText = "⏳ Saving Bill & Generating PDF...";
+
+      const billDateRaw = document.getElementById("billDate").value;
       const parts = billDateRaw.split("-");
       const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
       const formattedDate = `${parts[2]}-${months[parseInt(parts[1])-1]}-${parts[0]}`;
 
       const payload = {
-        billMode: document.getElementById("docType").value,
+        billMode: document.getElementById("billMode").value.includes("Estimate") ? "Estimate" : "Invoice",
         billDate: formattedDate,
-        rateType: rateType,
-        isGst: (isGst === "Yes"),
-        paymentMode: payMode,
-        customerName: custName,
+        rateType: document.getElementById("rateType").value,
+        isGst: document.getElementById("isGstBill").value.includes("Yes"),
+        paymentMode: document.getElementById("paymentMode").value,
+        customerName: document.getElementById("custName").value.trim(),
         phone: document.getElementById("custPhone").value.trim(),
         address: document.getElementById("custAddress").value.trim(),
+        gstin: document.getElementById("custGstin").value.trim(),
         items: billItems,
         grandTotal: billItems.reduce((acc, c) => acc + c.total, 0)
       };
@@ -729,10 +853,10 @@
       try {
         const res = await apiCall("processBillOrEstimate", payload);
         btn.disabled = false;
-        btn.innerText = "⚡ GENERATE & PRINT INVOICE";
+        btn.innerText = "⚡ Save Bill & Generate PDF";
 
         if (res && res.success) {
-          alert(`✓ Invoice Generated Successfully! Doc No: ${res.docNo}`);
+          alert(`✓ Bill Generated Successfully! Doc No: ${res.docNo}`);
           if (res.pdfUrl) window.open(res.pdfUrl, '_blank');
 
           // Reset cart & forced-blank fields
@@ -740,16 +864,116 @@
           renderBillTable();
           document.getElementById("custName").value = "";
           document.getElementById("custPhone").value = "";
+          document.getElementById("custGstin").value = "";
+          document.getElementById("billMode").selectedIndex = 0;
           document.getElementById("rateType").selectedIndex = 0;
-          document.getElementById("paymentMode").selectedIndex = 0;
           document.getElementById("isGstBill").selectedIndex = 0;
+          document.getElementById("paymentMode").selectedIndex = 0;
+          checkFormState();
         } else {
-          alert("Error: " + (res.message || "Failed to generate bill"));
+          alert("Error: " + (res.message || "Failed to save bill"));
         }
       } catch(e) {
         btn.disabled = false;
-        btn.innerText = "⚡ GENERATE & PRINT INVOICE";
+        btn.innerText = "⚡ Save Bill & Generate PDF";
         alert("Server communication error. Please retry!");
+      }
+    }
+
+    // ⚡ VIEW SWITCHER (Billing, Khata, Stock Inward)
+    function switchView(view) {
+      document.querySelectorAll(".nav-tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("viewBilling").style.display = (view === 'billing') ? 'block' : 'none';
+      document.getElementById("viewKhata").style.display = (view === 'khata') ? 'block' : 'none';
+      document.getElementById("viewStock").style.display = (view === 'stock') ? 'block' : 'none';
+
+      if (view === 'billing') document.getElementById("tabBillingBtn").classList.add("active");
+      if (view === 'khata') {
+        document.getElementById("tabKhataBtn").classList.add("active");
+        renderKhata();
+      }
+      if (view === 'stock') document.getElementById("tabStockBtn").classList.add("active");
+    }
+
+    // ⚡ UDHAR KHATA RENDERING
+    async function renderKhata() {
+      const c = document.getElementById("khataListContainer");
+      c.innerHTML = "Fetching pending udhar records...";
+      const res = await apiCall("getKhataRecords", { role: currentUser.role });
+      if (res && res.records) {
+        bankSettings = res.settings;
+        if (res.records.length === 0) { c.innerHTML = "No pending records!"; return; }
+
+        let html = '<div class="table-wrap"><table><thead><tr><th>Doc No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+        res.records.forEach(r => {
+          const isPending = (r.status === "Pending");
+          html += `
+            <tr>
+              <td><b>${r.docNo}</b></td>
+              <td>${r.date}</td>
+              <td>${r.customerName}</td>
+              <td>${r.phone || '-'}</td>
+              <td><b>₹${r.amount}</b></td>
+              <td><b style="color:${isPending ? '#f59e0b' : '#10b981'}">${r.status}</b></td>
+              <td>
+                ${isPending && r.phone ? `<button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px;" onclick="sendKhataReminder('${r.docNo}', '${r.customerName}', '${r.phone}', ${r.amount}, '${r.date}')">📲 WhatsApp</button>` : ''}
+                ${isPending ? `<button class="btn-add" style="display:inline-block; width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="markPaid('${r.docNo}')">✓ Paid</button>` : ''}
+              </td>
+            </tr>
+          `;
+        });
+        html += '</tbody></table></div>';
+        c.innerHTML = html;
+      }
+    }
+
+    function sendKhataReminder(docNo, name, phone, amount, date) {
+      const upi = (bankSettings && bankSettings.upi) ? bankSettings.upi : "8860880453@kotak";
+      const payUrl = `https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=${encodeURIComponent(upi)}&am=${amount}`;
+      const msg = `*Greetings from Moon Light Electricals!*\n\nHi ${name},\nThis is a reminder that payment for Bill *${docNo}* dated *${date}* is pending.\n\n• *Pending Amount:* ₹${amount}\n• *Due To:* Moon Light Electricals (Sector-121, Noida)\n\n👉 *Tap below to Pay directly via GPay / PhonePe / Paytm:*\n${payUrl}\n\nThank you!\n*MOON LIGHT ELECTRICALS*`;
+      window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    async function markPaid(docNo) {
+      if (!confirm(`Mark ${docNo} as Paid?`)) return;
+      const res = await apiCall("markKhataPaid", { docNo: docNo, role: currentUser.role });
+      if (res && res.success) {
+        alert("Marked as Paid!");
+        renderKhata();
+      }
+    }
+
+    // ⚡ STOCK INWARD SUBMIT
+    async function submitStockInward() {
+      const name = document.getElementById("stkName").value.trim();
+      const qty = parseFloat(document.getElementById("stkQty").value) || 0;
+      if (!name || qty <= 0) {
+        alert("⚠️ Item name aur quantity enter karein!");
+        return;
+      }
+
+      const data = {
+        name: name,
+        hsn: document.getElementById("stkHsn").value.trim(),
+        qty: qty,
+        custRate: parseFloat(document.getElementById("stkCustRate").value) || 0,
+        elecRate: parseFloat(document.getElementById("stkElecRate").value) || 0,
+        famRate: parseFloat(document.getElementById("stkFamRate").value) || 0,
+        minQty: parseFloat(document.getElementById("stkMinQty").value) || 2
+      };
+
+      try {
+        const res = await apiCall("addOrUpdateStock", { data: data, role: currentUser.role });
+        if (res && res.success) {
+          alert(`✓ Stock updated for ${res.name}`);
+          document.getElementById("stkName").value = "";
+          document.getElementById("stkQty").value = "10";
+          refreshAppData();
+        } else {
+          alert("Error updating stock");
+        }
+      } catch(e) {
+        alert("Failed to update stock");
       }
     }
   </script>
