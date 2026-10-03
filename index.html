@@ -34,8 +34,11 @@
       flex-wrap: wrap;
       gap: 10px;
     }
+    .brand-wrap { display: flex; flex-direction: column; }
     .brand-title { font-size: 18px; font-weight: 900; color: #0f172a; letter-spacing: 0.5px; }
     .brand-title span { color: var(--accent); }
+    .brand-tagline { font-size: 11px; color: var(--accent); font-style: italic; font-weight: 700; margin-top: 1px; }
+
     .nav-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .nav-tab-btn {
       background: #e2e8f0;
@@ -69,6 +72,18 @@
       gap: 5px;
     }
     .btn-refresh:active { transform: scale(0.96); }
+    
+    .timer-pill {
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #b45309;
+      font-family: monospace;
+    }
+
     .user-pill {
       background: #e2e8f0;
       border: 1px solid var(--border);
@@ -78,6 +93,18 @@
       font-weight: 700;
       color: #334155;
     }
+
+    .btn-logout {
+      background: #fee2e2;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-logout:hover { background: #fecaca; }
 
     .container { max-width: 1350px; margin: 0 auto; width: 100%; }
 
@@ -123,7 +150,6 @@
     }
     .form-col label span { color: #ef4444; }
 
-    /* Crisp Responsive Inputs */
     input, select {
       background: #ffffff;
       border: 1.5px solid var(--border);
@@ -143,7 +169,7 @@
     input::placeholder { color: #94a3b8; font-weight: normal; }
     input[readonly] { background: #f1f5f9; color: #475569; }
 
-    /* Full-Width Mobile-Adapted Dropdown Menu */
+    /* Full-Width Dropdown Menu */
     .dropdown-menu {
       position: absolute;
       top: 100%;
@@ -196,7 +222,6 @@
     }
     .btn-add:hover { background: #047857; }
 
-    /* Table Container */
     .table-wrap {
       background: #ffffff;
       border: 1.5px solid var(--border);
@@ -311,7 +336,7 @@
   <div id="authOverlay" style="display: none;">
     <div class="auth-box">
       <div class="brand-title" style="font-size: 20px;">MOON<span>LIGHT</span> ELECTRICALS</div>
-      <div style="font-size: 11px; color: var(--accent); font-style: italic; margin-top: 3px; margin-bottom: 20px; font-weight: bold;">Brightening Lives, Powering Trust</div>
+      <div class="brand-tagline" style="margin-bottom: 20px;">Brightening Lives, Powering Trust</div>
 
       <div id="stepPhone">
         <label style="display:block; text-align:left; font-size:11px; font-weight:800; color:#475569; margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
@@ -332,19 +357,26 @@
   </div>
 
   <div class="container">
-    <!-- Top Nav with View Tabs and Refresh -->
+    <!-- Top Nav with View Tabs, 24H Timer, Refresh & Logout -->
     <div class="top-nav">
-      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-        <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div class="brand-wrap">
+          <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
+          <div class="brand-tagline">Brightening Lives, Powering Trust</div>
+        </div>
         <button class="nav-tab-btn active" id="tabBillingBtn" onclick="switchView('billing')">📜 Billing</button>
         <button class="nav-tab-btn" id="tabKhataBtn" onclick="switchView('khata')">📒 Udhar Khata</button>
         <button class="nav-tab-btn" id="tabStockBtn" onclick="switchView('stock')">📦 Stock Inward</button>
       </div>
       <div class="nav-actions">
+        <!-- ⏳ Live 24H Session Countdown Timer -->
+        <div class="timer-pill" id="sessionTimerBadge" title="Session Timeout">⏳ 24:00:00</div>
         <button class="btn-refresh" id="btnRefresh" onclick="refreshAppData()" title="Sync Items From Sheet">
           🔄 Refresh
         </button>
         <div class="user-pill" id="lblUser">Session...</div>
+        <!-- 🚪 Logout Button -->
+        <button class="btn-logout" onclick="userLogout()" title="Logout from System">🚪 Logout</button>
       </div>
     </div>
 
@@ -423,7 +455,7 @@
 
       <div class="separator"></div>
 
-      <!-- ROW 4: Item Name (Direct Instant Auto-Clear on Click), Work Note, HSN -->
+      <!-- ROW 4: Item Name, Work Note, HSN -->
       <div class="grid-row row-item-top">
         <div class="form-col">
           <label>ITEM / SERVICE NAME</label>
@@ -518,7 +550,7 @@
           </div>
           <div class="form-col">
             <label>HSN / SAC (EDITABLE)</label>
-            <input type="text" id="stkHsn" placeholder="e.g. 8538">
+            <input type="text" id="stkHsn" placeholder="Enter HSN Code">
           </div>
         </div>
         <div class="grid-row row-5" style="margin-top:10px;">
@@ -559,6 +591,7 @@
     let bankSettings = null;
     let lastSelectedBillingItem = null;
     let lastSelectedStockItem = null;
+    let sessionTimerInterval = null;
 
     window.onload = function() {
       const now = new Date();
@@ -592,6 +625,48 @@
       }
       refreshAppData();
       checkFormState();
+      startSessionTimer();
+    }
+
+    // ⏳ 24-HOUR COUNTDOWN TIMER LOGIC
+    function startSessionTimer() {
+      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+      
+      let loginTime = localStorage.getItem("mle_login_time");
+      if (!loginTime) {
+        loginTime = new Date().getTime();
+        localStorage.setItem("mle_login_time", loginTime);
+      } else {
+        loginTime = parseInt(loginTime);
+      }
+
+      const totalDuration = 24 * 60 * 60 * 1000; // 24 Hours in ms
+
+      sessionTimerInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const diff = (loginTime + totalDuration) - now;
+
+        if (diff <= 0) {
+          clearInterval(sessionTimerInterval);
+          alert("⚠️ 24 Hours session expired. Please log in again.");
+          userLogout();
+          return;
+        }
+
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+        const pad = (n) => String(n).padStart(2, '0');
+        document.getElementById("sessionTimerBadge").innerText = `⏳ ${pad(h)}:${pad(m)}:${pad(s)}`;
+      }, 1000);
+    }
+
+    function userLogout() {
+      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+      localStorage.removeItem("mle_user");
+      localStorage.removeItem("mle_login_time");
+      location.reload();
     }
 
     async function apiCall(action, payload = {}) {
@@ -633,8 +708,10 @@
       }, 1500);
     }
 
+    // ⚡ PRECISE HSN AUTO-DETECTION (NO BLIND DEFAULT GUESS)
     function detectHsnFromName(name) {
-      var n = name.toLowerCase();
+      var n = name.toLowerCase().trim();
+      if (!n) return "";
       if (n.includes("labour") || n.includes("service") || n.includes("repair") || n.includes("fitting") || n.includes("charge")) return "998519";
       if (n.includes("fan") || n.includes("exhaust")) return "8414";
       if (n.includes("wire") || n.includes("cable") || n.includes("cord")) return "8544";
@@ -644,17 +721,16 @@
       if (n.includes("iron") || n.includes("press") || n.includes("geyser") || n.includes("heater") || n.includes("element") || n.includes("rod")) return "8516";
       if (n.includes("tape")) return "3919";
       if (n.includes("pipe") || n.includes("casing") || n.includes("pvc")) return "3917";
-      return "8538";
+      return ""; // No blind guess if unmatched!
     }
 
-    // ⚡ INSTANT DIRECT-CLICK AUTO-CLEAR (Bina Bahar Jaaye)
     function handleItemDirectClick() {
       const input = document.getElementById("itemSearch");
       if (input.value.trim() !== "") {
         lastSelectedBillingItem = input.value;
       }
-      input.value = ""; // Har click par turant blank
-      renderBillingDropdown(cachedItems); // Turant full dropdown open
+      input.value = "";
+      renderBillingDropdown(cachedItems);
     }
 
     function handleItemBlur() {
@@ -670,8 +746,9 @@
       const val = document.getElementById("itemSearch").value.trim();
       const lower = val.toLowerCase();
       
-      if (val.length > 0) {
-        document.getElementById("itemHsn").value = detectHsnFromName(val);
+      const suggestedHsn = detectHsnFromName(val);
+      if (suggestedHsn) {
+        document.getElementById("itemHsn").value = suggestedHsn;
       }
 
       const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
@@ -718,13 +795,12 @@
       lastSelectedBillingItem = item.name;
       document.getElementById("billingItemMenu").style.display = "none";
       currentItemObj = item;
-      document.getElementById("itemHsn").value = item.hsn && item.hsn !== "-" ? item.hsn : detectHsnFromName(item.name);
+      document.getElementById("itemHsn").value = (item.hsn && item.hsn !== "-") ? item.hsn : detectHsnFromName(item.name);
       document.getElementById("itemRate").readOnly = true;
       resolveRate();
       calculateItemTotal();
     }
 
-    // ⚡ INSTANT DIRECT-CLICK AUTO-CLEAR (STOCK INWARD)
     function handleStockDirectClick() {
       const input = document.getElementById("stkName");
       if (input.value.trim() !== "") {
@@ -746,9 +822,12 @@
     function onStockSearchInput() {
       const val = document.getElementById("stkName").value.trim();
       const lower = val.toLowerCase();
-      if (val.length > 0) {
-        document.getElementById("stkHsn").value = detectHsnFromName(val);
+      
+      const suggestedHsn = detectHsnFromName(val);
+      if (suggestedHsn) {
+        document.getElementById("stkHsn").value = suggestedHsn;
       }
+
       const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
       renderStockDropdown(filtered);
     }
@@ -768,7 +847,7 @@
           e.preventDefault();
           document.getElementById("stkName").value = item.name;
           lastSelectedStockItem = item.name;
-          document.getElementById("stkHsn").value = item.hsn && item.hsn !== "-" ? item.hsn : detectHsnFromName(item.name);
+          document.getElementById("stkHsn").value = (item.hsn && item.hsn !== "-") ? item.hsn : detectHsnFromName(item.name);
           document.getElementById("stkCustRate").value = item.custRate || 0;
           document.getElementById("stkElecRate").value = item.elecRate || 0;
           document.getElementById("stkFamRate").value = item.famRate || 0;
@@ -833,7 +912,7 @@
     function addItemToBill() {
       const name = document.getElementById("itemSearch").value.trim();
       const serial = document.getElementById("itemSerial").value.trim();
-      const hsn = document.getElementById("itemHsn").value.trim() || "-";
+      let hsn = document.getElementById("itemHsn").value.trim();
 
       let baseRate = 0;
       const rateVal = document.getElementById("itemRate").value;
@@ -849,6 +928,12 @@
       if (!name) { alert("⚠️ Kripya Item select ya enter karein!"); return; }
       if (baseRate <= 0) { alert("⚠️ Rate 0 se zyada hona chahiye!"); return; }
 
+      // HSN Confirmation Prompt if auto-detected or empty
+      if (!hsn) {
+        var userHsn = prompt("⚠️ Item ke liye HSN Code enter karein (Optional):", "8538");
+        hsn = userHsn ? userHsn.trim() : "-";
+      }
+
       const calc = calculateItemTotal();
       const isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
       const gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
@@ -856,7 +941,7 @@
       billItems.push({
         name: name,
         serialNo: serial,
-        hsn: hsn,
+        hsn: hsn || "-",
         baseRate: baseRate,
         discount: disc,
         gstPct: isGstSelected ? gstPct : 0,
@@ -1052,17 +1137,31 @@
       }
     }
 
+    // ⚡ STOCK INWARD WITH HSN CONFIRMATION
     async function submitStockInward() {
       const name = document.getElementById("stkName").value.trim();
       const qty = parseFloat(document.getElementById("stkQty").value) || 0;
+      let hsn = document.getElementById("stkHsn").value.trim();
+
       if (!name || qty <= 0) {
         alert("⚠️ Item name aur quantity enter karein!");
         return;
       }
 
+      // Check if HSN entered or prompt
+      if (!hsn) {
+        const askHsn = prompt(`"${name}" ke liye HSN code confirm karein:`, detectHsnFromName(name) || "8538");
+        if (askHsn === null) return; // User cancelled
+        hsn = askHsn.trim();
+        document.getElementById("stkHsn").value = hsn;
+      } else {
+        const confirmHsn = confirm(`Item: ${name}\nHSN Code: ${hsn}\n\nKya yeh HSN sahi hai? Update karein?`);
+        if (!confirmHsn) return;
+      }
+
       const data = {
         name: name,
-        hsn: document.getElementById("stkHsn").value.trim() || detectHsnFromName(name),
+        hsn: hsn,
         qty: qty,
         custRate: parseFloat(document.getElementById("stkCustRate").value) || 0,
         elecRate: parseFloat(document.getElementById("stkElecRate").value) || 0,
@@ -1073,9 +1172,12 @@
       try {
         const res = await apiCall("addOrUpdateStock", { data: data, role: currentUser.role });
         if (res && res.success) {
-          alert(`✓ Stock updated for ${res.name}`);
+          alert(`✓ Stock successfully updated for "${res.name}" with HSN: ${hsn}!`);
           document.getElementById("stkName").value = "";
           document.getElementById("stkHsn").value = "";
+          document.getElementById("stkCustRate").value = "";
+          document.getElementById("stkElecRate").value = "";
+          document.getElementById("stkFamRate").value = "";
           document.getElementById("stkQty").value = "10";
           refreshAppData();
         } else {
@@ -1129,6 +1231,7 @@
       if (res && res.success) {
         currentUser = res;
         localStorage.setItem("mle_user", JSON.stringify(res));
+        localStorage.setItem("mle_login_time", new Date().getTime());
         document.getElementById("authOverlay").style.display = "none";
         initSession();
       } else {
