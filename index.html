@@ -247,6 +247,7 @@
     }
     .btn-add:hover { background: #047857; }
 
+    /* Table Container */
     .table-wrap {
       background: #ffffff;
       border: 1.5px solid var(--border);
@@ -286,6 +287,7 @@
       cursor: pointer;
     }
 
+    /* 📊 Grand Total Bar with Items & Units Summary */
     .total-bar {
       background: var(--yellow-bar);
       border: 1.5px solid var(--yellow-border);
@@ -296,9 +298,24 @@
       align-items: center;
       color: #000000;
       margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .total-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #854d0e;
+    }
+    .total-amt-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .total-title { font-size: 15px; font-weight: 900; }
-    .total-amt { font-size: 22px; font-weight: 900; }
+    .total-amt { font-size: 22px; font-weight: 900; color: #000000; }
 
     .btn-save {
       background: var(--brown);
@@ -332,6 +349,23 @@
       padding: 18px;
       margin-top: 10px;
     }
+
+    /* 📒 Top Udhar Summary Card */
+    .udhar-summary-card {
+      background: #fff7ed;
+      border: 2px solid #fdba74;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .udhar-sum-title { font-size: 13px; font-weight: 800; color: #9a3412; text-transform: uppercase; }
+    .udhar-sum-amt { font-size: 26px; font-weight: 900; color: #c2410c; }
+    .udhar-sum-count { font-size: 12.5px; font-weight: 700; color: #7c2d12; background: #ffedd5; padding: 4px 12px; border-radius: 20px; }
 
     /* 🔒 Solid Opacity Authentication Overlay */
     #authOverlay {
@@ -436,15 +470,12 @@
       <div class="success-sub" id="lblSuccessDocNo">Doc No: -</div>
       
       <div class="success-actions">
-        <!-- 1. Send WhatsApp Message -->
         <button class="btn-wa-share" id="btnShareWhatsApp" onclick="shareBillOnWhatsApp()">
           📲 Send Invoice on WhatsApp
         </button>
-        <!-- 2. View / Download PDF -->
         <button class="btn-view-pdf" id="btnViewDownloadPdf" onclick="viewDownloadPdf()">
           👁️ View / Download PDF
         </button>
-        <!-- 3. Create Next Bill -->
         <button class="btn-next-bill" onclick="closeSuccessAndNextBill()">
           🧾 + Create Next Bill
         </button>
@@ -575,11 +606,11 @@
 
       <div class="separator"></div>
 
-      <!-- ROW 4: Item Name, Work Note, HSN -->
+      <!-- ROW 4: Item Name (1ST POINT: TYPE TO SEARCH + STRICT SELECTION), Work Note, HSN -->
       <div class="grid-row row-item-top">
         <div class="form-col">
-          <label>ITEM / SERVICE NAME</label>
-          <input type="text" id="itemSearch" placeholder="Search item or type Labour Charge..." autocomplete="off" onclick="handleItemDirectClick()" oninput="onItemSearchInput()" onblur="handleItemBlur()">
+          <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
+          <input type="text" id="itemSearch" placeholder="Type to search from inventory..." autocomplete="off" onclick="handleItemDirectClick()" oninput="onItemSearchInput()" onblur="handleItemBlur()">
           <div class="dropdown-menu" id="billingItemMenu"></div>
         </div>
         <div class="form-col">
@@ -638,10 +669,16 @@
         </table>
       </div>
 
-      <!-- Grand Total Bar -->
+      <!-- 📊 2ND POINT: Grand Total Bar with Total Items & Total Units Qty Display -->
       <div class="total-bar">
-        <div class="total-title">Grand Total:</div>
-        <div class="total-amt" id="lblGrandTotal">₹0.00</div>
+        <div class="total-meta">
+          <span>📦 Total Items: <b id="lblTotalItemCount" style="color:#0f172a;">0</b></span>
+          <span>🔢 Total Units (Qty): <b id="lblTotalUnitsCount" style="color:#0f172a;">0 Pcs</b></span>
+        </div>
+        <div class="total-amt-box">
+          <div class="total-title">Grand Total:</div>
+          <div class="total-amt" id="lblGrandTotal">₹0.00</div>
+        </div>
       </div>
 
       <!-- Save & Print Button -->
@@ -650,22 +687,31 @@
       </button>
     </div>
 
-    <!-- 📒 VIEW 2: UDHAR KHATA WORKSPACE -->
+    <!-- 📒 VIEW 2: UDHAR KHATA WORKSPACE (3RD POINT: TOP PENDING AMOUNT CARD) -->
     <div id="viewKhata" style="display: none;">
       <div class="aux-card">
+        <!-- 3rd Point: Top Pending Amount & Total Bills Display Card -->
+        <div class="udhar-summary-card">
+          <div>
+            <div class="udhar-sum-title">Total Pending Udhar Amount</div>
+            <div class="udhar-sum-amt" id="lblTotalPendingUdhar">₹0.00</div>
+          </div>
+          <div class="udhar-sum-count" id="lblTotalPendingCount">0 Pending Bills</div>
+        </div>
+
         <h3 style="color:#b45309; font-size:16px; margin-bottom:14px; text-transform:uppercase; font-weight:900;">Pending Udhar Records & Reminders</h3>
         <div id="khataListContainer" style="font-size:13.5px;">Loading Khata...</div>
       </div>
     </div>
 
-    <!-- 📦 VIEW 3: STOCK INWARD WORKSPACE -->
+    <!-- 📦 VIEW 3: STOCK INWARD WORKSPACE (MANUAL TYPING ALLOWED HERE) -->
     <div id="viewStock" style="display: none;">
       <div class="aux-card">
         <h3 style="color:#b45309; font-size:16px; margin-bottom:14px; text-transform:uppercase; font-weight:900;">Add / Inward Stock Entry</h3>
         <div class="grid-row row-2">
           <div class="form-col">
-            <label>Item Name <span>*</span></label>
-            <input type="text" id="stkName" placeholder="Full Item Description (Search or Type New)" autocomplete="off" onclick="handleStockDirectClick()" oninput="onStockSearchInput()" onblur="handleStockBlur()">
+            <label>Item Name <span>*</span> (Type New or Select Existing)</label>
+            <input type="text" id="stkName" placeholder="Full Item Description (Type new or choose existing)" autocomplete="off" onclick="handleStockDirectClick()" oninput="onStockSearchInput()" onblur="handleStockBlur()">
             <div class="dropdown-menu" id="stockItemMenu"></div>
           </div>
           <div class="form-col">
@@ -848,7 +894,13 @@
         const res = await apiCall("getAppData", { role: currentUser ? currentUser.role : "Staff" });
         if (res && res.items) {
           cachedItems = res.items;
-          localStorage.setItem("mle_items", JSON.stringify(res.items));
+          
+          const hasLabour = cachedItems.some(x => x.name.toLowerCase().includes("labour charge"));
+          if (!hasLabour) {
+            cachedItems.unshift({ name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, stock: "∞" });
+          }
+
+          localStorage.setItem("mle_items", JSON.stringify(cachedItems));
 
           if (res.alerts && res.alerts.length > 0) {
             document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(a => `• ${a}`).join("<br>");
@@ -867,6 +919,7 @@
       }, 1500);
     }
 
+    // Category HSN Detection
     function detectHsnFromName(name) {
       var n = name.toLowerCase().trim();
       if (!n) return "";
@@ -909,6 +962,7 @@
       return "";
     }
 
+    // Smart HSN Engine
     function resolveSmartHsn(itemName, targetHsnInputId, allowPopup = true) {
       const cleanName = (itemName || "").trim();
       const hsnInput = document.getElementById(targetHsnInputId);
@@ -948,6 +1002,7 @@
       return "";
     }
 
+    // ⚡ 1ST POINT: BILLING - FAST TYPE TO SEARCH
     function handleItemDirectClick() {
       const input = document.getElementById("itemSearch");
       if (input.value.trim() !== "") {
@@ -966,7 +1021,10 @@
           input.value = lastSelectedBillingItem;
           resolveSmartHsn(lastSelectedBillingItem, "itemHsn", false);
         } else if (val !== "") {
-          resolveSmartHsn(val, "itemHsn", true);
+          const match = cachedItems.find(x => x.name.toLowerCase() === val.toLowerCase());
+          if (match) {
+            selectBillingItem(match);
+          }
         }
       }, 250);
     }
@@ -978,13 +1036,9 @@
       const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
       renderBillingDropdown(filtered);
 
-      const autoHsn = detectHsnFromName(val);
-      if (autoHsn) {
-        document.getElementById("itemHsn").value = autoHsn;
-      }
-
+      // Labour Charge Unlock
       if (lower.includes("labour") || lower.includes("service")) {
-        currentItemObj = { name: val, hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
+        currentItemObj = { name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
         document.getElementById("itemHsn").value = "998519";
         const rateField = document.getElementById("itemRate");
         rateField.readOnly = false;
@@ -992,15 +1046,6 @@
         if (rateField.value === "Locked" || rateField.value.includes("₹0")) rateField.value = "";
         calculateItemTotal();
         return;
-      }
-
-      if (filtered.length === 0 && val.length > 2) {
-        currentItemObj = null;
-        const rateField = document.getElementById("itemRate");
-        rateField.readOnly = false;
-        rateField.placeholder = "Enter Rate";
-        if (rateField.value === "Locked") rateField.value = "";
-        calculateItemTotal();
       }
     }
 
@@ -1049,6 +1094,7 @@
       calculateItemTotal();
     }
 
+    // Stock Inward: Direct Click Clear & Blur
     function handleStockDirectClick() {
       const input = document.getElementById("stkName");
       if (input.value.trim() !== "") {
@@ -1165,10 +1211,26 @@
       return { finalUnitRate, total, gstPerPc, discountedRate };
     }
 
+    // ⚡ 1ST POINT: STRICT INVENTORY CHECK - UNKNOWN ITEM CANNOT BE ADDED IN BILLING
     function addItemToBill() {
       const name = document.getElementById("itemSearch").value.trim();
       const serial = document.getElementById("itemSerial").value.trim();
       let hsn = document.getElementById("itemHsn").value.trim();
+
+      if (!name) { 
+        alert("⚠️ Kripya item search karke list se select karein!"); 
+        return; 
+      }
+
+      // Strict Check: Must exist in inventory or be Labour Charge
+      const isLabour = name.toLowerCase().includes("labour") || name.toLowerCase().includes("service");
+      const existsInInventory = cachedItems.some(x => x.name.toLowerCase() === name.toLowerCase());
+
+      if (!existsInInventory && !isLabour) {
+        alert(`⚠️ "${name}" inventory mein registered nahi hai!\n\nNaya item pehle 'Stock Inward' tab mein jaakar add karein.`);
+        document.getElementById("itemSearch").focus();
+        return;
+      }
 
       let baseRate = 0;
       const rateVal = document.getElementById("itemRate").value.trim();
@@ -1181,7 +1243,6 @@
       const disc = parseFloat(document.getElementById("itemDisc").value) || 0;
       const qty = parseFloat(document.getElementById("itemQty").value) || 1;
 
-      if (!name) { alert("⚠️ Kripya Item select ya enter karein!"); return; }
       if (baseRate <= 0) { 
         alert("⚠️ Kripya valid Rate daalein (0 se zyada hona chahiye)!"); 
         document.getElementById("itemRate").focus();
@@ -1230,13 +1291,16 @@
       checkFormState();
     }
 
+    // ⚡ 2ND POINT: AUTO-CALCULATE TOTAL ITEMS (LINES) & TOTAL UNITS (QTY SUM)
     function renderBillTable() {
       const tbody = document.getElementById("billItemsTbody");
       tbody.innerHTML = "";
       let grand = 0;
+      let totalUnits = 0;
 
       billItems.forEach((it, idx) => {
         grand += it.total;
+        totalUnits += it.qty;
         tbody.innerHTML += `
           <tr>
             <td>
@@ -1254,6 +1318,9 @@
         `;
       });
 
+      // Update Summary Bar
+      document.getElementById("lblTotalItemCount").innerText = billItems.length;
+      document.getElementById("lblTotalUnitsCount").innerText = `${totalUnits} Pcs`;
       document.getElementById("lblGrandTotal").innerText = `₹${grand.toFixed(2)}`;
     }
 
@@ -1285,7 +1352,7 @@
       btn.disabled = !isReady;
     }
 
-    // ⚡ BILL GENERATION WITH PROPER NAMING FORMAT
+    // ⚡ SUBMIT BILL TO BACKEND (INCLUDES TOTAL ITEMS & UNITS IN PAYLOAD)
     async function submitBillToBackend() {
       const btn = document.getElementById("btnSubmitBill");
       btn.disabled = true;
@@ -1304,6 +1371,7 @@
       const cleanRateType = String(document.getElementById("rateType").value || "");
       const cleanPaymentMode = String(document.getElementById("paymentMode").value || "");
       const totalBillAmount = billItems.reduce((acc, c) => acc + c.total, 0);
+      const totalUnitsCount = billItems.reduce((acc, c) => acc + c.qty, 0);
 
       const payload = {
         billMode: rawMode.includes("Estimate") ? "Estimate" : "Invoice",
@@ -1316,7 +1384,9 @@
         address: cleanAddress,
         gstin: cleanGstin,
         items: billItems,
-        grandTotal: totalBillAmount
+        grandTotal: totalBillAmount,
+        totalItems: billItems.length,
+        totalUnits: totalUnitsCount
       };
 
       try {
@@ -1332,10 +1402,12 @@
             phone: cleanPhone,
             paymentMode: cleanPaymentMode,
             grandTotal: totalBillAmount,
+            totalItems: billItems.length,
+            totalUnits: totalUnitsCount,
             date: formattedDate
           };
 
-          document.getElementById("lblSuccessDocNo").innerText = `Doc No: ${res.docNo} | Amount: ₹${totalBillAmount.toFixed(2)}`;
+          document.getElementById("lblSuccessDocNo").innerText = `Doc No: ${res.docNo} | Items: ${billItems.length} | Units: ${totalUnitsCount} | Amt: ₹${totalBillAmount.toFixed(2)}`;
           document.getElementById("billSuccessModal").style.display = "flex";
         } else {
           alert("Error: " + (res.message || "Failed to save bill"));
@@ -1347,7 +1419,7 @@
       }
     }
 
-    // 📲 EXACT SCREENSHOT TEMPLATE WHATSAPP MESSAGE WITH FULL STORE ADDRESS
+    // 📲 WhatsApp Message with Total Items & Units Summary
     function shareBillOnWhatsApp() {
       if (!lastGeneratedBillData) return;
       const d = lastGeneratedBillData;
@@ -1355,13 +1427,11 @@
       const docTypeWord = d.docNo.includes("EST") ? "Estimate" : "Invoice";
       const pdfSection = d.pdfUrl ? `\n\n📄 *Download PDF Document:*\n${d.pdfUrl}` : "";
 
-      // Exact Message Template Matching image_9db4d8.png with Full Address
-      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docTypeWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Amount: *₹${d.grandTotal.toFixed(2)}*\n  • Payment Mode: ${d.paymentMode}${pdfSection}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
+      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docTypeWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Items: ${d.totalItems} (${d.totalUnits} Units)\n  • Total Amount: *₹${d.grandTotal.toFixed(2)}*\n  • Payment Mode: ${d.paymentMode}${pdfSection}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
 
       window.open(`https://wa.me/91${d.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
-    // 👁️ View / Download PDF
     function viewDownloadPdf() {
       if (!lastGeneratedBillData || !lastGeneratedBillData.pdfUrl) {
         alert("PDF link is not available!");
@@ -1370,12 +1440,10 @@
       window.open(lastGeneratedBillData.pdfUrl, '_blank');
     }
 
-    // 🧾 Create Next Bill
     function closeSuccessAndNextBill() {
       document.getElementById("billSuccessModal").style.display = "none";
       lastGeneratedBillData = null;
 
-      // Reset Table & Fields
       billItems = [];
       renderBillTable();
       document.getElementById("custName").value = "";
@@ -1404,12 +1472,28 @@
       if (view === 'stock') document.getElementById("tabStockBtn").classList.add("active");
     }
 
+    // ⚡ 3RD POINT: UDHAR KHATA RENDERING WITH TOTAL PENDING SUMMARY
     async function renderKhata() {
       const c = document.getElementById("khataListContainer");
       c.innerHTML = "Fetching pending udhar records...";
       const res = await apiCall("getKhataRecords", { role: currentUser.role });
       if (res && res.records) {
         bankSettings = res.settings;
+
+        let totalPending = 0;
+        let pendingCount = 0;
+
+        res.records.forEach(r => {
+          if (r.status === "Pending") {
+            totalPending += parseFloat(r.amount) || 0;
+            pendingCount++;
+          }
+        });
+
+        // Update Top Summary Card
+        document.getElementById("lblTotalPendingUdhar").innerText = `₹${totalPending.toFixed(2)}`;
+        document.getElementById("lblTotalPendingCount").innerText = `${pendingCount} Pending Bills`;
+
         if (res.records.length === 0) { c.innerHTML = "No pending records!"; return; }
 
         let html = '<div class="table-wrap"><table><thead><tr><th>Doc No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
