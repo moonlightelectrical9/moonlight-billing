@@ -607,7 +607,7 @@
   </div>
 
   <script>
-    // ⚙️️ LIVE APPS SCRIPT URL
+    // ⚙️ LIVE APPS SCRIPT URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
 
     let currentUser = JSON.parse(localStorage.getItem("mle_user")) || null;
@@ -770,60 +770,50 @@
       }, 1500);
     }
 
-    // ⚡ STEP 2: CATEGORY-WISE HSN DICTIONARY
+    // Category HSN Detection
     function detectHsnFromName(name) {
       var n = name.toLowerCase().trim();
       if (!n) return "";
 
-      // Labour / Service
       if (n.includes("labour") || n.includes("service") || n.includes("repair") || n.includes("fitting") || n.includes("charge") || n.includes("installation")) {
         return "998519";
       }
-      // Fans & Air Flow
       if (n.includes("fan") || n.includes("exhaust") || n.includes("cooler") || n.includes("blower") || n.includes("ventilator")) {
         return "8414";
       }
-      // Wires & Cables
       if (n.includes("wire") || n.includes("cable") || n.includes("cord") || n.includes("submersible wire") || n.includes("coaxial") || n.includes("cat6") || n.includes("cctv wire")) {
         return "8544";
       }
-      // Switches, Indicators, Sockets, Regulators, MCBs
       if (n.includes("switch") || n.includes("socket") || n.includes("indicator") || n.includes("mcb") || n.includes("rccb") || 
           n.includes("isolator") || n.includes("plug") || n.includes("top") || n.includes("holder") || n.includes("fuse") || 
           n.includes("regulator") || n.includes("dimmer") || n.includes("roma") || n.includes("anchor") || n.includes("modular") ||
           n.includes("bell push") || n.includes("step regulator") || n.includes("starter") || n.includes("contactor")) {
         return "8536";
       }
-      // Boards, Sheets, Gang Boxes, DB Panels
       if (n.includes("board") || n.includes("gang box") || n.includes("sheet") || n.includes("plate") || n.includes("panel") || 
           n.includes("distribution board") || n.includes("db box") || n.includes("mcb box") || n.includes("metal box") || 
           n.includes("concealed box") || n.includes("wooden board")) {
         return "8538";
       }
-      // Lighting & Fixtures
       if (n.includes("led") || n.includes("bulb") || n.includes("tube") || n.includes("light") || n.includes("lamp") || 
           n.includes("batten") || n.includes("panel light") || n.includes("downlight") || n.includes("flood light") || 
           n.includes("cob") || n.includes("strip light") || n.includes("surface light")) {
         return "8539";
       }
-      // Heating Appliances
       if (n.includes("iron") || n.includes("press") || n.includes("geyser") || n.includes("heater") || n.includes("water heater") || 
           n.includes("element") || n.includes("immersion") || n.includes("rod") || n.includes("kettle") || n.includes("room heater")) {
         return "8516";
       }
-      // Tapes
       if (n.includes("tape") || n.includes("steel grip") || n.includes("insulation tape")) {
         return "3919";
       }
-      // PVC Pipes & Conduit
       if (n.includes("pipe") || n.includes("casing") || n.includes("conduit") || n.includes("pvc pipe") || n.includes("caping")) {
         return "3917";
       }
-
-      return ""; // No category match
+      return "";
     }
 
-    // ⚡ STEP 1 + 2 + 3: SHEET -> CATEGORY -> CONFIRMATION POPUP FOR NEW/UNKNOWN
+    // Smart HSN Engine
     function resolveSmartHsn(itemName, targetHsnInputId, allowPopup = true) {
       const cleanName = (itemName || "").trim();
       const hsnInput = document.getElementById(targetHsnInputId);
@@ -832,21 +822,21 @@
         return "";
       }
 
-      // 1. Sheet Priority
+      // 1. Sheet Match
       const sheetMatch = cachedItems.find(x => x.name.toLowerCase() === cleanName.toLowerCase());
       if (sheetMatch && sheetMatch.hsn && sheetMatch.hsn !== "-" && sheetMatch.hsn.trim() !== "") {
         hsnInput.value = sheetMatch.hsn.trim();
         return sheetMatch.hsn.trim();
       }
 
-      // 2. Product-wise Category Detection
+      // 2. Category Match
       const catHsn = detectHsnFromName(cleanName);
       if (catHsn) {
         hsnInput.value = catHsn;
         return catHsn;
       }
 
-      // 3. New / Unknown Item Prompt
+      // 3. New / Unknown Popup
       if (allowPopup && lastPromptedHsnItem !== cleanName.toLowerCase()) {
         lastPromptedHsnItem = cleanName.toLowerCase();
         const userChoice = confirm(`"${cleanName}" ek naya item hai aur iska HSN code pata nahi chala.\n\nKya iska default general electrical HSN (8538) fill karein?\n\n[OK = Yes (8538 fill karein)]\n[Cancel = No (Apna HSN khud bharein)]`);
@@ -863,14 +853,14 @@
       return "";
     }
 
-    // ⚡ BILLING: CELL CLICK AUTO-CLEAR
+    // Billing: Direct Click Instant Clear
     function handleItemDirectClick() {
       const input = document.getElementById("itemSearch");
       if (input.value.trim() !== "") {
         lastSelectedBillingItem = input.value;
       }
       input.value = "";
-      document.getElementById("itemHsn").value = ""; // Reset HSN
+      document.getElementById("itemHsn").value = "";
       renderBillingDropdown(cachedItems);
     }
 
@@ -894,7 +884,6 @@
       const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
       renderBillingDropdown(filtered);
 
-      // Check if Category HSN matches while typing
       const autoHsn = detectHsnFromName(val);
       if (autoHsn) {
         document.getElementById("itemHsn").value = autoHsn;
@@ -967,14 +956,14 @@
       calculateItemTotal();
     }
 
-    // ⚡ STOCK INWARD: CELL CLICK AUTO-CLEAR & BLUR VALIDATION
+    // Stock Inward: Direct Click Clear & Blur
     function handleStockDirectClick() {
       const input = document.getElementById("stkName");
       if (input.value.trim() !== "") {
         lastSelectedStockItem = input.value;
       }
       input.value = "";
-      document.getElementById("stkHsn").value = ""; // Instant HSN reset
+      document.getElementById("stkHsn").value = "";
       renderStockDropdown(cachedItems);
     }
 
@@ -986,7 +975,6 @@
           input.value = lastSelectedStockItem;
           resolveSmartHsn(lastSelectedStockItem, "stkHsn", false);
         } else if (val !== "") {
-          // Trigger Popup if new item like "tarun"
           resolveSmartHsn(val, "stkHsn", true);
         }
       }, 250);
@@ -994,9 +982,7 @@
 
     function onStockSearchInput() {
       const val = document.getElementById("stkName").value.trim();
-      const lower = val.toLowerCase();
-      
-      const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
+      const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(val.toLowerCase()));
       renderStockDropdown(filtered);
 
       const auto = detectHsnFromName(val);
@@ -1186,13 +1172,13 @@
     }
 
     function checkFormState() {
-      const mode = document.getElementById("billMode").value;
-      const rateType = document.getElementById("rateType").value;
-      const isGst = document.getElementById("isGstBill").value;
-      const payMode = document.getElementById("paymentMode").value;
-      const custName = document.getElementById("custName").value.trim();
-      const custPhone = document.getElementById("custPhone").value.trim();
-      const custAddr = document.getElementById("custAddress").value.trim();
+      const mode = (document.getElementById("billMode").value || "").trim();
+      const rateType = (document.getElementById("rateType").value || "").trim();
+      const isGst = (document.getElementById("isGstBill").value || "").trim();
+      const payMode = (document.getElementById("paymentMode").value || "").trim();
+      const custName = (document.getElementById("custName").value || "").trim();
+      const custPhone = (document.getElementById("custPhone").value || "").trim();
+      const custAddr = (document.getElementById("custAddress").value || "").trim();
 
       const isReady = (mode !== "" && 
                        rateType !== "" && 
@@ -1207,6 +1193,7 @@
       btn.disabled = !isReady;
     }
 
+    // ⚡ FIXED: STRING SANITIZATION SO NO ".replace is not a function" ERROR
     async function submitBillToBackend() {
       const btn = document.getElementById("btnSubmitBill");
       btn.disabled = true;
@@ -1217,16 +1204,25 @@
       const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
       const formattedDate = `${parts[2]}-${months[parseInt(parts[1])-1]}-${parts[0]}`;
 
+      // Force pure String conversion for all customer & bill fields
+      const cleanCustomerName = String(document.getElementById("custName").value || "").trim();
+      const cleanPhone = String(document.getElementById("custPhone").value || "").trim();
+      const cleanAddress = String(document.getElementById("custAddress").value || "").trim();
+      const cleanGstin = String(document.getElementById("custGstin").value || "").trim();
+      const rawMode = String(document.getElementById("billMode").value || "");
+      const cleanRateType = String(document.getElementById("rateType").value || "");
+      const cleanPaymentMode = String(document.getElementById("paymentMode").value || "");
+
       const payload = {
-        billMode: document.getElementById("billMode").value.includes("Estimate") ? "Estimate" : "Invoice",
+        billMode: rawMode.includes("Estimate") ? "Estimate" : "Invoice",
         billDate: formattedDate,
-        rateType: document.getElementById("rateType").value,
+        rateType: cleanRateType,
         isGst: document.getElementById("isGstBill").value.includes("Yes"),
-        paymentMode: document.getElementById("paymentMode").value,
-        customerName: custName,
-        phone: document.getElementById("custPhone").value.trim(),
-        address: document.getElementById("custAddress").value.trim(),
-        gstin: document.getElementById("custGstin").value.trim(),
+        paymentMode: cleanPaymentMode,
+        customerName: cleanCustomerName,
+        phone: cleanPhone,
+        address: cleanAddress,
+        gstin: cleanGstin,
         items: billItems,
         grandTotal: billItems.reduce((acc, c) => acc + c.total, 0)
       };
@@ -1321,11 +1317,11 @@
       }
     }
 
-    // ⚡ STOCK INWARD: SUBMISSION
+    // Stock Inward
     async function submitStockInward() {
-      const name = document.getElementById("stkName").value.trim();
+      const name = String(document.getElementById("stkName").value || "").trim();
       const qty = parseFloat(document.getElementById("stkQty").value) || 0;
-      let hsn = document.getElementById("stkHsn").value.trim();
+      let hsn = String(document.getElementById("stkHsn").value || "").trim();
 
       if (!name || qty <= 0) {
         alert("⚠️ Item name aur quantity enter karein!");
