@@ -405,7 +405,7 @@
       border-radius: 16px;
       padding: 26px 20px;
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       text-align: center;
       box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     }
@@ -413,6 +413,7 @@
     .success-title { font-size: 19px; font-weight: 900; color: #059669; }
     .success-sub { font-size: 13px; color: #475569; margin: 4px 0 16px 0; font-weight: 600; }
     .success-actions { display: flex; flex-direction: column; gap: 10px; }
+    
     .btn-wa-share {
       background: #25d366;
       color: #ffffff;
@@ -428,6 +429,23 @@
       gap: 8px;
     }
     .btn-wa-share:hover { background: #1ebd56; }
+
+    .btn-print-direct {
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-print-direct:hover { background: #0369a1; }
+
     .btn-view-pdf {
       background: #2563eb;
       color: #ffffff;
@@ -443,6 +461,7 @@
       gap: 8px;
     }
     .btn-view-pdf:hover { background: #1d4ed8; }
+
     .btn-next-bill {
       background: #f1f5f9;
       color: #0f172a;
@@ -458,9 +477,20 @@
       gap: 8px;
     }
     .btn-next-bill:hover { background: #e2e8f0; }
+
+    /* Hidden Iframe for Direct Silent Print */
+    #silentPrintIframe {
+      display: none;
+      width: 0;
+      height: 0;
+      border: none;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Hidden iframe for instant one-click printer printing -->
+  <iframe id="silentPrintIframe"></iframe>
 
   <!-- 🎉 BILL SUCCESS ACTION MODAL -->
   <div id="billSuccessModal" style="display: none;">
@@ -470,12 +500,19 @@
       <div class="success-sub" id="lblSuccessDocNo">Doc No: -</div>
       
       <div class="success-actions">
+        <!-- 1. Send WhatsApp Message -->
         <button class="btn-wa-share" id="btnShareWhatsApp" onclick="shareBillOnWhatsApp()">
           📲 Send Invoice on WhatsApp
         </button>
+        <!-- 2. One-Click Instant Print (Active Printer) -->
+        <button class="btn-print-direct" onclick="triggerDirectPrint()">
+          🖨️ Print Invoice (Hard Copy)
+        </button>
+        <!-- 3. View / Download PDF -->
         <button class="btn-view-pdf" id="btnViewDownloadPdf" onclick="viewDownloadPdf()">
           👁️ View / Download PDF
         </button>
+        <!-- 4. Create Next Bill -->
         <button class="btn-next-bill" onclick="closeSuccessAndNextBill()">
           🧾 + Create Next Bill
         </button>
@@ -511,12 +548,13 @@
   <div class="container" id="mainAppWrapper" style="display: none;">
     <!-- Top Nav with View Tabs, 24H Timer, PWA Install, Refresh & Logout -->
     <div class="top-nav">
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
         <div class="brand-wrap">
           <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
           <div class="brand-tagline">Brightening Lives, Powering Trust</div>
         </div>
         <button class="nav-tab-btn active" id="tabBillingBtn" onclick="switchView('billing')">📜 Billing</button>
+        <button class="nav-tab-btn" id="tabHistoryBtn" onclick="switchView('history')">🔍 Search Bills</button>
         <button class="nav-tab-btn" id="tabKhataBtn" onclick="switchView('khata')">📒 Udhar Khata</button>
         <button class="nav-tab-btn" id="tabStockBtn" onclick="switchView('stock')">📦 Stock Inward</button>
       </div>
@@ -527,7 +565,8 @@
           🔄 Refresh
         </button>
         <div class="user-pill" id="lblUser">Session...</div>
-        <button class="btn-logout" onclick="userLogout()" title="Logout from System">🚪 Logout</button>
+        <!-- Safe logout confirmation flow -->
+        <button class="btn-logout" onclick="confirmUserLogout()" title="Logout from System">🚪 Logout</button>
       </div>
     </div>
 
@@ -606,7 +645,7 @@
 
       <div class="separator"></div>
 
-      <!-- ROW 4: Item Name (1ST POINT: TYPE TO SEARCH + STRICT SELECTION), Work Note, HSN -->
+      <!-- ROW 4: Item Name (Fast Type-To-Search + Inventory Verification), Work Note, HSN -->
       <div class="grid-row row-item-top">
         <div class="form-col">
           <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
@@ -669,7 +708,7 @@
         </table>
       </div>
 
-      <!-- 📊 2ND POINT: Grand Total Bar with Total Items & Total Units Qty Display -->
+      <!-- 📊 Grand Total Bar with Total Items & Total Units Qty Display -->
       <div class="total-bar">
         <div class="total-meta">
           <span>📦 Total Items: <b id="lblTotalItemCount" style="color:#0f172a;">0</b></span>
@@ -687,10 +726,32 @@
       </button>
     </div>
 
-    <!-- 📒 VIEW 2: UDHAR KHATA WORKSPACE (3RD POINT: TOP PENDING AMOUNT CARD) -->
+    <!-- 🔍 VIEW 2: SEARCH BILLS & REPRINT HISTORY WORKSPACE -->
+    <div id="viewHistory" style="display: none;">
+      <div class="aux-card">
+        <h3 style="color:#b45309; font-size:16px; margin-bottom:12px; text-transform:uppercase; font-weight:900;">Invoice Lookup & Reprint History</h3>
+        
+        <div class="grid-row row-2">
+          <div class="form-col">
+            <label>Search by Customer Mobile, Name, or Invoice / Estimate No</label>
+            <input type="text" id="historySearchInput" placeholder="Enter 10-digit phone, customer name, or MLE-INV..." oninput="filterBillHistory()">
+          </div>
+          <div class="form-col" style="justify-content: flex-end;">
+            <button class="btn-refresh" style="height: 40px; justify-content: center;" onclick="loadBillHistory()">
+              🔄 Refresh Invoices List
+            </button>
+          </div>
+        </div>
+
+        <div id="historyTableContainer" style="margin-top: 14px; font-size: 13.5px;">
+          Type phone number or bill number above to search...
+        </div>
+      </div>
+    </div>
+
+    <!-- 📒 VIEW 3: UDHAR KHATA WORKSPACE -->
     <div id="viewKhata" style="display: none;">
       <div class="aux-card">
-        <!-- 3rd Point: Top Pending Amount & Total Bills Display Card -->
         <div class="udhar-summary-card">
           <div>
             <div class="udhar-sum-title">Total Pending Udhar Amount</div>
@@ -704,7 +765,7 @@
       </div>
     </div>
 
-    <!-- 📦 VIEW 3: STOCK INWARD WORKSPACE (MANUAL TYPING ALLOWED HERE) -->
+    <!-- 📦 VIEW 4: STOCK INWARD WORKSPACE -->
     <div id="viewStock" style="display: none;">
       <div class="aux-card">
         <h3 style="color:#b45309; font-size:16px; margin-bottom:14px; text-transform:uppercase; font-weight:900;">Add / Inward Stock Entry</h3>
@@ -763,6 +824,7 @@
     
     // Last Generated Bill State
     let lastGeneratedBillData = null;
+    let cachedBillHistory = [];
 
     // 📲 PWA Install Trigger
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -782,7 +844,7 @@
           deferredPwaPrompt = null;
         });
       } else {
-        alert("PWA Install: Browser menu (3 dots) par click karke 'Add to Home screen' ya 'Install app' chunein!");
+        alert("PWA Install: Tap the browser menu (3 dots) and select 'Add to Home screen' or 'Install app'.");
       }
     }
 
@@ -847,8 +909,8 @@
 
         if (diff <= 0) {
           clearInterval(sessionTimerInterval);
-          alert("⚠️ 24 Hours session expired. Please log in again.");
-          userLogout();
+          alert("24-Hour session has expired. Please log in again.");
+          executeUserLogout();
           return;
         }
 
@@ -861,7 +923,15 @@
       }, 1000);
     }
 
-    function userLogout() {
+    // 🔒 SAFE LOGOUT CONFIRMATION FLOW
+    function confirmUserLogout() {
+      const isConfirmed = confirm("Are you sure you want to log out of your session?");
+      if (isConfirmed) {
+        executeUserLogout();
+      }
+    }
+
+    function executeUserLogout() {
       if (sessionTimerInterval) clearInterval(sessionTimerInterval);
       localStorage.removeItem("mle_user");
       localStorage.removeItem("mle_login_time");
@@ -988,7 +1058,7 @@
       // 3. New / Unknown Popup
       if (allowPopup && lastPromptedHsnItem !== cleanName.toLowerCase()) {
         lastPromptedHsnItem = cleanName.toLowerCase();
-        const userChoice = confirm(`"${cleanName}" ek naya item hai aur iska HSN code pata nahi chala.\n\nKya iska default general electrical HSN (8538) fill karein?\n\n[OK = Yes (8538 fill karein)]\n[Cancel = No (Apna HSN khud bharein)]`);
+        const userChoice = confirm(`"${cleanName}" is a new item without a matched HSN category.\n\nDo you want to assign the default general electrical HSN (8538)?\n\n[OK = Assign 8538]\n[Cancel = Enter Custom HSN]`);
         if (userChoice) {
           hsnInput.value = "8538";
           return "8538";
@@ -1002,7 +1072,7 @@
       return "";
     }
 
-    // ⚡ 1ST POINT: BILLING - FAST TYPE TO SEARCH
+    // ⚡ BILLING: FAST TYPE-TO-SEARCH
     function handleItemDirectClick() {
       const input = document.getElementById("itemSearch");
       if (input.value.trim() !== "") {
@@ -1211,23 +1281,22 @@
       return { finalUnitRate, total, gstPerPc, discountedRate };
     }
 
-    // ⚡ 1ST POINT: STRICT INVENTORY CHECK - UNKNOWN ITEM CANNOT BE ADDED IN BILLING
+    // ⚡ STRICT INVENTORY VALIDATION ON ADD
     function addItemToBill() {
       const name = document.getElementById("itemSearch").value.trim();
       const serial = document.getElementById("itemSerial").value.trim();
       let hsn = document.getElementById("itemHsn").value.trim();
 
       if (!name) { 
-        alert("⚠️ Kripya item search karke list se select karein!"); 
+        alert("Please search and select an item from inventory list!"); 
         return; 
       }
 
-      // Strict Check: Must exist in inventory or be Labour Charge
       const isLabour = name.toLowerCase().includes("labour") || name.toLowerCase().includes("service");
       const existsInInventory = cachedItems.some(x => x.name.toLowerCase() === name.toLowerCase());
 
       if (!existsInInventory && !isLabour) {
-        alert(`⚠️ "${name}" inventory mein registered nahi hai!\n\nNaya item pehle 'Stock Inward' tab mein jaakar add karein.`);
+        alert(`"${name}" is not found in inventory!\n\nPlease add this new item via 'Stock Inward' tab first.`);
         document.getElementById("itemSearch").focus();
         return;
       }
@@ -1244,7 +1313,7 @@
       const qty = parseFloat(document.getElementById("itemQty").value) || 1;
 
       if (baseRate <= 0) { 
-        alert("⚠️ Kripya valid Rate daalein (0 se zyada hona chahiye)!"); 
+        alert("Please enter a valid rate greater than 0!"); 
         document.getElementById("itemRate").focus();
         return; 
       }
@@ -1291,7 +1360,7 @@
       checkFormState();
     }
 
-    // ⚡ 2ND POINT: AUTO-CALCULATE TOTAL ITEMS (LINES) & TOTAL UNITS (QTY SUM)
+    // ⚡ AUTO-CALCULATE TOTAL ITEMS & TOTAL UNITS
     function renderBillTable() {
       const tbody = document.getElementById("billItemsTbody");
       tbody.innerHTML = "";
@@ -1318,7 +1387,6 @@
         `;
       });
 
-      // Update Summary Bar
       document.getElementById("lblTotalItemCount").innerText = billItems.length;
       document.getElementById("lblTotalUnitsCount").innerText = `${totalUnits} Pcs`;
       document.getElementById("lblGrandTotal").innerText = `₹${grand.toFixed(2)}`;
@@ -1352,7 +1420,7 @@
       btn.disabled = !isReady;
     }
 
-    // ⚡ SUBMIT BILL TO BACKEND (INCLUDES TOTAL ITEMS & UNITS IN PAYLOAD)
+    // ⚡ SUBMIT BILL TO BACKEND
     async function submitBillToBackend() {
       const btn = document.getElementById("btnSubmitBill");
       btn.disabled = true;
@@ -1419,25 +1487,46 @@
       }
     }
 
-    // 📲 WhatsApp Message with Total Items & Units Summary
-    function shareBillOnWhatsApp() {
-      if (!lastGeneratedBillData) return;
-      const d = lastGeneratedBillData;
+    // 🖨️ DIRECT ONE-CLICK SILENT PRINTING (ACTIVE PRINTER)
+    function triggerDirectPrint(customPdfUrl) {
+      const pdfToPrint = customPdfUrl || (lastGeneratedBillData ? lastGeneratedBillData.pdfUrl : null);
+      if (!pdfToPrint) {
+        alert("Invoice PDF is not available to print!");
+        return;
+      }
+      
+      const iframe = document.getElementById("silentPrintIframe");
+      iframe.src = pdfToPrint;
+      iframe.onload = function() {
+        try {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        } catch(e) {
+          window.open(pdfToPrint, '_blank');
+        }
+      };
+    }
+
+    // 📲 WhatsApp Message with Full Store Address
+    function shareBillOnWhatsApp(customData) {
+      const d = customData || lastGeneratedBillData;
+      if (!d) return;
       
       const docTypeWord = d.docNo.includes("EST") ? "Estimate" : "Invoice";
       const pdfSection = d.pdfUrl ? `\n\n📄 *Download PDF Document:*\n${d.pdfUrl}` : "";
 
-      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docTypeWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Items: ${d.totalItems} (${d.totalUnits} Units)\n  • Total Amount: *₹${d.grandTotal.toFixed(2)}*\n  • Payment Mode: ${d.paymentMode}${pdfSection}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
+      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docTypeWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Amount: *₹${parseFloat(d.grandTotal || d.amount || 0).toFixed(2)}*\n  • Payment Mode: ${d.paymentMode || 'Cash / Online'}${pdfSection}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
 
       window.open(`https://wa.me/91${d.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
-    function viewDownloadPdf() {
-      if (!lastGeneratedBillData || !lastGeneratedBillData.pdfUrl) {
+    function viewDownloadPdf(customPdfUrl) {
+      const url = customPdfUrl || (lastGeneratedBillData ? lastGeneratedBillData.pdfUrl : null);
+      if (!url) {
         alert("PDF link is not available!");
         return;
       }
-      window.open(lastGeneratedBillData.pdfUrl, '_blank');
+      window.open(url, '_blank');
     }
 
     function closeSuccessAndNextBill() {
@@ -1458,13 +1547,19 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // ⚡ VIEW SWITCHER (Billing, History, Khata, Stock Inward)
     function switchView(view) {
       document.querySelectorAll(".nav-tab-btn").forEach(b => b.classList.remove("active"));
       document.getElementById("viewBilling").style.display = (view === 'billing') ? 'block' : 'none';
+      document.getElementById("viewHistory").style.display = (view === 'history') ? 'block' : 'none';
       document.getElementById("viewKhata").style.display = (view === 'khata') ? 'block' : 'none';
       document.getElementById("viewStock").style.display = (view === 'stock') ? 'block' : 'none';
 
       if (view === 'billing') document.getElementById("tabBillingBtn").classList.add("active");
+      if (view === 'history') {
+        document.getElementById("tabHistoryBtn").classList.add("active");
+        loadBillHistory();
+      }
       if (view === 'khata') {
         document.getElementById("tabKhataBtn").classList.add("active");
         renderKhata();
@@ -1472,7 +1567,79 @@
       if (view === 'stock') document.getElementById("tabStockBtn").classList.add("active");
     }
 
-    // ⚡ 3RD POINT: UDHAR KHATA RENDERING WITH TOTAL PENDING SUMMARY
+    // 🔍 BILL HISTORY & REPRINT SEARCH ENGINE
+    async function loadBillHistory() {
+      const container = document.getElementById("historyTableContainer");
+      container.innerHTML = "Fetching invoices history...";
+
+      try {
+        const res = await apiCall("getBillHistory", { role: currentUser.role });
+        if (res && res.records) {
+          cachedBillHistory = res.records;
+          renderHistoryTable(cachedBillHistory);
+        } else {
+          container.innerHTML = "No invoices found!";
+        }
+      } catch(e) {
+        container.innerHTML = "Failed to load invoices history. Please refresh.";
+      }
+    }
+
+    function filterBillHistory() {
+      const query = document.getElementById("historySearchInput").value.trim().toLowerCase();
+      if (!query) {
+        renderHistoryTable(cachedBillHistory);
+        return;
+      }
+
+      const filtered = cachedBillHistory.filter(r => 
+        (r.docNo && r.docNo.toLowerCase().includes(query)) ||
+        (r.customerName && r.customerName.toLowerCase().includes(query)) ||
+        (r.phone && r.phone.toLowerCase().includes(query))
+      );
+
+      renderHistoryTable(filtered);
+    }
+
+    function renderHistoryTable(records) {
+      const container = document.getElementById("historyTableContainer");
+      if (!records || records.length === 0) {
+        container.innerHTML = "No matching bills found!";
+        return;
+      }
+
+      let html = '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Doc No</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Actions</th></tr></thead><tbody>';
+      records.forEach(r => {
+        const dataObj = JSON.stringify({
+          docNo: r.docNo,
+          customerName: r.customerName,
+          phone: r.phone,
+          amount: r.amount,
+          date: r.date,
+          pdfUrl: r.pdfUrl,
+          paymentMode: r.paymentMode || 'Online / Cash'
+        }).replace(/"/g, '&quot;');
+
+        html += `
+          <tr>
+            <td>${r.date || '-'}</td>
+            <td><b>${r.docNo}</b></td>
+            <td>${r.customerName}</td>
+            <td>${r.phone || '-'}</td>
+            <td><b>₹${parseFloat(r.amount || 0).toFixed(2)}</b></td>
+            <td>
+              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px;" onclick="triggerDirectPrint('${r.pdfUrl}')">🖨️ Re-Print</button>
+              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick='shareBillOnWhatsApp(${dataObj})'>📲 WhatsApp</button>
+              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px;" onclick="viewDownloadPdf('${r.pdfUrl}')">👁️ View</button>
+            </td>
+          </tr>
+        `;
+      });
+      html += '</tbody></table></div>';
+      container.innerHTML = html;
+    }
+
+    // ⚡ UDHAR KHATA RENDERING WITH TOP PENDING SUMMARY
     async function renderKhata() {
       const c = document.getElementById("khataListContainer");
       c.innerHTML = "Fetching pending udhar records...";
@@ -1490,7 +1657,6 @@
           }
         });
 
-        // Update Top Summary Card
         document.getElementById("lblTotalPendingUdhar").innerText = `₹${totalPending.toFixed(2)}`;
         document.getElementById("lblTotalPendingCount").innerText = `${pendingCount} Pending Bills`;
 
@@ -1542,14 +1708,14 @@
       let hsn = String(document.getElementById("stkHsn").value || "").trim();
 
       if (!name || qty <= 0) {
-        alert("⚠️ Item name aur quantity enter karein!");
+        alert("Please enter a valid item name and quantity!");
         return;
       }
 
       if (!hsn) {
         hsn = resolveSmartHsn(name, "stkHsn", true);
         if (!hsn) {
-          alert("⚠️ Kripya HSN Code enter karein!");
+          alert("Please enter a valid HSN Code!");
           document.getElementById("stkHsn").focus();
           return;
         }
@@ -1568,7 +1734,7 @@
       try {
         const res = await apiCall("addOrUpdateStock", { data: data, role: currentUser.role });
         if (res && res.success) {
-          alert(`✓ Stock successfully updated for "${res.name}" with HSN: ${hsn}!`);
+          alert(`Stock updated successfully for "${res.name}" with HSN: ${hsn}!`);
           document.getElementById("stkName").value = "";
           document.getElementById("stkHsn").value = "";
           document.getElementById("stkCustRate").value = "";
@@ -1590,7 +1756,7 @@
       const btn = document.getElementById("btnSendOtp");
 
       if (phone.length !== 10) {
-        err.innerText = "10-digit number enter karein!";
+        err.innerText = "Please enter a valid 10-digit number!";
         err.style.display = "block";
         return;
       }
