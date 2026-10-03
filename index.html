@@ -192,7 +192,7 @@
       box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
     }
     input::placeholder { color: #94a3b8; font-weight: normal; }
-    input[readonly] { background: #f1f5f9; color: #475569; }
+    input[readonly] { background: #f1f5f9; color: #475569; cursor: not-allowed; }
 
     /* Full-Width Dropdown Menu */
     .dropdown-menu {
@@ -502,7 +502,7 @@
       <div class="grid-row row-item-btm">
         <div class="form-col">
           <label>RATE (₹) [🔒 LOCKED]</label>
-          <input type="text" id="itemRate" value="Locked" readonly>
+          <input type="text" id="itemRate" value="Locked" readonly oninput="calculateItemTotal()">
         </div>
         <div class="form-col">
           <label>DISC (₹/PC)</label>
@@ -770,7 +770,7 @@
       }, 1500);
     }
 
-    // ⚡ 60+ EXPANDED ELECTRICAL HSN DICTIONARY (MATCHES INDICATOR, ROMA, ANCHOR ETC.)
+    // ⚡ 2ND POINT: SMART PRODUCT-WISE HSN ENGINE (SHEET -> CATEGORY -> CONFIRM POPUP)
     function detectHsnFromName(name) {
       var n = name.toLowerCase().trim();
       if (!n) return "";
@@ -828,7 +828,42 @@
         return "3917";
       }
 
-      return ""; // Blank if completely unknown item
+      return ""; // No match found (Unrecognized/New item)
+    }
+
+    // Helper: Sheet first -> Product wise -> Prompt popup if brand new/unrecognized
+    function resolveSmartHsn(itemName, targetHsnInputId) {
+      if (!itemName || itemName.trim() === "") {
+        document.getElementById(targetHsnInputId).value = "";
+        return "";
+      }
+
+      // 1. Check if item exists in sheet with valid HSN
+      const sheetMatch = cachedItems.find(x => x.name.toLowerCase() === itemName.trim().toLowerCase());
+      if (sheetMatch && sheetMatch.hsn && sheetMatch.hsn !== "-" && sheetMatch.hsn.trim() !== "") {
+        document.getElementById(targetHsnInputId).value = sheetMatch.hsn.trim();
+        return sheetMatch.hsn.trim();
+      }
+
+      // 2. Product-wise category detection
+      const catHsn = detectHsnFromName(itemName);
+      if (catHsn) {
+        document.getElementById(targetHsnInputId).value = catHsn;
+        return catHsn;
+      }
+
+      // 3. Brand New / Unrecognized item prompt
+      const confirmDefault = confirm(`"${itemName}" ek naya/anjaan item hai.\n\nKya iska general electrical HSN (8538) fill karein?`);
+      if (confirmDefault) {
+        document.getElementById(targetHsnInputId).value = "8538";
+        return "8538";
+      } else {
+        // No bole toh editable rehne do aur focus karo
+        const hsnField = document.getElementById(targetHsnInputId);
+        hsnField.value = "";
+        hsnField.focus();
+        return "";
+      }
     }
 
     // ⚡ 1-CLICK INSTANT CLEAR (CELL BLANK + HSN RESET ON DIRECT CLICK)
@@ -838,7 +873,7 @@
         lastSelectedBillingItem = input.value;
       }
       input.value = "";
-      document.getElementById("itemHsn").value = ""; // Reset old HSN immediately
+      document.getElementById("itemHsn").value = "";
       renderBillingDropdown(cachedItems);
     }
 
@@ -847,33 +882,41 @@
         const input = document.getElementById("itemSearch");
         if (input.value.trim() === "" && lastSelectedBillingItem) {
           input.value = lastSelectedBillingItem;
-          // Restore correct HSN
-          const match = cachedItems.find(x => x.name.toLowerCase() === lastSelectedBillingItem.toLowerCase());
-          document.getElementById("itemHsn").value = (match && match.hsn && match.hsn !== "-") ? match.hsn : detectHsnFromName(lastSelectedBillingItem);
+          resolveSmartHsn(lastSelectedBillingItem, "itemHsn");
         }
       }, 200);
     }
 
+    // ⚡ 1ST POINT: LABOUR CHARGE RATE UNLOCK & SMART INPUT HANDLING
     function onItemSearchInput() {
       const val = document.getElementById("itemSearch").value.trim();
       const lower = val.toLowerCase();
       
-      const suggestedHsn = detectHsnFromName(val);
-      document.getElementById("itemHsn").value = suggestedHsn; // Auto-update as you type
-
       const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
       renderBillingDropdown(filtered);
 
-      if (filtered.length === 0) {
-        if (lower.includes("labour") || lower.includes("service")) {
-          currentItemObj = { name: val, hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
-          document.getElementById("itemRate").value = "0.00";
-          document.getElementById("itemRate").readOnly = false;
-        } else {
-          currentItemObj = null;
-          document.getElementById("itemRate").value = "Enter Rate";
-          document.getElementById("itemRate").readOnly = false;
+      // Check if Labour / Service Charge is typed or item is brand new
+      if (lower.includes("labour") || lower.includes("service")) {
+        currentItemObj = { name: val, hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
+        document.getElementById("itemHsn").value = "998519";
+        
+        // UNLOCK RATE CELL FOR LABOUR CHARGE
+        const rateField = document.getElementById("itemRate");
+        rateField.readOnly = false;
+        rateField.placeholder = "Enter Amount";
+        if (rateField.value === "Locked" || rateField.value.includes("₹0")) {
+          rateField.value = "";
         }
+        calculateItemTotal();
+        return;
+      }
+
+      if (filtered.length === 0 && val.length > 2) {
+        currentItemObj = null;
+        const rateField = document.getElementById("itemRate");
+        rateField.readOnly = false;
+        rateField.placeholder = "Enter Rate";
+        if (rateField.value === "Locked") rateField.value = "";
         calculateItemTotal();
       }
     }
@@ -888,10 +931,10 @@
       }
 
       items.forEach(item => {
-        const itemHsn = (item.hsn && item.hsn !== "-") ? item.hsn : detectHsnFromName(item.name);
+        const itemHsn = (item.hsn && item.hsn !== "-") ? item.hsn : (detectHsnFromName(item.name) || "-");
         const div = document.createElement("div");
         div.className = "dropdown-item";
-        div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock: ${item.stock} | ₹${item.custRate} | HSN: ${itemHsn || '-'}</small>`;
+        div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock: ${item.stock} | ₹${item.custRate} | HSN: ${itemHsn}</small>`;
         div.onmousedown = function(e) {
           e.preventDefault();
           selectBillingItem(item);
@@ -907,12 +950,21 @@
       document.getElementById("billingItemMenu").style.display = "none";
       currentItemObj = item;
       
-      // Auto-set HSN accurately (First check sheet, then fallback to intelligent engine)
-      const resolvedHsn = (item.hsn && item.hsn !== "-" && item.hsn.trim() !== "") ? item.hsn : detectHsnFromName(item.name);
-      document.getElementById("itemHsn").value = resolvedHsn;
+      // 1. Resolve HSN via Smart Engine (Sheet -> Category -> Prompt)
+      resolveSmartHsn(item.name, "itemHsn");
       
-      document.getElementById("itemRate").readOnly = true;
-      resolveRate();
+      // 2. Check if Labour Charge
+      const isLabour = item.name.toLowerCase().includes("labour") || item.name.toLowerCase().includes("service");
+      const rateField = document.getElementById("itemRate");
+      if (isLabour) {
+        rateField.readOnly = false;
+        rateField.placeholder = "Enter Amount";
+        rateField.value = item.custRate > 0 ? item.custRate : "";
+        rateField.focus();
+      } else {
+        rateField.readOnly = true;
+        resolveRate();
+      }
       calculateItemTotal();
     }
 
@@ -923,7 +975,7 @@
         lastSelectedStockItem = input.value;
       }
       input.value = "";
-      document.getElementById("stkHsn").value = ""; // Reset old HSN immediately
+      document.getElementById("stkHsn").value = "";
       renderStockDropdown(cachedItems);
     }
 
@@ -932,8 +984,7 @@
         const input = document.getElementById("stkName");
         if (input.value.trim() === "" && lastSelectedStockItem) {
           input.value = lastSelectedStockItem;
-          const match = cachedItems.find(x => x.name.toLowerCase() === lastSelectedStockItem.toLowerCase());
-          document.getElementById("stkHsn").value = (match && match.hsn && match.hsn !== "-") ? match.hsn : detectHsnFromName(lastSelectedStockItem);
+          resolveSmartHsn(lastSelectedStockItem, "stkHsn");
         }
       }, 200);
     }
@@ -942,11 +993,14 @@
       const val = document.getElementById("stkName").value.trim();
       const lower = val.toLowerCase();
       
-      const suggestedHsn = detectHsnFromName(val);
-      document.getElementById("stkHsn").value = suggestedHsn;
-
       const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
       renderStockDropdown(filtered);
+
+      if (filtered.length === 0 && val.length > 2) {
+        // Custom new item being typed in stock
+        const auto = detectHsnFromName(val);
+        if (auto) document.getElementById("stkHsn").value = auto;
+      }
     }
 
     function renderStockDropdown(items) {
@@ -957,15 +1011,17 @@
         return;
       }
       items.forEach(item => {
-        const itemHsn = (item.hsn && item.hsn !== "-") ? item.hsn : detectHsnFromName(item.name);
+        const itemHsn = (item.hsn && item.hsn !== "-") ? item.hsn : (detectHsnFromName(item.name) || "-");
         const div = document.createElement("div");
         div.className = "dropdown-item";
-        div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock: ${item.stock} | HSN: ${itemHsn || '-'}</small>`;
+        div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock: ${item.stock} | HSN: ${itemHsn}</small>`;
         div.onmousedown = function(e) {
           e.preventDefault();
           document.getElementById("stkName").value = item.name;
           lastSelectedStockItem = item.name;
-          document.getElementById("stkHsn").value = itemHsn;
+          
+          resolveSmartHsn(item.name, "stkHsn");
+
           document.getElementById("stkCustRate").value = item.custRate || 0;
           document.getElementById("stkElecRate").value = item.elecRate || 0;
           document.getElementById("stkFamRate").value = item.famRate || 0;
@@ -978,7 +1034,9 @@
     }
 
     function onRateTypeChange() {
-      resolveRate();
+      if (currentItemObj && !currentItemObj.name.toLowerCase().includes("labour")) {
+        resolveRate();
+      }
       calculateItemTotal();
       checkFormState();
     }
@@ -1000,7 +1058,7 @@
 
     function calculateItemTotal() {
       let baseRate = 0;
-      const rateVal = document.getElementById("itemRate").value;
+      const rateVal = document.getElementById("itemRate").value.trim();
       if (rateVal.includes("₹")) {
         baseRate = parseFloat(rateVal.replace("₹", "")) || 0;
       } else {
@@ -1033,7 +1091,7 @@
       let hsn = document.getElementById("itemHsn").value.trim();
 
       let baseRate = 0;
-      const rateVal = document.getElementById("itemRate").value;
+      const rateVal = document.getElementById("itemRate").value.trim();
       if (rateVal.includes("₹")) {
         baseRate = parseFloat(rateVal.replace("₹", "")) || 0;
       } else {
@@ -1044,12 +1102,15 @@
       const qty = parseFloat(document.getElementById("itemQty").value) || 1;
 
       if (!name) { alert("⚠️ Kripya Item select ya enter karein!"); return; }
-      if (baseRate <= 0) { alert("⚠️ Rate 0 se zyada hona chahiye!"); return; }
+      if (baseRate <= 0) { 
+        alert("⚠️ Kripya valid Rate daalein (0 se zyada hona chahiye)!"); 
+        document.getElementById("itemRate").focus();
+        return; 
+      }
 
+      // If HSN still empty, smart resolve
       if (!hsn) {
-        var autoDetected = detectHsnFromName(name);
-        var userHsn = prompt("⚠️ Item ke liye HSN Code enter karein:", autoDetected || "8536");
-        hsn = userHsn ? userHsn.trim() : "-";
+        hsn = resolveSmartHsn(name, "itemHsn") || "-";
       }
 
       const calc = calculateItemTotal();
@@ -1074,8 +1135,12 @@
       document.getElementById("itemSearch").value = "";
       document.getElementById("itemSerial").value = "";
       document.getElementById("itemHsn").value = "";
-      document.getElementById("itemRate").value = "Locked";
-      document.getElementById("itemRate").readOnly = true;
+      
+      const rateField = document.getElementById("itemRate");
+      rateField.value = "Locked";
+      rateField.readOnly = true;
+      rateField.placeholder = "";
+
       document.getElementById("itemDisc").value = "0";
       document.getElementById("itemGstAdded").value = "0.00";
       document.getElementById("itemQty").value = "1";
@@ -1157,7 +1222,7 @@
         rateType: document.getElementById("rateType").value,
         isGst: document.getElementById("isGstBill").value.includes("Yes"),
         paymentMode: document.getElementById("paymentMode").value,
-        customerName: custName,
+        customerName: document.getElementById("custName").value.trim(),
         phone: document.getElementById("custPhone").value.trim(),
         address: document.getElementById("custAddress").value.trim(),
         gstin: document.getElementById("custGstin").value.trim(),
@@ -1255,7 +1320,7 @@
       }
     }
 
-    // ⚡ STOCK INWARD HANDLER (CLEAN HSN PERSISTENCE)
+    // ⚡ STOCK INWARD HANDLER (SMART HSN PERSISTENCE)
     async function submitStockInward() {
       const name = document.getElementById("stkName").value.trim();
       const qty = parseFloat(document.getElementById("stkQty").value) || 0;
@@ -1267,11 +1332,12 @@
       }
 
       if (!hsn) {
-        const autoHsn = detectHsnFromName(name);
-        const askHsn = prompt(`"${name}" ke liye HSN code confirm karein:`, autoHsn || "8536");
-        if (askHsn === null) return;
-        hsn = askHsn.trim();
-        document.getElementById("stkHsn").value = hsn;
+        hsn = resolveSmartHsn(name, "stkHsn");
+        if (!hsn) {
+          alert("⚠️ Kripya HSN Code enter karein!");
+          document.getElementById("stkHsn").focus();
+          return;
+        }
       }
 
       const data = {
