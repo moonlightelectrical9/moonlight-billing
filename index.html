@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Moon Light Electricals</title>
   
-  <!-- PWA & Mobile Install Meta Tags -->
   <meta name="theme-color" content="#d97706">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -33,7 +32,6 @@
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 0; }
     body { background: var(--bg); color: #0f172a; padding: 10px 14px; min-height: 100vh; overflow-x: hidden; }
 
-    /* Top Nav Responsive */
     .top-nav {
       display: flex;
       justify-content: space-between;
@@ -133,7 +131,6 @@
 
     .container { max-width: 1350px; margin: 0 auto; width: 100%; }
 
-    /* Alert Banner */
     .alert-box {
       background: var(--danger-bg);
       border: 1px solid var(--danger-border);
@@ -147,7 +144,6 @@
     }
     .alert-box b { font-weight: 900; }
 
-    /* Responsive Grid Engine */
     .grid-row { display: grid; gap: 10px; margin-bottom: 12px; }
     .row-5 { grid-template-columns: 1fr 1.3fr 1.2fr 1.1fr 1.2fr; }
     .row-2 { grid-template-columns: 2fr 1fr; }
@@ -157,10 +153,7 @@
     @media (max-width: 820px) {
       body { padding: 8px 10px; }
       .brand-title { font-size: 16px; }
-      .row-5, .row-2, .row-item-top, .row-item-btm {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
+      .row-5, .row-2, .row-item-top, .row-item-btm { grid-template-columns: 1fr; gap: 8px; }
       .top-nav { flex-direction: column; align-items: flex-start; }
       .nav-actions { width: 100%; justify-content: space-between; }
     }
@@ -194,7 +187,6 @@
     input::placeholder { color: #94a3b8; font-weight: normal; }
     input[readonly] { background: #f1f5f9; color: #475569; cursor: not-allowed; }
 
-    /* Full-Width Dropdown Menu */
     .dropdown-menu {
       position: absolute;
       top: 100%;
@@ -223,10 +215,7 @@
       flex-wrap: wrap;
       gap: 4px;
     }
-    .dropdown-item:hover {
-      background: #eff6ff;
-      color: #1d4ed8;
-    }
+    .dropdown-item:hover { background: #eff6ff; color: #1d4ed8; }
     .dropdown-item small { color: #64748b; font-weight: normal; font-size: 11.5px; }
 
     .separator { border-bottom: 1px dashed #cbd5e1; margin: 14px 0; }
@@ -247,7 +236,6 @@
     }
     .btn-add:hover { background: #047857; }
 
-    /* Table Container */
     .table-wrap {
       background: #ffffff;
       border: 1.5px solid var(--border);
@@ -256,13 +244,7 @@
       margin-bottom: 14px;
       -webkit-overflow-scrolling: touch;
     }
-    table {
-      width: 100%;
-      min-width: 600px;
-      border-collapse: collapse;
-      color: #0f172a;
-      font-size: 13px;
-    }
+    table { width: 100%; min-width: 600px; border-collapse: collapse; color: #0f172a; font-size: 13px; }
     th {
       background: #f8fafc;
       padding: 10px 12px;
@@ -273,21 +255,9 @@
       color: #334155;
       white-space: nowrap;
     }
-    td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #f1f5f9;
-      font-weight: 600;
-    }
-    .btn-del-row {
-      color: #dc2626;
-      font-weight: 900;
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-    }
+    td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; }
+    .btn-del-row { color: #dc2626; font-weight: 900; background: none; border: none; font-size: 16px; cursor: pointer; }
 
-    /* Grand Total Bar with Items & Units Summary */
     .total-bar {
       background: var(--yellow-bar);
       border: 1.5px solid var(--yellow-border);
@@ -301,19 +271,8 @@
       flex-wrap: wrap;
       gap: 10px;
     }
-    .total-meta {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: 13.5px;
-      font-weight: 800;
-      color: #854d0e;
-    }
-    .total-amt-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .total-meta { display: flex; align-items: center; gap: 16px; font-size: 13.5px; font-weight: 800; color: #854d0e; }
+    .total-amt-box { display: flex; align-items: center; gap: 10px; }
     .total-title { font-size: 15px; font-weight: 900; }
     .total-amt { font-size: 22px; font-weight: 900; color: #000000; }
 
@@ -337,9 +296,7 @@
       border: 1px solid #cbd5e1 !important;
       box-shadow: none !important;
     }
-    .btn-save:not(:disabled) {
-      box-shadow: 0 4px 14px rgba(194, 94, 0, 0.3);
-    }
+    .btn-save:not(:disabled) { box-shadow: 0 4px 14px rgba(194, 94, 0, 0.3); }
     .btn-save:not(:disabled):hover { background: #9a4c03; }
 
     .aux-card {
@@ -350,7 +307,6 @@
       margin-top: 10px;
     }
 
-    /* Top Udhar Summary Card */
     .udhar-summary-card {
       background: #fff7ed;
       border: 2px solid #fdba74;
@@ -367,7 +323,6 @@
     .udhar-sum-amt { font-size: 26px; font-weight: 900; color: #c2410c; }
     .udhar-sum-count { font-size: 12.5px; font-weight: 700; color: #7c2d12; background: #ffedd5; padding: 4px 12px; border-radius: 20px; }
 
-    /* Solid Opacity Authentication Overlay */
     #authOverlay {
       position: fixed;
       inset: 0;
@@ -389,7 +344,6 @@
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
     }
 
-    /* Bill Success Action Modal */
     #billSuccessModal {
       position: fixed;
       inset: 0;
@@ -478,12 +432,7 @@
     }
     .btn-next-bill:hover { background: #e2e8f0; }
 
-    #silentPrintIframe {
-      display: none;
-      width: 0;
-      height: 0;
-      border: none;
-    }
+    #silentPrintIframe { display: none; width: 0; height: 0; border: none; }
   </style>
 </head>
 <body>
@@ -637,7 +586,7 @@
 
       <div class="separator"></div>
 
-      <!-- ROW 4: Item Name (Fast Type-To-Search), Work Note, HSN -->
+      <!-- ROW 4: Item Name, Work Note, HSN -->
       <div class="grid-row row-item-top">
         <div class="form-col">
           <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
@@ -654,7 +603,7 @@
         </div>
       </div>
 
-      <!-- ROW 5: Rate, Disc, GST (Added), Qty, Total -->
+      <!-- ROW 5: Rate, Disc, GST, Qty, Total -->
       <div class="grid-row row-item-btm">
         <div class="form-col">
           <label>RATE (₹) [🔒 LOCKED]</label>
@@ -678,10 +627,9 @@
         </div>
       </div>
 
-      <!-- Add Item Button -->
       <button class="btn-add" onclick="addItemToBill()">+ Add Item / Charge to Bill</button>
 
-      <!-- Table with GST Added column -->
+      <!-- Table -->
       <div class="table-wrap">
         <table>
           <thead>
@@ -700,7 +648,7 @@
         </table>
       </div>
 
-      <!-- Grand Total Bar with Items & Units Summary -->
+      <!-- Summary Bar -->
       <div class="total-bar">
         <div class="total-meta">
           <span>📦 Total Items: <b id="lblTotalItemCount" style="color:#0f172a;">0</b></span>
@@ -712,7 +660,6 @@
         </div>
       </div>
 
-      <!-- Save & Print Button -->
       <button class="btn-save" id="btnSubmitBill" onclick="submitBillToBackend()" disabled>
         ⚡ Save Bill & Generate PDF
       </button>
@@ -800,7 +747,6 @@
   </div>
 
   <script>
-    // ⚙️ LIVE APPS SCRIPT URL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
 
     let currentUser = JSON.parse(localStorage.getItem("mle_user")) || null;
@@ -814,11 +760,9 @@
     let deferredPwaPrompt = null;
     let lastPromptedHsnItem = "";
     
-    // Last Generated Bill State
     let lastGeneratedBillData = null;
     let cachedBillHistory = [];
 
-    // 📲 PWA Install Trigger
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPwaPrompt = e;
@@ -861,7 +805,6 @@
       }
     };
 
-    // Close Dropdowns on Click Outside
     document.addEventListener("click", function(e) {
       if (!e.target.closest("#itemSearch") && !e.target.closest("#billingItemMenu")) {
         document.getElementById("billingItemMenu").style.display = "none";
@@ -915,7 +858,6 @@
       }, 1000);
     }
 
-    // Safe Logout Confirmation Flow
     function confirmUserLogout() {
       const isConfirmed = confirm("Are you sure you want to log out of your session?");
       if (isConfirmed) {
@@ -954,7 +896,7 @@
 
       try {
         const res = await apiCall("getAppData", { role: currentUser ? currentUser.role : "Staff" });
-        if (res && res.items) {
+        if (res && res.items && res.items.length > 0) {
           cachedItems = res.items;
           
           const hasLabour = cachedItems.some(x => x.name.toLowerCase().includes("labour charge"));
@@ -981,7 +923,6 @@
       }, 1500);
     }
 
-    // Category HSN Detection
     function detectHsnFromName(name) {
       var n = name.toLowerCase().trim();
       if (!n) return "";
@@ -1024,7 +965,6 @@
       return "";
     }
 
-    // Smart HSN Engine
     function resolveSmartHsn(itemName, targetHsnInputId, allowPopup = true) {
       const cleanName = (itemName || "").trim();
       const hsnInput = document.getElementById(targetHsnInputId);
@@ -1061,7 +1001,6 @@
       return "";
     }
 
-    // BILLING: Fast Type-to-Search
     function handleItemDirectClick() {
       const input = document.getElementById("itemSearch");
       if (input.value.trim() !== "") {
@@ -1152,7 +1091,6 @@
       calculateItemTotal();
     }
 
-    // Stock Inward
     function handleStockDirectClick() {
       const input = document.getElementById("stkName");
       if (input.value.trim() !== "") {
@@ -1549,7 +1487,6 @@
       if (view === 'stock') document.getElementById("tabStockBtn").classList.add("active");
     }
 
-    // 🔍 BILL HISTORY & REPRINT SEARCH ENGINE
     async function loadBillHistory() {
       const container = document.getElementById("historyTableContainer");
       const btn = document.getElementById("btnSyncHistory");
@@ -1628,7 +1565,7 @@
       container.innerHTML = html;
     }
 
-    // Udhar Khata
+    // ⚡ 100% FIXED UDHAR KHATA RENDERING (CASE-INSENSITIVE STATUS)
     async function renderKhata() {
       const c = document.getElementById("khataListContainer");
       c.innerHTML = "Fetching pending udhar records...";
@@ -1640,7 +1577,8 @@
         let pendingCount = 0;
 
         res.records.forEach(r => {
-          if (r.status === "Pending") {
+          const isPending = String(r.status || "").toLowerCase().indexOf("paid") === -1;
+          if (isPending) {
             totalPending += parseFloat(r.amount) || 0;
             pendingCount++;
           }
@@ -1653,17 +1591,17 @@
 
         let html = '<div class="table-wrap"><table><thead><tr><th>Doc No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
         res.records.forEach(r => {
-          const isPending = (r.status === "Pending");
+          const isPending = String(r.status || "").toLowerCase().indexOf("paid") === -1;
           html += `
             <tr>
               <td><b>${r.docNo}</b></td>
               <td>${r.date}</td>
               <td>${r.customerName}</td>
               <td>${r.phone || '-'}</td>
-              <td><b>₹${r.amount}</b></td>
-              <td><b style="color:${isPending ? '#d97706' : '#059669'}">${r.status}</b></td>
+              <td><b>₹${parseFloat(r.amount || 0).toFixed(2)}</b></td>
+              <td><b style="color:${isPending ? '#d97706' : '#059669'}">${isPending ? 'Pending' : 'Paid'}</b></td>
               <td>
-                ${isPending && r.phone ? `<button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px;" onclick="sendKhataReminder('${r.docNo}', '${r.customerName}', '${r.phone}', ${r.amount}, '${r.date}')">📲 WhatsApp</button>` : ''}
+                ${isPending ? `<button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick="sendKhataReminder('${r.docNo}', '${r.customerName}', '${r.phone}', ${r.amount}, '${r.date}')">📲 WhatsApp</button>` : ''}
                 ${isPending ? `<button class="btn-add" style="display:inline-block; width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="markPaid('${r.docNo}')">✓ Paid</button>` : ''}
               </td>
             </tr>
@@ -1675,6 +1613,10 @@
     }
 
     function sendKhataReminder(docNo, name, phone, amount, date) {
+      if (!phone || phone.length < 10) {
+        phone = prompt("Customer phone number is missing. Please enter 10-digit number:", "");
+        if (!phone) return;
+      }
       const upi = (bankSettings && bankSettings.upi) ? bankSettings.upi : "8860880453@kotak";
       const payUrl = `https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=${encodeURIComponent(upi)}&am=${amount}`;
       const msg = `*Greetings from Moon Light Electricals!*\n\nHi ${name},\nThis is a reminder that payment for Bill *${docNo}* dated *${date}* is pending.\n\n• *Pending Amount:* ₹${amount}\n• *Due To:* Moon Light Electricals (Shop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304)\n\n👉 *Tap below to Pay directly via GPay / PhonePe / Paytm:*\n${payUrl}\n\nThank you!\n*MOON LIGHT ELECTRICALS*`;
@@ -1685,7 +1627,7 @@
       if (!confirm(`Mark ${docNo} as Paid?`)) return;
       const res = await apiCall("markKhataPaid", { docNo: docNo, role: currentUser.role });
       if (res && res.success) {
-        alert("Marked as Paid!");
+        alert("Marked as Paid successfully!");
         renderKhata();
       }
     }
