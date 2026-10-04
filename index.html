@@ -24,7 +24,7 @@
       --danger-bg: #fee2e2;
     }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-    body { background: var(--bg); color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
+    body { background: #090d16; color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
 
     /* Top Bar */
     .top-header {
@@ -50,7 +50,7 @@
     .btn-logout { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 800; cursor: pointer; }
 
     /* Main Container (Hidden completely until login) */
-    #mainAppWrapper { display: flex; flex-direction: column; flex: 1; width: 100%; }
+    #mainAppWrapper { display: none; flex-direction: column; flex: 1; width: 100%; background: var(--bg); }
     .main-wrapper { display: flex; flex: 1; min-height: calc(100vh - 65px); }
 
     /* Left Sidebar */
@@ -271,17 +271,7 @@
     </div>
   </div>
 
-  <!-- 2. WELCOME MODAL -->
-  <div id="welcomeModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
-    <div class="modal-box">
-      <div style="font-size: 42px;">👋</div>
-      <h2 style="font-size: 18px; margin: 10px 0; color:#0f172a;">Greetings!</h2>
-      <p style="font-size: 14px; color:#475569; margin-bottom: 20px;">Welcome to Moonlight Electricals, <b id="lblWelcomeUser">Varun Sharma</b>!</p>
-      <button class="btn-checkout" onclick="enterAppFromWelcome()">Thank You / Enter Dashboard ➔</button>
-    </div>
-  </div>
-
-  <!-- 3. CHECKOUT SUCCESS MODAL -->
+  <!-- 2. CHECKOUT SUCCESS MODAL -->
   <div id="checkoutSuccessModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box">
       <div style="font-size: 42px;">✅</div>
@@ -296,8 +286,8 @@
     </div>
   </div>
 
-  <!-- 4. MAIN APPLICATION WRAPPER (HIDDEN UNTIL LOGIN SUCCESS) -->
-  <div id="mainAppWrapper" style="display: none;">
+  <!-- 3. MAIN APPLICATION WRAPPER (HIDDEN UNTIL LOGIN SUCCESS) -->
+  <div id="mainAppWrapper">
     <!-- TOP BAR -->
     <header class="top-header">
       <div>
@@ -687,129 +677,31 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
+    var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
 
-    const KNOWN_USERS = {
+    var KNOWN_USERS = {
       "8860706865": { name: "Varun Sharma (Owner)", role: "Admin", pin: "1234" },
       "9650897965": { name: "Rahul Chauhan", role: "Admin", pin: "1234" },
       "8860880453": { name: "Shivam Chauhan", role: "Admin", pin: "1234" },
       "9264923954": { name: "Raja", role: "Staff", pin: "1234" }
     };
 
-    // Safe Boot: Clear corrupted localStorage if any
-    let currentUser = null;
-    try {
-      const stored = localStorage.getItem("mle_user");
-      if (stored && stored.startsWith("{")) {
-        currentUser = JSON.parse(stored);
-      } else {
-        localStorage.removeItem("mle_user");
-      }
-    } catch(e) {
-      localStorage.removeItem("mle_user");
-    }
+    var currentUser = null;
+    var cachedItems = [];
+    var billItems = [];
+    var currentItemObj = null;
+    var lastGeneratedBillData = null;
+    var cachedBillHistory = [];
+    var bankSettings = null;
+    var sessionTimerInterval = null;
+    var deferredPrompt = null;
 
-    let cachedItems = [];
-    try {
-      const itemsStored = localStorage.getItem("mle_items");
-      if (itemsStored && itemsStored.startsWith("[")) {
-        cachedItems = JSON.parse(itemsStored);
-      }
-    } catch(e) {}
-
-    let billItems = [];
-    let currentItemObj = null;
-    let lastGeneratedBillData = null;
-    let cachedBillHistory = [];
-    let bankSettings = null;
-    let sessionTimerInterval = null;
-    let deferredPrompt = null;
-
-    // Chrome PWA Install Support
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const installBtn = document.getElementById("btnChromeInstall");
-      if (installBtn) installBtn.style.display = "inline-flex";
-    });
-
-    function triggerChromeInstall() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            document.getElementById("btnChromeInstall").style.display = "none";
-          }
-          deferredPrompt = null;
-        });
-      } else {
-        alert("To install in Google Chrome: Click the 3 dots (⋮) in the top-right corner of Chrome -> Click 'Cast, save, and share' -> Click 'Install Moon Light Electricals'!");
-      }
-    }
-
-    // Direct Boot
-    window.addEventListener("load", function() {
-      const now = new Date();
-      const bField = document.getElementById("billDate");
-      if (bField) bField.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-
-      // Check current login state
-      if (!currentUser) {
-        document.getElementById("authOverlay").style.display = "flex";
-        document.getElementById("mainAppWrapper").style.display = "none";
-      } else {
-        document.getElementById("authOverlay").style.display = "none";
-        document.getElementById("mainAppWrapper").style.display = "flex";
-        initSession();
-      }
-    });
-
-    function initSession() {
-      if (!currentUser) return;
-      document.getElementById("lblUser").innerText = `${currentUser.name} (${currentUser.role})`;
-      refreshAppData();
-      startSessionTimer();
-      loadDashboardAnalytics();
-      loadInwardAuditLog();
-    }
-
-    function startSessionTimer() {
-      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
-      let loginTime = parseInt(localStorage.getItem("mle_login_time") || new Date().getTime());
-      sessionTimerInterval = setInterval(() => {
-        const diff = (loginTime + 24 * 3600 * 1000) - new Date().getTime();
-        if (diff <= 0) {
-          clearInterval(sessionTimerInterval);
-          executeUserLogout();
-          return;
-        }
-        const h = Math.floor(diff / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
-        const s = Math.floor((diff % 60000) / 1000);
-        const pad = (n) => String(n).padStart(2, '0');
-        document.getElementById("sessionTimerBadge").innerText = `⏳ ${pad(h)}:${pad(m)}:${pad(s)}`;
-      }, 1000);
-    }
-
-    function confirmUserLogout() {
-      if (confirm("Are you sure you want to log out of your session?")) {
-        executeUserLogout();
-      }
-    }
-
-    function executeUserLogout() {
-      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
-      localStorage.removeItem("mle_user");
-      localStorage.removeItem("mle_login_time");
-      location.reload();
-    }
-
-    /* 🔐 1. BULLETPROOF DIRECT PASSWORD LOGIN */
-    function doPasswordLogin() {
-      const phoneInput = document.getElementById("pwdLoginPhone").value.trim().replace(/\D/g, '');
-      const phone = phoneInput.slice(-10);
-      const pwd = document.getElementById("loginPassword").value.trim();
-      const err = document.getElementById("pwdErr");
+    // Direct Window Functions
+    window.doPasswordLogin = function() {
+      var phoneInput = document.getElementById("pwdLoginPhone").value.trim().replace(/\D/g, '');
+      var phone = phoneInput.slice(-10);
+      var pwd = document.getElementById("loginPassword").value.trim();
+      var err = document.getElementById("pwdErr");
 
       if (phone.length !== 10) {
         err.innerText = "Please enter valid 10-digit number!";
@@ -824,46 +716,41 @@
       }
 
       err.style.display = "none";
-      const user = KNOWN_USERS[phone] || { name: "Varun Sharma (Owner)", role: "Admin", pin: "1234" };
+      var user = KNOWN_USERS[phone] || { name: "Varun Sharma (Owner)", role: "Admin", pin: "1234" };
 
       if (pwd === user.pin || pwd === "1234" || pwd === "8860") {
         currentUser = { name: user.name, phone: phone, role: user.role };
-        localStorage.setItem("mle_user", JSON.stringify(currentUser));
-        localStorage.setItem("mle_login_time", new Date().getTime());
+        try {
+          localStorage.setItem("mle_user", JSON.stringify(currentUser));
+          localStorage.setItem("mle_login_time", new Date().getTime());
+        } catch(e) {}
 
-        // HIDE LOGIN & SHOW WELCOME MODAL
+        // Direct show workspace
         document.getElementById("authOverlay").style.display = "none";
-        document.getElementById("lblWelcomeUser").innerText = currentUser.name;
-        document.getElementById("welcomeModal").style.display = "flex";
+        document.getElementById("mainAppWrapper").style.display = "flex";
+        initSession();
       } else {
         err.innerText = "Invalid Password! (Default PIN is: 1234)";
         err.style.display = "block";
       }
-    }
+    };
 
-    function enterAppFromWelcome() {
-      document.getElementById("welcomeModal").style.display = "none";
-      document.getElementById("mainAppWrapper").style.display = "flex";
-      initSession();
-    }
-
-    function showOtpScreen() {
+    window.showOtpScreen = function() {
       document.getElementById("stepPasswordMode").style.display = "none";
       document.getElementById("stepPhoneMode").style.display = "block";
       document.getElementById("stepOtp").style.display = "none";
-    }
+    };
 
-    function showPasswordScreen() {
+    window.showPasswordScreen = function() {
       document.getElementById("stepPasswordMode").style.display = "block";
       document.getElementById("stepPhoneMode").style.display = "none";
       document.getElementById("stepOtp").style.display = "none";
-    }
+    };
 
-    /* 📲 2. WHATSAPP OTP */
-    function doSendOtp() {
-      const phoneInput = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
-      const phone = phoneInput.slice(-10);
-      const err = document.getElementById("loginErr");
+    window.doSendOtp = function() {
+      var phoneInput = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
+      var phone = phoneInput.slice(-10);
+      var err = document.getElementById("loginErr");
 
       if (phone.length !== 10) {
         err.innerText = "Enter valid 10-digit number!";
@@ -872,48 +759,144 @@
       }
 
       err.style.display = "none";
-      const matched = KNOWN_USERS[phone] || { name: "Varun Sharma (Owner)", role: "Admin" };
-      const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
-      localStorage.setItem("mle_active_otp", otpCode);
-      localStorage.setItem("mle_active_phone", phone);
-      localStorage.setItem("mle_active_name", matched.name);
-      localStorage.setItem("mle_active_role", matched.role);
+      var matched = KNOWN_USERS[phone] || { name: "Varun Sharma (Owner)", role: "Admin" };
+      var otpCode = Math.floor(1000 + Math.random() * 9000).toString();
+      try {
+        localStorage.setItem("mle_active_otp", otpCode);
+        localStorage.setItem("mle_active_phone", phone);
+        localStorage.setItem("mle_active_name", matched.name);
+        localStorage.setItem("mle_active_role", matched.role);
+      } catch(e) {}
 
-      const waMsg = `Hello ${matched.name},\nYour Moon Light Electricals Login OTP is: *${otpCode}*\n\nValid for 5 minutes.`;
-      const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(waMsg)}`;
+      var waMsg = "Hello " + matched.name + ",\nYour Moon Light Electricals Login OTP is: *" + otpCode + "*\n\nValid for 5 minutes.";
+      var waUrl = "https://wa.me/91" + phone + "?text=" + encodeURIComponent(waMsg);
 
       document.getElementById("stepPhoneMode").style.display = "none";
       document.getElementById("stepOtp").style.display = "block";
-      document.getElementById("displaySentPhone").innerText = `${phone} (${matched.name})`;
+      document.getElementById("displaySentPhone").innerText = phone + " (" + matched.name + ")";
       document.getElementById("waDirectBtn").href = waUrl;
 
       try { window.open(waUrl, '_blank'); } catch(e) {}
-    }
+    };
 
-    function doVerifyOtp() {
-      const enteredOtp = document.getElementById("loginOtp").value.trim();
-      const savedOtp = localStorage.getItem("mle_active_otp");
-      const phone = localStorage.getItem("mle_active_phone") || "8860706865";
-      const name = localStorage.getItem("mle_active_name") || "Varun Sharma (Owner)";
-      const role = localStorage.getItem("mle_active_role") || "Admin";
+    window.doVerifyOtp = function() {
+      var enteredOtp = document.getElementById("loginOtp").value.trim();
+      var savedOtp = localStorage.getItem("mle_active_otp");
+      var phone = localStorage.getItem("mle_active_phone") || "8860706865";
+      var name = localStorage.getItem("mle_active_name") || "Varun Sharma (Owner)";
+      var role = localStorage.getItem("mle_active_role") || "Admin";
 
       if (enteredOtp === savedOtp || enteredOtp.length === 4) {
         currentUser = { name: name, phone: phone, role: role };
-        localStorage.setItem("mle_user", JSON.stringify(currentUser));
-        localStorage.setItem("mle_login_time", new Date().getTime());
+        try {
+          localStorage.setItem("mle_user", JSON.stringify(currentUser));
+          localStorage.setItem("mle_login_time", new Date().getTime());
+        } catch(e) {}
 
         document.getElementById("authOverlay").style.display = "none";
-        document.getElementById("lblWelcomeUser").innerText = currentUser.name;
-        document.getElementById("welcomeModal").style.display = "flex";
+        document.getElementById("mainAppWrapper").style.display = "flex";
+        initSession();
       } else {
         alert("Wrong OTP! Please enter valid code.");
       }
+    };
+
+    // Install prompt support
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      var installBtn = document.getElementById("btnChromeInstall");
+      if (installBtn) installBtn.style.display = "inline-flex";
+    });
+
+    window.triggerChromeInstall = function() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(choiceResult) {
+          if (choiceResult.outcome === 'accepted') {
+            document.getElementById("btnChromeInstall").style.display = "none";
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert("To install in Google Chrome: Click the 3 dots (⋮) in the top-right corner -> Click 'Cast, save, and share' -> Click 'Install Moon Light Electricals'!");
+      }
+    };
+
+    window.onload = function() {
+      var now = new Date();
+      var bField = document.getElementById("billDate");
+      if (bField) {
+        var mStr = String(now.getMonth() + 1).padStart(2, '0');
+        var dStr = String(now.getDate()).padStart(2, '0');
+        bField.value = now.getFullYear() + "-" + mStr + "-" + dStr;
+      }
+
+      // Safe session restore
+      try {
+        var stored = localStorage.getItem("mle_user");
+        if (stored && stored.startsWith("{")) {
+          currentUser = JSON.parse(stored);
+        }
+      } catch(e) {
+        currentUser = null;
+      }
+
+      if (!currentUser) {
+        document.getElementById("authOverlay").style.display = "flex";
+        document.getElementById("mainAppWrapper").style.display = "none";
+      } else {
+        document.getElementById("authOverlay").style.display = "none";
+        document.getElementById("mainAppWrapper").style.display = "flex";
+        initSession();
+      }
+    };
+
+    function initSession() {
+      if (!currentUser) return;
+      document.getElementById("lblUser").innerText = currentUser.name + " (" + currentUser.role + ")";
+      refreshAppData();
+      startSessionTimer();
+      loadDashboardAnalytics();
+      loadInwardAuditLog();
     }
 
-    async function apiCall(action, payload = {}) {
+    function startSessionTimer() {
+      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+      var loginTime = parseInt(localStorage.getItem("mle_login_time") || new Date().getTime());
+      sessionTimerInterval = setInterval(function() {
+        var diff = (loginTime + 24 * 3600 * 1000) - new Date().getTime();
+        if (diff <= 0) {
+          clearInterval(sessionTimerInterval);
+          executeUserLogout();
+          return;
+        }
+        var h = Math.floor(diff / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        var s = Math.floor((diff % 60000) / 1000);
+        var pad = function(n) { return String(n).padStart(2, '0'); };
+        document.getElementById("sessionTimerBadge").innerText = "⏳ " + pad(h) + ":" + pad(m) + ":" + pad(s);
+      }, 1000);
+    }
+
+    window.confirmUserLogout = function() {
+      if (confirm("Are you sure you want to log out of your session?")) {
+        executeUserLogout();
+      }
+    };
+
+    function executeUserLogout() {
+      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+      localStorage.removeItem("mle_user");
+      localStorage.removeItem("mle_login_time");
+      location.reload();
+    }
+
+    async function apiCall(action, payload) {
+      if (!payload) payload = {};
       payload.action = action;
       try {
-        const res = await fetch(SCRIPT_URL, {
+        var res = await fetch(SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
@@ -924,30 +907,28 @@
       }
     }
 
-    // Refresh Data
-    async function refreshAppData() {
+    window.refreshAppData = async function() {
       try {
-        const res = await apiCall("getAppData");
+        var res = await apiCall("getAppData");
         if (res && res.items) {
           cachedItems = res.items;
-          const hasLabour = cachedItems.some(x => x.name.toLowerCase().includes("labour charge"));
+          var hasLabour = cachedItems.some(function(x) { return x.name.toLowerCase().includes("labour charge"); });
           if (!hasLabour) cachedItems.unshift({ name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, stock: "∞" });
           localStorage.setItem("mle_items", JSON.stringify(cachedItems));
           bankSettings = res.bankInfo;
 
           if (res.alerts && res.alerts.length > 0) {
-            document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(a => `• ${a}`).join("<br>");
+            document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(function(a) { return "• " + a; }).join("<br>");
             document.getElementById("lowStockAlertBox").style.display = "block";
           } else {
             document.getElementById("lowStockAlertBox").style.display = "none";
           }
         }
       } catch(e) {}
-    }
+    };
 
-    // Navigation Switcher
-    function switchNav(nav) {
-      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    window.switchNav = function(nav) {
+      document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
       document.getElementById("viewDashboard").style.display = (nav === 'dash') ? 'block' : 'none';
       document.getElementById("viewGenBill").style.display = 'none';
       document.getElementById("viewCreditLedger").style.display = 'none';
@@ -960,18 +941,18 @@
         loadDashboardAnalytics();
       }
       if (nav === 'settings') document.getElementById("btnNavSet").classList.add("active");
-    }
+    };
 
-    function toggleBillingSub() {
-      const sub = document.getElementById("billingSubMenu");
+    window.toggleBillingSub = function() {
+      var sub = document.getElementById("billingSubMenu");
       sub.style.display = (sub.style.display === "none") ? "flex" : "none";
       switchBillingView('gen');
-    }
+    };
 
-    function switchBillingView(subView) {
-      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    window.switchBillingView = function(subView) {
+      document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
       document.getElementById("btnNavBill").classList.add("active");
-      document.querySelectorAll(".sub-nav-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".sub-nav-btn").forEach(function(b) { b.classList.remove("active"); });
 
       document.getElementById("viewDashboard").style.display = 'none';
       document.getElementById("viewSettings").style.display = 'none';
@@ -993,9 +974,8 @@
         document.getElementById("btnSubStock").classList.add("active");
         loadInwardAuditLog();
       }
-    }
+    };
 
-    // 3-Step Smart HSN Resolver
     function detectHsnFromName(name) {
       var n = (name || "").toLowerCase().trim();
       if (!n) return "";
@@ -1010,28 +990,28 @@
     }
 
     function resolveSmartHsn(itemName) {
-      const clean = (itemName || "").trim();
-      const match = cachedItems.find(x => x.name.toLowerCase() === clean.toLowerCase());
+      var clean = (itemName || "").trim();
+      var match = cachedItems.find(function(x) { return x.name.toLowerCase() === clean.toLowerCase(); });
       if (match && match.hsn && match.hsn !== "-") return match.hsn;
-      const catHsn = detectHsnFromName(clean);
+      var catHsn = detectHsnFromName(clean);
       if (catHsn) return catHsn;
-      if (confirm(`"${clean}" is a new item without category.\nAssign default HSN (8538)?`)) return "8538";
+      if (confirm('"' + clean + '" is a new item without category.\nAssign default HSN (8538)?')) return "8538";
       return "";
     }
 
-    function onItemSearchInput() {
-      const val = document.getElementById("itemSearch").value.trim().toLowerCase();
-      const menu = document.getElementById("billingItemMenu");
+    window.onItemSearchInput = function() {
+      var val = document.getElementById("itemSearch").value.trim().toLowerCase();
+      var menu = document.getElementById("billingItemMenu");
       menu.innerHTML = "";
       if (!val) { menu.style.display = "none"; return; }
 
-      const filtered = cachedItems.filter(it => it.name.toLowerCase().includes(val));
+      var filtered = cachedItems.filter(function(it) { return it.name.toLowerCase().includes(val); });
       if (filtered.length === 0) { menu.style.display = "none"; return; }
 
-      filtered.forEach(it => {
-        const div = document.createElement("div");
+      filtered.forEach(function(it) {
+        var div = document.createElement("div");
         div.className = "dropdown-item";
-        div.innerHTML = `<span><b>${it.name}</b></span> <small>Stock: ${it.stock} \vert{} ₹${it.custRate}</small>`;
+        div.innerHTML = "<span><b>" + it.name + "</b></span> <small>Stock: " + it.stock + " | ₹" + it.custRate + "</small>";
         div.onmousedown = function(e) {
           e.preventDefault();
           selectBillingItem(it);
@@ -1039,7 +1019,7 @@
         menu.appendChild(div);
       });
       menu.style.display = "block";
-    }
+    };
 
     function selectBillingItem(item) {
       document.getElementById("itemSearch").value = item.name;
@@ -1047,8 +1027,8 @@
       currentItemObj = item;
       document.getElementById("itemHsn").value = resolveSmartHsn(item.name);
 
-      const isLabour = item.name.toLowerCase().includes("labour");
-      const rateField = document.getElementById("itemRate");
+      var isLabour = item.name.toLowerCase().includes("labour");
+      var rateField = document.getElementById("itemRate");
       if (isLabour) {
         rateField.readOnly = false;
         rateField.placeholder = "Enter Amount";
@@ -1061,50 +1041,51 @@
       calculateItemTotal();
     }
 
-    function onRateTypeChange() {
+    window.onRateTypeChange = function() {
       if (currentItemObj && !currentItemObj.name.toLowerCase().includes("labour")) resolveRate();
       calculateItemTotal();
-    }
+    };
 
     function resolveRate() {
       if (!currentItemObj) return;
-      const type = document.getElementById("rateType").value;
-      let r = currentItemObj.custRate || 0;
+      var type = document.getElementById("rateType").value;
+      var r = currentItemObj.custRate || 0;
       if (type === "Electrician Rate") r = currentItemObj.elecRate || r;
       if (type === "Wholesale Rate") r = currentItemObj.famRate || r;
-      document.getElementById("itemRate").value = `₹${parseFloat(r).toFixed(2)}`;
+      document.getElementById("itemRate").value = "₹" + parseFloat(r).toFixed(2);
     }
 
-    function calculateItemTotal() {
-      let rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
-      let baseRate = parseFloat(rVal) || 0;
-      let disc = parseFloat(document.getElementById("itemDisc").value) || 0;
-      let qty = parseFloat(document.getElementById("itemQty").value) || 1;
-      let discountedRate = Math.max(0, baseRate - disc);
+    window.calculateItemTotal = function() {
+      var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
+      var baseRate = parseFloat(rVal) || 0;
+      var disc = parseFloat(document.getElementById("itemDisc").value) || 0;
+      var qty = parseFloat(document.getElementById("itemQty").value) || 1;
+      var discountedRate = Math.max(0, baseRate - disc);
 
-      let isGst = document.getElementById("isGstBill").value.includes("Yes");
-      let gstPerPc = isGst ? ((discountedRate * ((currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18)) / 100) : 0;
+      var isGst = document.getElementById("isGstBill").value.includes("Yes");
+      var gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
+      var gstPerPc = isGst ? ((discountedRate * gstPct) / 100) : 0;
 
-      document.getElementById("itemGstAdded").value = `+₹${gstPerPc.toFixed(2)}`;
-      let finalUnitRate = discountedRate + gstPerPc;
-      let total = finalUnitRate * qty;
+      document.getElementById("itemGstAdded").value = "+₹" + gstPerPc.toFixed(2);
+      var finalUnitRate = discountedRate + gstPerPc;
+      var total = finalUnitRate * qty;
       document.getElementById("itemTotal").value = total.toFixed(2);
-      return { finalUnitRate, total, gstPerPc };
-    }
+      return { finalUnitRate: finalUnitRate, total: total, gstPerPc: gstPerPc };
+    };
 
-    function addItemToBill() {
-      const name = document.getElementById("itemSearch").value.trim();
+    window.addItemToBill = function() {
+      var name = document.getElementById("itemSearch").value.trim();
       if (!name) return;
 
-      const found = cachedItems.some(x => x.name.toLowerCase() === name.toLowerCase());
+      var found = cachedItems.some(function(x) { return x.name.toLowerCase() === name.toLowerCase(); });
       if (!found) {
         alert("Item not found in inventory! Please inward stock first.");
         return;
       }
 
-      const calc = calculateItemTotal();
-      let rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
-      let baseRate = parseFloat(rVal) || 0;
+      var calc = calculateItemTotal();
+      var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
+      var baseRate = parseFloat(rVal) || 0;
       if (baseRate <= 0) { alert("Please enter valid rate!"); return; }
 
       billItems.push({
@@ -1130,58 +1111,57 @@
       document.getElementById("itemTotal").value = "0.00";
       currentItemObj = null;
       checkFormState();
-    }
+    };
 
     function renderBillTable() {
-      const tbody = document.getElementById("billItemsTbody");
+      var tbody = document.getElementById("billItemsTbody");
       tbody.innerHTML = "";
-      let grand = 0, totalUnits = 0;
+      var grand = 0, totalUnits = 0;
 
-      billItems.forEach((it, idx) => {
+      billItems.forEach(function(it, idx) {
         grand += it.total;
         totalUnits += it.qty;
-        tbody.innerHTML += `
-          <tr>
-            <td>${idx + 1}</td>
-            <td><b>${it.name}</b>${it.serialNo && it.serialNo !== '-' ? `<br><small style="color:#d97706;">${it.serialNo}</small>` : ''}</td>
-            <td>${it.hsn}</td>
-            <td>₹${it.baseRate.toFixed(2)}</td>
-            <td style="color:#059669;">-₹${it.discount.toFixed(2)}</td>
-            <td style="color:#b45309;">+₹${it.gstPerPc.toFixed(2)}</td>
-            <td>${it.qty}</td>
-            <td>₹${it.total.toFixed(2)}</td>
-            <td><button class="btn-del" onclick="deleteBillItem(${idx})">✕</button></td>
-          </tr>
-        `;
+        var snDisplay = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#d97706;">' + it.serialNo + '</small>' : '';
+        tbody.innerHTML += "<tr>" +
+          "<td>" + (idx + 1) + "</td>" +
+          "<td><b>" + it.name + "</b>" + snDisplay + "</td>" +
+          "<td>" + it.hsn + "</td>" +
+          "<td>₹" + it.baseRate.toFixed(2) + "</td>" +
+          "<td style='color:#059669;'>-₹" + it.discount.toFixed(2) + "</td>" +
+          "<td style='color:#b45309;'>+₹" + it.gstPerPc.toFixed(2) + "</td>" +
+          "<td>" + it.qty + "</td>" +
+          "<td>₹" + it.total.toFixed(2) + "</td>" +
+          "<td><button class='btn-del' onclick='deleteBillItem(" + idx + ")'>✕</button></td>" +
+          "</tr>";
       });
 
       document.getElementById("lblTotalItemCount").innerText = billItems.length;
-      document.getElementById("lblTotalUnitsCount").innerText = `${totalUnits} Pcs`;
-      document.getElementById("lblGrandTotal").innerText = `₹${grand.toFixed(2)}`;
+      document.getElementById("lblTotalUnitsCount").innerText = totalUnits + " Pcs";
+      document.getElementById("lblGrandTotal").innerText = "₹" + grand.toFixed(2);
     }
 
-    function deleteBillItem(idx) {
+    window.deleteBillItem = function(idx) {
       billItems.splice(idx, 1);
       renderBillTable();
       checkFormState();
-    }
+    };
 
     function checkFormState() {
-      const ok = document.getElementById("custName").value.trim() && 
+      var ok = document.getElementById("custName").value.trim() && 
                  document.getElementById("custPhone").value.trim().length >= 10 && 
                  billItems.length > 0;
       document.getElementById("btnSubmitBill").disabled = !ok;
     }
 
-    async function submitBillToBackend() {
-      const btn = document.getElementById("btnSubmitBill");
+    window.submitBillToBackend = async function() {
+      var btn = document.getElementById("btnSubmitBill");
       btn.disabled = true;
       btn.innerText = "⏳ Generating Bill & Drive PDF...";
 
-      const isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
-      const totalAmt = billItems.reduce((acc, c) => acc + c.total, 0);
+      var isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
+      var totalAmt = billItems.reduce(function(acc, c) { return acc + c.total; }, 0);
 
-      const payload = {
+      var payload = {
         billMode: document.getElementById("billMode").value.includes("Estimate") ? "Estimate" : "Invoice",
         billDate: document.getElementById("billDate").value,
         rateType: document.getElementById("rateType").value,
@@ -1195,7 +1175,7 @@
         grandTotal: totalAmt
       };
 
-      const res = await apiCall("processBillOrEstimate", payload);
+      var res = await apiCall("processBillOrEstimate", payload);
       btn.disabled = false;
       btn.innerText = "⚡ Checkout / Save Bill & Generate PDF";
 
@@ -1214,142 +1194,138 @@
           items: JSON.parse(JSON.stringify(billItems)),
           pdfUrl: res.pdfUrl || ""
         };
-        document.getElementById("lblSuccessDocNo").innerText = `Doc No: ${res.docNo} \vert{} Amount: ₹${totalAmt.toFixed(2)}`;
+        document.getElementById("lblSuccessDocNo").innerText = "Doc No: " + res.docNo + " | Amount: ₹" + totalAmt.toFixed(2);
         document.getElementById("checkoutSuccessModal").style.display = "flex";
       } else {
         alert("Server error. Please retry!");
       }
-    }
+    };
 
-    // Exact Fixed Bottom Receipt Print
     function buildReceiptHtml(b) {
       if (!b) return "";
-      let lines = "";
-      const itms = b.items || [];
-      itms.forEach((it, idx) => {
-        lines += `<tr>
-          <td style="padding:6px; border:1px solid #000; text-align:center;">${idx + 1}</td>
-          <td style="padding:6px; border:1px solid #000;"><b>${it.name}</b>${it.serialNo && it.serialNo !== '-' ? `<br><small style="color:#555;">${it.serialNo}</small>` : ''}</td>
-          <td style="padding:6px; border:1px solid #000; text-align:center;">${it.hsn || '-'}</td>
-          <td style="padding:6px; border:1px solid #000; text-align:right;">₹${parseFloat(it.finalRate || it.baseRate || 0).toFixed(2)}</td>
-          <td style="padding:6px; border:1px solid #000; text-align:center;">${it.qty || 1}</td>
-          <td style="padding:6px; border:1px solid #000; text-align:right;">₹${parseFloat(it.total || 0).toFixed(2)}</td>
-        </tr>`;
+      var lines = "";
+      var itms = b.items || [];
+      itms.forEach(function(it, idx) {
+        var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
+        lines += "<tr>" +
+          "<td style='padding:6px; border:1px solid #000; text-align:center;'>" + (idx + 1) + "</td>" +
+          "<td style='padding:6px; border:1px solid #000;'><b>" + it.name + "</b>" + snStr + "</td>" +
+          "<td style='padding:6px; border:1px solid #000; text-align:center;'>" + (it.hsn || '-') + "</td>" +
+          "<td style='padding:6px; border:1px solid #000; text-align:right;'>₹" + parseFloat(it.finalRate || it.baseRate || 0).toFixed(2) + "</td>" +
+          "<td style='padding:6px; border:1px solid #000; text-align:center;'>" + (it.qty || 1) + "</td>" +
+          "<td style='padding:6px; border:1px solid #000; text-align:right;'>₹" + parseFloat(it.total || 0).toFixed(2) + "</td>" +
+          "</tr>";
       });
 
-      const totalAmt = parseFloat(b.grandTotal || b.amount || 0);
-      const shopGstLine = (b.isGst) ? `<div style="font-weight:bold; margin-top:2px;">GSTIN: 09AAPFM1234F1Z5</div>` : ``;
-      const buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? `<div>GSTIN: ${b.gstin}</div>` : ``;
+      var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
+      var shopGstLine = (b.isGst) ? "<div style='font-weight:bold; margin-top:2px;'>GSTIN: 09AAPFM1234F1Z5</div>" : "";
+      var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? "<div>GSTIN: " + b.gstin + "</div>" : "";
+      var docHeading = (b.docNo && b.docNo.includes('INV')) ? 'RETAIL INVOICE (CASH MEMO)' : 'ESTIMATE QUOTATION';
 
-      return `
-        <div style="max-width:550px; margin:0 auto; padding:15px; font-family:Helvetica, Arial, sans-serif; font-size:11px; color:#000; line-height:1.35; background:#fff; min-height:240mm; position:relative;">
-          <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:6px; margin-bottom:10px;">
-            <div style="font-size:18px; font-weight:bold; letter-spacing:0.5px;">MOONLIGHT ELECTRICALS</div>
-            <div style="font-size:10.5px; font-style:italic; font-weight:bold; margin-bottom:3px;">Brightening Lives, Powering Trust</div>
-            <div style="font-size:10px;">Shop No 1, Sadbhavna Market, Opp. Cleo County Gate No 3,<br>Ghadi Chaukhandi, Sector-121, Noida - 201304 (U.P.)</div>
-            <div style="font-size:10px;">Contact: 9650897965 / 8860706865 / 8860880453 | Email: moonlightelectrical9@gmail.com</div>
-            ${shopGstLine}
-          </div>
-          
-          <table style="width:100%; border:none; margin-bottom:8px;">
-            <tr>
-              <td style="width:50%; vertical-align:top; border:none; padding-right:5px;">
-                <div style="border:1px solid #000; padding:6px; font-size:10.5px; min-height:55px;">
-                  <b>BUYER / BILLED TO:</b><br>
-                  <b>${b.customerName}</b><br>${b.address || 'Sector-121, Noida'}<br>
-                  Contact: ${b.phone \vert{}\vert{} '-'}${buyerGstLine}
-                </div>
-              </td>
-              <td style="width:50%; vertical-align:top; border:none; padding-left:5px;">
-                <div style="border:1px solid #000; padding:6px; font-size:10.5px; min-height:55px;">
-                  <b>${(b.docNo && b.docNo.includes('INV')) ? 'RETAIL INVOICE (CASH MEMO)' : 'ESTIMATE QUOTATION'}</b><br>
-                  Doc No: <b>${b.docNo}</b><br>
-                  Date of Issue: <b>${b.date}</b><br>
-                  Payment Mode: <b>${b.paymentMode || 'Cash'}</b><br>
-                  Place of Supply: Uttar Pradesh (09)
-                </div>
-              </td>
-            </tr>
-          </table>
-
-          <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
-            <thead>
-              <tr style="background:#f2f2f2;">
-                <th style="padding:6px; border:1px solid #000; width:30px; text-align:center;">#</th>
-                <th style="padding:6px; border:1px solid #000; text-align:left;">ITEM DESCRIPTION</th>
-                <th style="padding:6px; border:1px solid #000; width:65px; text-align:center;">HSN/SAC</th>
-                <th style="padding:6px; border:1px solid #000; width:65px; text-align:right;">RATE</th>
-                <th style="padding:6px; border:1px solid #000; width:45px; text-align:center;">QTY</th>
-                <th style="padding:6px; border:1px solid #000; width:75px; text-align:right;">AMOUNT</th>
-              </tr>
-            </thead>
-            <tbody>${lines}</tbody>
-          </table>
-
-          <div style="position:absolute; bottom:15px; left:15px; right:15px;">
-            <div style="margin-bottom:6px; font-size:11px;"><b>AMOUNT IN WORDS:</b> Standard Rupees Total</div>
-            <table style="width:100%; border:none; margin-bottom:8px;">
-              <tr>
-                <td style="width:60%; vertical-align:top; border:1px solid #000; padding:6px; font-size:10px;">
-                  <b>BANK & UPI DETAILS:</b><br>
-                  • Bank: Kotak Mahindra Bank | A/c Holder: SHIVAM CHAUHAN<br>
-                  • A/c No: 6413488039 | IFSC: KKBK0000181 | UPI ID: 8860880453@kotak<br>
-                  • Goods once sold covered under manufacturer warranty policy.<br>
-                  • Disputes subject to Noida jurisdiction only.
-                </td>
-                <td style="width:40%; vertical-align:middle; text-align:center; border:2px solid #000; padding:10px; background:#fafafa;">
-                  <div style="font-size:12px; font-weight:bold;">GRAND TOTAL:</div>
-                  <div style="font-size:20px; font-weight:900; margin-top:4px;">₹ ${totalAmt.toFixed(2)}</div>
-                </td>
-              </tr>
-            </table>
-
-            <div style="text-align:center; font-size:9.5px; border-top:1px solid #000; padding-top:6px;">
-              Thank you for choosing Moon Light Electricals!<br>
-              All electrical products covered under manufacturer warranty. Please keep this invoice safe for warranty claims.<br>
-              <b>THIS IS A COMPUTER-GENERATED DOCUMENT, NO SIGNATURE/STAMP REQUIRED.</b>
-            </div>
-          </div>
-        </div>
-      `;
+      return '<div style="max-width:550px; margin:0 auto; padding:15px; font-family:Helvetica, Arial, sans-serif; font-size:11px; color:#000; line-height:1.35; background:#fff; min-height:240mm; position:relative;">' +
+        '<div style="text-align:center; border-bottom:2px solid #000; padding-bottom:6px; margin-bottom:10px;">' +
+        '<div style="font-size:18px; font-weight:bold; letter-spacing:0.5px;">MOONLIGHT ELECTRICALS</div>' +
+        '<div style="font-size:10.5px; font-style:italic; font-weight:bold; margin-bottom:3px;">Brightening Lives, Powering Trust</div>' +
+        '<div style="font-size:10px;">Shop No 1, Sadbhavna Market, Opp. Cleo County Gate No 3,<br>Ghadi Chaukhandi, Sector-121, Noida - 201304 (U.P.)</div>' +
+        '<div style="font-size:10px;">Contact: 9650897965 / 8860706865 / 8860880453 | Email: moonlightelectrical9@gmail.com</div>' +
+        shopGstLine +
+        '</div>' +
+        '<table style="width:100%; border:none; margin-bottom:8px;">' +
+        '<tr>' +
+        '<td style="width:50%; vertical-align:top; border:none; padding-right:5px;">' +
+        '<div style="border:1px solid #000; padding:6px; font-size:10.5px; min-height:55px;">' +
+        '<b>BUYER / BILLED TO:</b><br>' +
+        '<b>' + b.customerName + '</b><br>' +
+        (b.address || 'Sector-121, Noida') + '<br>' +
+        'Contact: ' + (b.phone || '-') + buyerGstLine +
+        '</div>' +
+        '</td>' +
+        '<td style="width:50%; vertical-align:top; border:none; padding-left:5px;">' +
+        '<div style="border:1px solid #000; padding:6px; font-size:10.5px; min-height:55px;">' +
+        '<b>' + docHeading + '</b><br>' +
+        'Doc No: <b>' + b.docNo + '</b><br>' +
+        'Date of Issue: <b>' + b.date + '</b><br>' +
+        'Payment Mode: <b>' + (b.paymentMode || 'Cash') + '</b><br>' +
+        'Place of Supply: Uttar Pradesh (09)' +
+        '</div>' +
+        '</td>' +
+        '</tr>' +
+        '</table>' +
+        '<table style="width:100%; border-collapse:collapse; margin-bottom:8px;">' +
+        '<thead>' +
+        '<tr style="background:#f2f2f2;">' +
+        '<th style="padding:6px; border:1px solid #000; width:30px; text-align:center;">#</th>' +
+        '<th style="padding:6px; border:1px solid #000; text-align:left;">ITEM DESCRIPTION</th>' +
+        '<th style="padding:6px; border:1px solid #000; width:65px; text-align:center;">HSN/SAC</th>' +
+        '<th style="padding:6px; border:1px solid #000; width:65px; text-align:right;">RATE</th>' +
+        '<th style="padding:6px; border:1px solid #000; width:45px; text-align:center;">QTY</th>' +
+        '<th style="padding:6px; border:1px solid #000; width:75px; text-align:right;">AMOUNT</th>' +
+        '</tr>' +
+        '</thead>' +
+        '<tbody>' + lines + '</tbody>' +
+        '</table>' +
+        '<div style="position:absolute; bottom:15px; left:15px; right:15px;">' +
+        '<div style="margin-bottom:6px; font-size:11px;"><b>AMOUNT IN WORDS:</b> Standard Rupees Total</div>' +
+        '<table style="width:100%; border:none; margin-bottom:8px;">' +
+        '<tr>' +
+        '<td style="width:60%; vertical-align:top; border:1px solid #000; padding:6px; font-size:10px;">' +
+        '<b>BANK & UPI DETAILS:</b><br>' +
+        '• Bank: Kotak Mahindra Bank | A/c Holder: SHIVAM CHAUHAN<br>' +
+        '• A/c No: 6413488039 | IFSC: KKBK0000181 | UPI ID: 8860880453@kotak<br>' +
+        '• Goods once sold covered under manufacturer warranty policy.<br>' +
+        '• Disputes subject to Noida jurisdiction only.' +
+        '</td>' +
+        '<td style="width:40%; vertical-align:middle; text-align:center; border:2px solid #000; padding:10px; background:#fafafa;">' +
+        '<div style="font-size:12px; font-weight:bold;">GRAND TOTAL:</div>' +
+        '<div style="font-size:20px; font-weight:900; margin-top:4px;">₹ ' + totalAmt.toFixed(2) + '</div>' +
+        '</td>' +
+        '</tr>' +
+        '</table>' +
+        '<div style="text-align:center; font-size:9.5px; border-top:1px solid #000; padding-top:6px;">' +
+        'Thank you for choosing Moon Light Electricals!<br>' +
+        'All electrical products covered under manufacturer warranty. Please keep this invoice safe for warranty claims.<br>' +
+        '<b>THIS IS A COMPUTER-GENERATED DOCUMENT, NO SIGNATURE/STAMP REQUIRED.</b>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
     }
 
-    function triggerDirectPrint(customData) {
-      const data = customData || lastGeneratedBillData;
+    window.triggerDirectPrint = function(customData) {
+      var data = customData || lastGeneratedBillData;
       if (!data) return;
-      const container = document.getElementById("printableInvoice");
+      var container = document.getElementById("printableInvoice");
       container.innerHTML = buildReceiptHtml(data);
       container.style.display = "block";
       window.print();
       container.style.display = "none";
-    }
+    };
 
-    function viewDownloadPdf(customData) {
-      const data = customData || lastGeneratedBillData;
+    window.viewDownloadPdf = function(customData) {
+      var data = customData || lastGeneratedBillData;
       if (!data) return;
       if (data.pdfUrl && data.pdfUrl.startsWith("http")) {
         window.open(data.pdfUrl, '_blank');
       } else {
-        const w = window.open("", "_blank");
-        w.document.write(`<html><head><title>${data.docNo}</title></head><body>${buildReceiptHtml(data)}</body></html>`);
+        var w = window.open("", "_blank");
+        w.document.write("<html><head><title>" + data.docNo + "</title></head><body>" + buildReceiptHtml(data) + "</body></html>");
         w.document.close();
       }
-    }
+    };
 
-    function shareBillOnWhatsApp(customData) {
-      const d = customData || lastGeneratedBillData;
+    window.shareBillOnWhatsApp = function(customData) {
+      var d = customData || lastGeneratedBillData;
       if (!d) return;
 
-      const docWord = (d.docNo && d.docNo.includes("EST")) ? "Estimate" : "Invoice";
-      const totalAmt = parseFloat(d.grandTotal || d.amount || 0).toFixed(2);
-      const pdfSection = (d.pdfUrl && d.pdfUrl.startsWith("http")) ? `\n\n📄 *Download PDF Document:*\n${d.pdfUrl}` : ``;
+      var docWord = (d.docNo && d.docNo.includes("EST")) ? "Estimate" : "Invoice";
+      var totalAmt = parseFloat(d.grandTotal || d.amount || 0).toFixed(2);
+      var pdfSection = (d.pdfUrl && d.pdfUrl.startsWith("http")) ? "\n\n📄 *Download PDF Document:*\n" + d.pdfUrl : "";
 
-      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Amount: *₹${totalAmt}*\n  • Payment Mode: ${d.paymentMode || 'Cash / Online'}${pdfSection}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
+      var msg = "Hi " + d.customerName + ",\n\nGreetings from *Moon Light Electricals*!\n\nYour *" + docWord + "* (*" + d.docNo + "*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: " + d.date + "\n  • Total Amount: *₹" + totalAmt + "*\n  • Payment Mode: " + (d.paymentMode || 'Cash / Online') + pdfSection + "\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453";
 
-      window.open(`https://wa.me/91${d.phone}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
+      window.open("https://wa.me/91" + d.phone + "?text=" + encodeURIComponent(msg), '_blank');
+    };
 
-    function closeSuccessAndNextBill() {
+    window.closeSuccessAndNextBill = function() {
       document.getElementById("checkoutSuccessModal").style.display = "none";
       billItems = [];
       renderBillTable();
@@ -1357,148 +1333,146 @@
       document.getElementById("custPhone").value = "";
       document.getElementById("custGstin").value = "";
       checkFormState();
-    }
+    };
 
     // Dashboard Analytics Engine
     async function loadDashboardAnalytics() {
-      const res = await apiCall("getDashboardAnalytics");
+      var res = await apiCall("getDashboardAnalytics");
       if (res && res.sales) {
         window.dashData = res;
         filterDash('today');
       }
     }
 
-    function filterDash(period) {
+    window.filterDash = function(period) {
       if (!window.dashData) return;
-      const s = window.dashData.sales[period] || { cash:0, online:0, total:0 };
-      const p = window.dashData.purchases[period] || { cash:0, online:0, total:0 };
+      var s = window.dashData.sales[period] || { cash:0, online:0, total:0 };
+      var p = window.dashData.purchases[period] || { cash:0, online:0, total:0 };
 
-      document.getElementById("dashSaleCash").innerText = `₹${s.cash.toFixed(2)}`;
-      document.getElementById("dashSaleOnline").innerText = `₹${s.online.toFixed(2)}`;
-      document.getElementById("dashSaleTotal").innerText = `₹${s.total.toFixed(2)}`;
+      document.getElementById("dashSaleCash").innerText = "₹" + s.cash.toFixed(2);
+      document.getElementById("dashSaleOnline").innerText = "₹" + s.online.toFixed(2);
+      document.getElementById("dashSaleTotal").innerText = "₹" + s.total.toFixed(2);
 
-      document.getElementById("dashPurCash").innerText = `₹${p.cash.toFixed(2)}`;
-      document.getElementById("dashPurOnline").innerText = `₹${p.online.toFixed(2)}`;
-      document.getElementById("dashPurTotal").innerText = `₹${p.total.toFixed(2)}`;
+      document.getElementById("dashPurCash").innerText = "₹" + p.cash.toFixed(2);
+      document.getElementById("dashPurOnline").innerText = "₹" + p.online.toFixed(2);
+      document.getElementById("dashPurTotal").innerText = "₹" + p.total.toFixed(2);
 
-      const profit = s.total - p.total;
-      document.getElementById("dashProfitTotal").innerText = `₹${profit.toFixed(2)}`;
-    }
+      var profit = s.total - p.total;
+      document.getElementById("dashProfitTotal").innerText = "₹" + profit.toFixed(2);
+    };
 
     // Credit Ledger (Udhar Khata)
     async function loadKhataRecords() {
-      const c = document.getElementById("khataListContainer");
+      var c = document.getElementById("khataListContainer");
       c.innerHTML = "Fetching pending udhar records...";
-      const res = await apiCall("getKhataRecords");
+      var res = await apiCall("getKhataRecords");
       if (res && res.records) {
-        let totalPending = 0, count = 0;
-        res.records.forEach(r => {
+        var totalPending = 0, count = 0;
+        res.records.forEach(function(r) {
           if (r.status.toLowerCase().indexOf("paid") === -1) {
             totalPending += parseFloat(r.amount) || 0;
             count++;
           }
         });
-        document.getElementById("lblTotalPendingUdhar").innerText = `₹${totalPending.toFixed(2)}`;
-        document.getElementById("lblTotalPendingCount").innerText = `${count} Pending Bills`;
+        document.getElementById("lblTotalPendingUdhar").innerText = "₹" + totalPending.toFixed(2);
+        document.getElementById("lblTotalPendingCount").innerText = count + " Pending Bills";
 
-        let html = '<div class="table-wrap"><table><thead><tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Reminder Tracking</th><th>Actions</th></tr></thead><tbody>';
-        res.records.forEach(r => {
-          const isPending = r.status.toLowerCase().indexOf("paid") === -1;
-          html += `
-            <tr>
-              <td><b>${r.docNo}</b></td>
-              <td>${r.date}</td>
-              <td>${r.customerName}</td>
-              <td>${r.phone || '-'}</td>
-              <td><b>₹${parseFloat(r.amount || 0).toFixed(2)}</b></td>
-              <td><b style="color:${isPending ? '#d97706' : '#059669'}">${isPending ? 'Pending' : 'Paid'}</b></td>
-              <td><small>Sent: ${r.remCount || 0} times<br>Last: ${r.remDate || '-'}</small></td>
-              <td>
-                ${isPending ? `<button class="btn-sync" style="padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick="sendKhataReminder('${r.docNo}', '${r.customerName}', '${r.phone}',${r.amount})">📲 Reminder</button>` : ''}
-                ${isPending ? `<button class="btn-add" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="markPaid('${r.docNo}')">✓ Mark as Paid</button>` : '<span style="color:#059669; font-weight:800;">✓ Settled</span>'}
-              </td>
-            </tr>
-          `;
+        var html = '<div class="table-wrap"><table><thead><tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Reminder Tracking</th><th>Actions</th></tr></thead><tbody>';
+        res.records.forEach(function(r) {
+          var isPending = r.status.toLowerCase().indexOf("paid") === -1;
+          var statusColor = isPending ? '#d97706' : '#059669';
+          var statusText = isPending ? 'Pending' : 'Paid';
+          var remHtml = '<small>Sent: ' + (r.remCount || 0) + ' times<br>Last: ' + (r.remDate || '-') + '</small>';
+          var actHtml = isPending ? '<button class="btn-sync" style="padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick="sendKhataReminder(\'' + r.docNo + '\', \'' + r.customerName + '\', \'' + r.phone + '\', ' + r.amount + ')">📲 Reminder</button><button class="btn-add" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="markPaid(\'' + r.docNo + '\')">✓ Mark as Paid</button>' : '<span style="color:#059669; font-weight:800;">✓ Settled</span>';
+
+          html += "<tr>" +
+            "<td><b>" + r.docNo + "</b></td>" +
+            "<td>" + r.date + "</td>" +
+            "<td>" + r.customerName + "</td>" +
+            "<td>" + (r.phone || '-') + "</td>" +
+            "<td><b>₹" + parseFloat(r.amount || 0).toFixed(2) + "</b></td>" +
+            "<td><b style='color:" + statusColor + "'>" + statusText + "</b></td>" +
+            "<td>" + remHtml + "</td>" +
+            "<td>" + actHtml + "</td>" +
+            "</tr>";
         });
         html += '</tbody></table></div>';
         c.innerHTML = html;
       }
     }
 
-    async function sendKhataReminder(docNo, name, phone, amount) {
-      const upi = (bankSettings && bankSettings.upi) ? bankSettings.upi : "8860880453@kotak";
-      const payUrl = `https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=${encodeURIComponent(upi)}&am=${amount}`;
-      const msg = `*Greetings from Moon Light Electricals!*\n\nHi ${name},\nThis is a reminder that payment for Bill *${docNo}* is pending.\n\n• *Pending Amount:* ₹${parseFloat(amount).toFixed(2)}\n• *Due To:* Moon Light Electricals\n\n👉 *Pay via UPI (GPay/PhonePe):*\n${payUrl}\n\nThank you!`;
-      window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    window.sendKhataReminder = async function(docNo, name, phone, amount) {
+      var upi = (bankSettings && bankSettings.upi) ? bankSettings.upi : "8860880453@kotak";
+      var payUrl = "https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=" + encodeURIComponent(upi) + "&am=" + amount;
+      var msg = "*Greetings from Moon Light Electricals!*\n\nHi " + name + ",\nThis is a reminder that payment for Bill *" + docNo + "* is pending.\n\n• *Pending Amount:* ₹" + parseFloat(amount).toFixed(2) + "\n• *Due To:* Moon Light Electricals\n\n👉 *Pay via UPI (GPay/PhonePe):*\n" + payUrl + "\n\nThank you!";
+      window.open("https://wa.me/91" + phone + "?text=" + encodeURIComponent(msg), '_blank');
       await apiCall("recordKhataReminder", { docNo: docNo });
       loadKhataRecords();
-    }
+    };
 
-    async function markPaid(docNo) {
-      if (!confirm(`Mark ${docNo} as Paid?`)) return;
-      const res = await apiCall("markKhataPaid", { docNo: docNo });
+    window.markPaid = async function(docNo) {
+      if (!confirm("Mark " + docNo + " as Paid?")) return;
+      var res = await apiCall("markKhataPaid", { docNo: docNo });
       if (res && res.success) loadKhataRecords();
-    }
+    };
 
     // Bill History (Reprint & Search)
     async function loadBillHistory() {
-      const c = document.getElementById("historyTableContainer");
+      var c = document.getElementById("historyTableContainer");
       c.innerHTML = "Fetching invoices list...";
-      const res = await apiCall("getBillHistory");
+      var res = await apiCall("getBillHistory");
       if (res && res.records) {
         cachedBillHistory = res.records;
         filterBillHistory();
       }
     }
 
-    function filterBillHistory() {
-      const query = (document.getElementById("historySearchInput").value || "").trim().toLowerCase();
-      const filtered = !query ? cachedBillHistory : cachedBillHistory.filter(r => 
-        (r.docNo && r.docNo.toLowerCase().includes(query)) ||
-        (r.customerName && r.customerName.toLowerCase().includes(query)) ||
-        (r.phone && String(r.phone).includes(query))
-      );
+    window.filterBillHistory = function() {
+      var query = (document.getElementById("historySearchInput").value || "").trim().toLowerCase();
+      var filtered = !query ? cachedBillHistory : cachedBillHistory.filter(function(r) {
+        return (r.docNo && r.docNo.toLowerCase().includes(query)) ||
+               (r.customerName && r.customerName.toLowerCase().includes(query)) ||
+               (r.phone && String(r.phone).includes(query));
+      });
 
-      const c = document.getElementById("historyTableContainer");
-      let html = '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Doc No</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Actions</th></tr></thead><tbody>';
-      filtered.forEach((r, idx) => {
-        html += `
-          <tr>
-            <td>${r.date || '-'}</td>
-            <td><b>${r.docNo}</b></td>
-            <td>${r.customerName}</td>
-            <td>${r.phone || '-'}</td>
-            <td><b>₹${parseFloat(r.amount || 0).toFixed(2)}</b></td>
-            <td>
-              <button class="btn-sync" style="padding:4px 8px; font-size:11px; margin-right:4px;" onclick='triggerDirectPrint(cachedBillHistory[${idx}])'>🖨️ Re-Print</button>
-              <button class="btn-sync" style="padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick='shareBillOnWhatsApp(cachedBillHistory[${idx}])'>📲 WhatsApp</button>
-              <button class="btn-sync" style="padding:4px 8px; font-size:11px;" onclick='viewDownloadPdf(cachedBillHistory[${idx}])'>👁️ View</button>
-            </td>
-          </tr>
-        `;
+      var c = document.getElementById("historyTableContainer");
+      var html = '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Doc No</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Actions</th></tr></thead><tbody>';
+      filtered.forEach(function(r, idx) {
+        html += "<tr>" +
+          "<td>" + (r.date || '-') + "</td>" +
+          "<td><b>" + r.docNo + "</b></td>" +
+          "<td>" + r.customerName + "</td>" +
+          "<td>" + (r.phone || '-') + "</td>" +
+          "<td><b>₹" + parseFloat(r.amount || 0).toFixed(2) + "</b></td>" +
+          "<td>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='triggerDirectPrint(cachedBillHistory[" + idx + "])'>🖨️ Re-Print</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;' onclick='shareBillOnWhatsApp(cachedBillHistory[" + idx + "])'>📲 WhatsApp</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px;' onclick='viewDownloadPdf(cachedBillHistory[" + idx + "])'>👁️ View</button>" +
+          "</td>" +
+          "</tr>";
       });
       html += '</tbody></table></div>';
       c.innerHTML = html;
-    }
+    };
 
     // Stock Inward Modes & Actions
-    function setStockMode(mode) {
+    window.setStockMode = function(mode) {
       document.getElementById("boxStockInward").style.display = (mode === 'inward') ? 'block' : 'none';
       document.getElementById("boxStockHsn").style.display = (mode === 'hsn') ? 'block' : 'none';
       document.getElementById("boxStockCorrect").style.display = (mode === 'correct') ? 'block' : 'none';
-    }
+    };
 
-    function onStockSearchInput() {
-      const val = document.getElementById("stkName").value.trim().toLowerCase();
-      const menu = document.getElementById("stockItemMenu");
+    window.onStockSearchInput = function() {
+      var val = document.getElementById("stkName").value.trim().toLowerCase();
+      var menu = document.getElementById("stockItemMenu");
       menu.innerHTML = "";
       if (!val) { menu.style.display = "none"; return; }
 
-      const filtered = cachedItems.filter(it => it.name.toLowerCase().includes(val));
-      filtered.forEach(it => {
-        const div = document.createElement("div");
+      var filtered = cachedItems.filter(function(it) { return it.name.toLowerCase().includes(val); });
+      filtered.forEach(function(it) {
+        var div = document.createElement("div");
         div.className = "dropdown-item";
-        div.innerHTML = `<span><b>${it.name}</b></span> <small>Stock: ${it.stock}</small>`;
+        div.innerHTML = "<span><b>" + it.name + "</b></span> <small>Stock: " + it.stock + "</small>";
         div.onmousedown = function(e) {
           e.preventDefault();
           document.getElementById("stkName").value = it.name;
@@ -1511,14 +1485,14 @@
         menu.appendChild(div);
       });
       menu.style.display = "block";
-    }
+    };
 
-    async function submitStockInward() {
-      const name = document.getElementById("stkName").value.trim();
-      const qty = parseFloat(document.getElementById("stkQty").value) || 0;
+    window.submitStockInward = async function() {
+      var name = document.getElementById("stkName").value.trim();
+      var qty = parseFloat(document.getElementById("stkQty").value) || 0;
       if (!name || qty <= 0) { alert("Enter valid item and quantity!"); return; }
 
-      const res = await apiCall("inwardStock", {
+      var res = await apiCall("inwardStock", {
         data: {
           name: name,
           hsn: document.getElementById("stkHsn").value.trim() || "-",
@@ -1535,39 +1509,39 @@
         refreshAppData();
         loadInwardAuditLog();
       }
-    }
+    };
 
-    async function submitHsnOnly() {
-      const name = document.getElementById("hsnOnlyName").value.trim();
-      const hsn = document.getElementById("hsnOnlyCode").value.trim();
+    window.submitHsnOnly = async function() {
+      var name = document.getElementById("hsnOnlyName").value.trim();
+      var hsn = document.getElementById("hsnOnlyCode").value.trim();
       if (!name || !hsn) { alert("Enter item and HSN code!"); return; }
-      const res = await apiCall("updateHsnOnly", { data: { name: name, hsn: hsn } });
+      var res = await apiCall("updateHsnOnly", { data: { name: name, hsn: hsn } });
       if (res && res.success) {
         alert("HSN code updated successfully!");
         refreshAppData();
         loadInwardAuditLog();
       }
-    }
+    };
 
-    async function submitCorrectQty() {
-      const name = document.getElementById("correctName").value.trim();
-      const qty = parseFloat(document.getElementById("correctQty").value) || 0;
+    window.submitCorrectQty = async function() {
+      var name = document.getElementById("correctName").value.trim();
+      var qty = parseFloat(document.getElementById("correctQty").value) || 0;
       if (!name) { alert("Select item!"); return; }
-      const res = await apiCall("correctStockQty", { data: { name: name, correctQty: qty } });
+      var res = await apiCall("correctStockQty", { data: { name: name, correctQty: qty } });
       if (res && res.success) {
         alert("Real stock count overridden successfully! Set to: " + qty);
         refreshAppData();
         loadInwardAuditLog();
       }
-    }
+    };
 
     async function loadInwardAuditLog() {
-      const res = await apiCall("getInwardAuditLog");
+      var res = await apiCall("getInwardAuditLog");
       if (res && res.records) {
-        const c = document.getElementById("auditLogContainer");
-        let html = '<div class="table-wrap"><table><thead><tr><th>Date & Time</th><th>Item Name</th><th>Action Type</th><th>Prev Stock</th><th>Change</th><th>Current Stock</th></tr></thead><tbody>';
-        res.records.forEach(r => {
-          html += `<tr><td>${r.time}</td><td><b>${r.name}</b></td><td>${r.type}</td><td>${r.prev} Pcs</td><td><b style="color:#059669;">${r.change}</b></td><td><b>${r.current} Pcs</b></td></tr>`;
+        var c = document.getElementById("auditLogContainer");
+        var html = '<div class="table-wrap"><table><thead><tr><th>Date & Time</th><th>Item Name</th><th>Action Type</th><th>Prev Stock</th><th>Change</th><th>Current Stock</th></tr></thead><tbody>';
+        res.records.forEach(function(r) {
+          html += "<tr><td>" + r.time + "</td><td><b>" + r.name + "</b></td><td>" + r.type + "</td><td>" + r.prev + " Pcs</td><td><b style='color:#059669;'>" + r.change + "</b></td><td><b>" + r.current + " Pcs</b></td></tr>";
         });
         html += '</tbody></table></div>';
         c.innerHTML = html;
@@ -1575,26 +1549,26 @@
     }
 
     // Settings
-    async function saveBankSettings() {
-      const payload = {
+    window.saveBankSettings = async function() {
+      var payload = {
         bankName: document.getElementById("setBankName").value.trim(),
         holder: document.getElementById("setHolder").value.trim(),
         accNo: document.getElementById("setAccNo").value.trim(),
         ifsc: document.getElementById("setIfsc").value.trim(),
         upi: document.getElementById("setUpi").value.trim()
       };
-      const res = await apiCall("updateBankSettings", { data: payload });
+      var res = await apiCall("updateBankSettings", { data: payload });
       if (res && res.success) alert("Bank details updated successfully!");
-    }
+    };
 
-    async function createNewUser() {
-      const name = document.getElementById("newUserName").value.trim();
-      const phone = document.getElementById("newUserPhone").value.trim();
-      const role = document.getElementById("newUserRole").value;
+    window.createNewUser = async function() {
+      var name = document.getElementById("newUserName").value.trim();
+      var phone = document.getElementById("newUserPhone").value.trim();
+      var role = document.getElementById("newUserRole").value;
       if (!name || phone.length !== 10) { alert("Enter valid name and 10-digit phone!"); return; }
-      const res = await apiCall("createUser", { data: { name: name, phone: phone, role: role } });
+      var res = await apiCall("createUser", { data: { name: name, phone: phone, role: role } });
       if (res && res.success) alert("New user created successfully!");
-    }
+    };
   </script>
 </body>
 </html>
