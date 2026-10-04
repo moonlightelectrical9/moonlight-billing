@@ -137,6 +137,7 @@
 
     @media (max-width: 820px) {
       body { padding: 8px 10px; }
+      .brand-title { font-size: 16px; }
       .row-5, .row-2, .row-item-top, .row-item-btm { grid-template-columns: 1fr; gap: 8px; }
       .top-nav { flex-direction: column; align-items: flex-start; }
       .nav-actions { width: 100%; justify-content: space-between; }
@@ -296,7 +297,7 @@
     .btn-view-pdf { background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
     .btn-next-bill { background: #f1f5f9; color: #0f172a; border: 1.5px solid #cbd5e1; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
 
-    /* Clean Thermal / Receipt Print Styling */
+    /* Clean Thermal Receipt Print Style */
     @media print {
       body * { visibility: hidden; }
       #printableReceipt, #printableReceipt * { visibility: visible; }
@@ -309,14 +310,13 @@
         background: #fff;
         color: #000;
         padding: 10px;
-        font-family: monospace;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Direct Printable Receipt Template -->
+  <!-- Hidden Container for Instant Receipt Printing -->
   <div id="printableReceipt" style="display:none;"></div>
 
   <!-- Bill Success Modal -->
@@ -384,7 +384,7 @@
     <!-- 🧾 VIEW 1: BILLING -->
     <div id="viewBilling">
       <div class="alert-box" id="lowStockAlertBox">
-        <b>⚠️️ LOW STOCK ALERT:</b>
+        <b>⚠ LOW STOCK ALERT:</b>
         <div id="lowStockItemsList" style="margin-top: 4px;"></div>
       </div>
 
@@ -457,7 +457,7 @@
       <div class="grid-row row-item-top">
         <div class="form-col">
           <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
-          <input type="text" id="itemSearch" placeholder="Type to search from inventory..." autocomplete="off" onclick="handleItemDirectClick()" oninput="onItemSearchInput()" onblur="handleItemBlur()">
+          <input type="text" id="itemSearch" placeholder="Type to search from 450+ items..." autocomplete="off" onclick="handleItemDirectClick()" oninput="onItemSearchInput()" onblur="handleItemBlur()">
           <div class="dropdown-menu" id="billingItemMenu"></div>
         </div>
         <div class="form-col">
@@ -690,7 +690,7 @@
       return JSON.parse(await res.text());
     }
 
-    // Refresh Data & Load All Items
+    // Refresh Data & Load All 450+ Items from 'Items' Sheet
     async function refreshAppData() {
       const btn = document.getElementById("btnRefresh");
       btn.innerText = "⏳ Syncing...";
@@ -773,7 +773,7 @@
       lastSelectedBillingItem = item.name;
       document.getElementById("billingItemMenu").style.display = "none";
       currentItemObj = item;
-      document.getElementById("itemHsn").value = item.hsn || "8538";
+      document.getElementById("itemHsn").value = (item.hsn && item.hsn !== "-") ? item.hsn : "8538";
 
       const isLabour = item.name.toLowerCase().includes("labour") || item.name.toLowerCase().includes("service");
       const rateField = document.getElementById("itemRate");
@@ -934,7 +934,7 @@
             grandTotal: totalAmt,
             amount: totalAmt,
             date: payload.billDate,
-            items: billItems
+            items: JSON.parse(JSON.stringify(billItems))
           };
           document.getElementById("lblSuccessDocNo").innerText = `Doc No: ${res.docNo} | Amount: ₹${totalAmt.toFixed(2)}`;
           document.getElementById("billSuccessModal").style.display = "flex";
@@ -946,42 +946,41 @@
       }
     }
 
-    // Direct Browser Receipt Printing (Fixes 404 & Empty Print Issue)
-    function buildPrintableReceiptHtml(billData) {
-      const b = billData || lastGeneratedBillData;
+    // Direct Receipt HTML Generator
+    function buildReceiptHtml(b) {
       if (!b) return "";
-      let linesHtml = "";
-      const items = b.items || [];
-      items.forEach(it => {
-        linesHtml += `<tr>
-          <td style="padding:4px 0; border-bottom:1px dashed #ccc;">${it.name}</td>
-          <td style="padding:4px 0; border-bottom:1px dashed #ccc; text-align:center;">${it.qty || 1}</td>
-          <td style="padding:4px 0; border-bottom:1px dashed #ccc; text-align:right;">₹${parseFloat(it.total || 0).toFixed(2)}</td>
+      let lines = "";
+      const itms = b.items || [];
+      itms.forEach(it => {
+        lines += `<tr>
+          <td style="padding:4px 0; border-bottom:1px dashed #ccc; font-size:12px;">${it.name}</td>
+          <td style="padding:4px 0; border-bottom:1px dashed #ccc; text-align:center; font-size:12px;">${it.qty || 1}</td>
+          <td style="padding:4px 0; border-bottom:1px dashed #ccc; text-align:right; font-size:12px;">₹${parseFloat(it.total || 0).toFixed(2)}</td>
         </tr>`;
       });
 
       return `
-        <div style="max-width:320px; margin:0 auto; padding:10px; font-family:monospace; font-size:12px; line-height:1.4;">
+        <div style="max-width:320px; margin:0 auto; padding:12px; font-family:monospace; line-height:1.4;">
           <div style="text-align:center; margin-bottom:8px;">
             <div style="font-size:16px; font-weight:900;">MOON LIGHT ELECTRICALS</div>
-            <div>Shop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Sector 121, Noida</div>
-            <div>Ph: 9650897965 / 8860706865</div>
+            <div style="font-size:11px;">Sadbhavna Market, Opp. Cleo County Gate No. 3, Sector 121, Noida</div>
+            <div style="font-size:11px;">Ph: 9650897965 / 8860706865</div>
           </div>
-          <div style="border-top:1px dashed #000; border-bottom:1px dashed #000; padding:4px 0; margin-bottom:8px;">
+          <div style="border-top:1px dashed #000; border-bottom:1px dashed #000; padding:4px 0; margin-bottom:8px; font-size:12px;">
             <div>Doc No: <b>${b.docNo}</b></div>
             <div>Date: ${b.date}</div>
             <div>Customer: ${b.customerName} (${b.phone || '-'})</div>
-            <div>Payment: ${b.paymentMode || 'Cash'}</div>
+            <div>Payment Mode: ${b.paymentMode || 'Cash'}</div>
           </div>
-          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:8px;">
+          <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
             <thead>
-              <tr style="border-bottom:1px solid #000;">
+              <tr style="border-bottom:1px solid #000; font-size:12px;">
                 <th style="text-align:left;">Item</th>
                 <th style="text-align:center;">Qty</th>
-                <th style="text-align:right;">Amount</th>
+                <th style="text-align:right;">Amt</th>
               </tr>
             </thead>
-            <tbody>${linesHtml}</tbody>
+            <tbody>${lines}</tbody>
           </table>
           <div style="border-top:1px dashed #000; padding-top:4px; text-align:right; font-size:14px; font-weight:900;">
             Grand Total: ₹${parseFloat(b.grandTotal || b.amount || 0).toFixed(2)}
@@ -995,9 +994,9 @@
 
     function triggerDirectPrint(customData) {
       const data = customData || lastGeneratedBillData;
-      if (!data) { alert("No bill data available to print!"); return; }
+      if (!data) { alert("No bill data to print!"); return; }
       const container = document.getElementById("printableReceipt");
-      container.innerHTML = buildPrintableReceiptHtml(data);
+      container.innerHTML = buildReceiptHtml(data);
       container.style.display = "block";
       window.print();
       container.style.display = "none";
@@ -1005,13 +1004,13 @@
 
     function viewDownloadPdf(customData) {
       const data = customData || lastGeneratedBillData;
-      if (!data) { alert("No bill data available!"); return; }
+      if (!data) { alert("No bill data to view!"); return; }
       const w = window.open("", "_blank");
-      w.document.write(`<html><head><title>${data.docNo}</title></head><body>${buildPrintableReceiptHtml(data)}</body></html>`);
+      w.document.write(`<html><head><title>${data.docNo}</title></head><body>${buildReceiptHtml(data)}</body></html>`);
       w.document.close();
     }
 
-    // Exact WhatsApp Share with Complete Store Address
+    // Exact WhatsApp Share (Correct Amount & Payment Mode)
     function shareBillOnWhatsApp(customData) {
       const d = customData || lastGeneratedBillData;
       if (!d) return;
@@ -1038,7 +1037,6 @@
       checkFormState();
     }
 
-    // View Switcher
     function switchView(view) {
       document.querySelectorAll(".nav-tab-btn").forEach(b => b.classList.remove("active"));
       document.getElementById("viewBilling").style.display = (view === 'billing') ? 'block' : 'none';
@@ -1058,7 +1056,7 @@
       if (view === 'stock') document.getElementById("tabStockBtn").classList.add("active");
     }
 
-    // History Lookup (Exact Working Buttons)
+    // History Lookup
     async function loadBillHistory() {
       const container = document.getElementById("historyTableContainer");
       container.innerHTML = "Fetching invoices from Google Sheets...";
