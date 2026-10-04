@@ -137,7 +137,6 @@
 
     @media (max-width: 820px) {
       body { padding: 8px 10px; }
-      .brand-title { font-size: 16px; }
       .row-5, .row-2, .row-item-top, .row-item-btm { grid-template-columns: 1fr; gap: 8px; }
       .top-nav { flex-direction: column; align-items: flex-start; }
       .nav-actions { width: 100%; justify-content: space-between; }
@@ -297,7 +296,7 @@
     .btn-view-pdf { background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
     .btn-next-bill { background: #f1f5f9; color: #0f172a; border: 1.5px solid #cbd5e1; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
 
-    /* Clean Thermal Receipt Print Style */
+    /* Exact Bill Print Layout */
     @media print {
       body * { visibility: hidden; }
       #printableReceipt, #printableReceipt * { visibility: visible; }
@@ -309,14 +308,14 @@
         display: block !important;
         background: #fff;
         color: #000;
-        padding: 10px;
+        padding: 15px;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Hidden Container for Instant Receipt Printing -->
+  <!-- Hidden Container for Exact Bill Printing -->
   <div id="printableReceipt" style="display:none;"></div>
 
   <!-- Bill Success Modal -->
@@ -618,6 +617,7 @@
     let sessionTimerInterval = null;
     let lastGeneratedBillData = null;
     let cachedBillHistory = [];
+    let lastPromptedHsnItem = "";
 
     window.onload = function() {
       const now = new Date();
@@ -690,7 +690,7 @@
       return JSON.parse(await res.text());
     }
 
-    // Refresh Data & Load All 450+ Items from 'Items' Sheet
+    // Refresh Data from 'Items' Sheet
     async function refreshAppData() {
       const btn = document.getElementById("btnRefresh");
       btn.innerText = "⏳ Syncing...";
@@ -718,6 +718,58 @@
       setTimeout(() => { btn.innerText = "🔄 Refresh"; }, 1500);
     }
 
+    // ⚡ 1ST POINT: 3-STEP HSN RESOLVER (SHEET -> CATEGORY -> CONFIRMATION)
+    function detectHsnFromName(name) {
+      var n = (name || "").toLowerCase().trim();
+      if (!n) return "";
+      if (n.includes("labour") || n.includes("service") || n.includes("repair") || n.includes("fitting") || n.includes("installation")) return "998519";
+      if (n.includes("fan") || n.includes("exhaust") || n.includes("cooler") || n.includes("blower")) return "8414";
+      if (n.includes("wire") || n.includes("cable") || n.includes("cord") || n.includes("cat6")) return "8544";
+      if (n.includes("switch") || n.includes("socket") || n.includes("indicator") || n.includes("mcb") || n.includes("rccb") || n.includes("regulator") || n.includes("dimmer") || n.includes("roma") || n.includes("anchor") || n.includes("modular") || n.includes("plug") || n.includes("holder")) return "8536";
+      if (n.includes("board") || n.includes("gang box") || n.includes("sheet") || n.includes("plate") || n.includes("panel") || n.includes("db box")) return "8538";
+      if (n.includes("led") || n.includes("bulb") || n.includes("tube") || n.includes("light") || n.includes("lamp") || n.includes("batten") || n.includes("downlight") || n.includes("cob")) return "8539";
+      if (n.includes("iron") || n.includes("press") || n.includes("geyser") || n.includes("heater") || n.includes("water heater") || n.includes("rod") || n.includes("element")) return "8516";
+      if (n.includes("tape") || n.includes("steel grip")) return "3919";
+      if (n.includes("pipe") || n.includes("casing") || n.includes("conduit")) return "3917";
+      return "";
+    }
+
+    function resolveSmartHsn(itemName, targetHsnInputId, allowPopup = true) {
+      const cleanName = (itemName || "").trim();
+      const hsnInput = document.getElementById(targetHsnInputId);
+      if (!cleanName) { hsnInput.value = ""; return ""; }
+
+      // 1. Sheet Priority
+      const sheetMatch = cachedItems.find(x => x.name.toLowerCase() === cleanName.toLowerCase());
+      if (sheetMatch && sheetMatch.hsn && sheetMatch.hsn !== "-" && sheetMatch.hsn.trim() !== "") {
+        hsnInput.value = sheetMatch.hsn.trim();
+        return sheetMatch.hsn.trim();
+      }
+
+      // 2. Product-wise Category
+      const catHsn = detectHsnFromName(cleanName);
+      if (catHsn) {
+        hsnInput.value = catHsn;
+        return catHsn;
+      }
+
+      // 3. New Item Confirmation Popup
+      if (allowPopup && lastPromptedHsnItem !== cleanName.toLowerCase()) {
+        lastPromptedHsnItem = cleanName.toLowerCase();
+        const userChoice = confirm(`"${cleanName}" is a new item without a matched HSN category.\n\nDo you want to assign default general electrical HSN (8538)?\n\n[OK = Yes (8538)]\n[Cancel = No (Enter Manually)]`);
+        if (userChoice) {
+          hsnInput.value = "8538";
+          return "8538";
+        } else {
+          hsnInput.value = "";
+          setTimeout(() => { hsnInput.focus(); }, 100);
+          return "";
+        }
+      }
+
+      return "";
+    }
+
     function handleItemDirectClick() {
       const input = document.getElementById("itemSearch");
       if (input.value.trim() !== "") lastSelectedBillingItem = input.value;
@@ -728,8 +780,12 @@
     function handleItemBlur() {
       setTimeout(() => {
         const input = document.getElementById("itemSearch");
-        if (input.value.trim() === "" && lastSelectedBillingItem) {
+        const val = input.value.trim();
+        if (val === "" && lastSelectedBillingItem) {
           input.value = lastSelectedBillingItem;
+          resolveSmartHsn(lastSelectedBillingItem, "itemHsn", false);
+        } else if (val !== "") {
+          resolveSmartHsn(val, "itemHsn", true);
         }
       }, 250);
     }
@@ -738,6 +794,9 @@
       const val = document.getElementById("itemSearch").value.trim().toLowerCase();
       const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(val));
       renderBillingDropdown(filtered);
+
+      const auto = detectHsnFromName(val);
+      if (auto) document.getElementById("itemHsn").value = auto;
 
       if (val.includes("labour") || val.includes("service")) {
         currentItemObj = { name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
@@ -773,7 +832,8 @@
       lastSelectedBillingItem = item.name;
       document.getElementById("billingItemMenu").style.display = "none";
       currentItemObj = item;
-      document.getElementById("itemHsn").value = (item.hsn && item.hsn !== "-") ? item.hsn : "8538";
+      
+      resolveSmartHsn(item.name, "itemHsn", true);
 
       const isLabour = item.name.toLowerCase().includes("labour") || item.name.toLowerCase().includes("service");
       const rateField = document.getElementById("itemRate");
@@ -827,6 +887,9 @@
       const name = document.getElementById("itemSearch").value.trim();
       if (!name) { alert("Please select an item from inventory list!"); return; }
 
+      let hsn = document.getElementById("itemHsn").value.trim();
+      if (!hsn) hsn = resolveSmartHsn(name, "itemHsn", true) || "-";
+
       const calc = calculateItemTotal();
       let rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
       let baseRate = parseFloat(rVal) || 0;
@@ -834,8 +897,8 @@
 
       billItems.push({
         name: name,
-        serialNo: document.getElementById("itemSerial").value.trim(),
-        hsn: document.getElementById("itemHsn").value.trim() || "-",
+        serialNo: document.getElementById("itemSerial").value.trim() || "-",
+        hsn: hsn || "-",
         baseRate: baseRate,
         discount: parseFloat(document.getElementById("itemDisc").value) || 0,
         gstPerPc: calc.gstPerPc,
@@ -867,7 +930,7 @@
         totalUnits += it.qty;
         tbody.innerHTML += `
           <tr>
-            <td><b>${it.name}</b>${it.serialNo ? `<br><small style="color:#d97706;">${it.serialNo}</small>` : ''}</td>
+            <td><b>${it.name}</b>${it.serialNo && it.serialNo !== '-' ? `<br><small style="color:#d97706;">${it.serialNo}</small>` : ''}</td>
             <td>${it.hsn}</td>
             <td>₹${it.baseRate.toFixed(2)}</td>
             <td style="color:#059669;">-₹${it.discount.toFixed(2)}</td>
@@ -904,7 +967,7 @@
     async function submitBillToBackend() {
       const btn = document.getElementById("btnSubmitBill");
       btn.disabled = true;
-      btn.innerText = "⏳ Saving Bill...";
+      btn.innerText = "⏳ Generating Bill & Drive PDF...";
 
       const totalAmt = billItems.reduce((acc, c) => acc + c.total, 0);
       const payload = {
@@ -930,11 +993,13 @@
             docNo: res.docNo,
             customerName: payload.customerName,
             phone: payload.phone,
+            address: payload.address,
             paymentMode: payload.paymentMode,
             grandTotal: totalAmt,
             amount: totalAmt,
             date: payload.billDate,
-            items: JSON.parse(JSON.stringify(billItems))
+            items: JSON.parse(JSON.stringify(billItems)),
+            pdfUrl: res.pdfUrl || ""
           };
           document.getElementById("lblSuccessDocNo").innerText = `Doc No: ${res.docNo} | Amount: ₹${totalAmt.toFixed(2)}`;
           document.getElementById("billSuccessModal").style.display = "flex";
@@ -946,47 +1011,85 @@
       }
     }
 
-    // Direct Receipt HTML Generator
+    // ⚡ 2ND POINT: EXACT RECEIPT TEMPLATE (MATCHING Pritam_7503767810_MLE-INV-2026-044.pdf)
     function buildReceiptHtml(b) {
       if (!b) return "";
       let lines = "";
       const itms = b.items || [];
-      itms.forEach(it => {
+      itms.forEach((it, idx) => {
         lines += `<tr>
-          <td style="padding:4px 0; border-bottom:1px dashed #ccc; font-size:12px;">${it.name}</td>
-          <td style="padding:4px 0; border-bottom:1px dashed #ccc; text-align:center; font-size:12px;">${it.qty || 1}</td>
-          <td style="padding:4px 0; border-bottom:1px dashed #ccc; text-align:right; font-size:12px;">₹${parseFloat(it.total || 0).toFixed(2)}</td>
+          <td style="padding:6px; border:1px solid #000; text-align:center;">${idx + 1}</td>
+          <td style="padding:6px; border:1px solid #000;"><b>${it.name}</b>${it.serialNo && it.serialNo !== '-' ? `<br><small style="color:#555;">${it.serialNo}</small>` : ''}</td>
+          <td style="padding:6px; border:1px solid #000; text-align:center;">${it.hsn || '-'}</td>
+          <td style="padding:6px; border:1px solid #000; text-align:right;">₹${parseFloat(it.finalRate || it.baseRate || (it.total / (it.qty || 1))).toFixed(2)}</td>
+          <td style="padding:6px; border:1px solid #000; text-align:center;">${it.qty || 1}</td>
+          <td style="padding:6px; border:1px solid #000; text-align:right;">₹${parseFloat(it.total || 0).toFixed(2)}</td>
         </tr>`;
       });
 
+      const totalAmt = parseFloat(b.grandTotal || b.amount || 0);
+
       return `
-        <div style="max-width:320px; margin:0 auto; padding:12px; font-family:monospace; line-height:1.4;">
-          <div style="text-align:center; margin-bottom:8px;">
-            <div style="font-size:16px; font-weight:900;">MOON LIGHT ELECTRICALS</div>
-            <div style="font-size:11px;">Sadbhavna Market, Opp. Cleo County Gate No. 3, Sector 121, Noida</div>
-            <div style="font-size:11px;">Ph: 9650897965 / 8860706865</div>
+        <div style="max-width:550px; margin:0 auto; padding:15px; font-family:Helvetica, Arial, sans-serif; font-size:11px; color:#000; line-height:1.35; background:#fff;">
+          <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:8px; margin-bottom:10px;">
+            <div style="font-size:18px; font-weight:bold; letter-spacing:0.5px;">MOONLIGHT ELECTRICALS</div>
+            <div style="font-size:10.5px; font-style:italic; font-weight:bold; margin-bottom:3px;">Brightening Lives, Powering Trust</div>
+            <div style="font-size:10px;">Shop No 1, Sadbhavna Market, Opp. Cleo County Gate No 3,<br>Ghadi Chaukhandi, Sector-121, Noida - 201304 (U.P.)</div>
+            <div style="font-size:10px;">Contact: 9650897965 / 8860706865 / 8860880453 | Email: moonlightelectrical9@gmail.com</div>
           </div>
-          <div style="border-top:1px dashed #000; border-bottom:1px dashed #000; padding:4px 0; margin-bottom:8px; font-size:12px;">
-            <div>Doc No: <b>${b.docNo}</b></div>
-            <div>Date: ${b.date}</div>
-            <div>Customer: ${b.customerName} (${b.phone || '-'})</div>
-            <div>Payment Mode: ${b.paymentMode || 'Cash'}</div>
-          </div>
+          
+          <table style="width:100%; border:none; margin-bottom:8px;">
+            <tr>
+              <td style="width:50%; vertical-align:top; border:none; padding-right:5px;">
+                <div style="border:1px solid #000; padding:6px; font-size:10.5px;">
+                  <b>BUYER / BILLED TO:</b><br>
+                  <b>${b.customerName}</b><br>
+                  ${b.address || 'Sector-121, Noida'}<br>
+                  Contact: ${b.phone || '-'}
+                </div>
+              </td>
+              <td style="width:50%; vertical-align:top; border:none; padding-left:5px;">
+                <div style="border:1px solid #000; padding:6px; font-size:10.5px;">
+                  <b>${(b.docNo && b.docNo.includes('INV')) ? 'RETAIL INVOICE (CASH MEMO)' : 'ESTIMATE QUOTATION'}</b><br>
+                  Doc No: <b>${b.docNo}</b><br>
+                  Date of Issue: <b>${b.date}</b><br>
+                  Payment Mode: <b>${b.paymentMode || 'Cash'}</b><br>
+                  Place of Supply: Uttar Pradesh (09)
+                </div>
+              </td>
+            </tr>
+          </table>
+
           <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
             <thead>
-              <tr style="border-bottom:1px solid #000; font-size:12px;">
-                <th style="text-align:left;">Item</th>
-                <th style="text-align:center;">Qty</th>
-                <th style="text-align:right;">Amt</th>
+              <tr style="background:#f2f2f2;">
+                <th style="padding:6px; border:1px solid #000; width:30px; text-align:center;">#</th>
+                <th style="padding:6px; border:1px solid #000; text-align:left;">ITEM DESCRIPTION</th>
+                <th style="padding:6px; border:1px solid #000; width:65px; text-align:center;">HSN/SAC</th>
+                <th style="padding:6px; border:1px solid #000; width:65px; text-align:right;">RATE</th>
+                <th style="padding:6px; border:1px solid #000; width:45px; text-align:center;">QTY</th>
+                <th style="padding:6px; border:1px solid #000; width:75px; text-align:right;">AMOUNT</th>
               </tr>
             </thead>
             <tbody>${lines}</tbody>
           </table>
-          <div style="border-top:1px dashed #000; padding-top:4px; text-align:right; font-size:14px; font-weight:900;">
-            Grand Total: ₹${parseFloat(b.grandTotal || b.amount || 0).toFixed(2)}
+
+          <div style="border:1px solid #000; padding:6px; font-size:10px; margin-bottom:8px;">
+            <b>BANK & UPI DETAILS:</b><br>
+            • Bank: Kotak Mahindra Bank | A/c Holder Name: SHIVAM CHAUHAN<br>
+            • A/c No: 6413488039 | IFSC: KKBK0000181 | UPI ID: 8860880453@kotak<br>
+            • Goods once sold will be covered strictly as per manufacturer warranty policy.<br>
+            • All disputes are subject to Noida / Gautam Buddha Nagar jurisdiction only.
           </div>
-          <div style="text-align:center; margin-top:12px; font-size:11px;">
-            Thank you for shopping with us!<br>*** Powering Trust ***
+
+          <div style="text-align:right; font-size:14px; font-weight:bold; border-top:1px dashed #000; padding-top:4px; margin-bottom:10px;">
+            GRAND TOTAL: ₹ ${totalAmt.toFixed(2)}
+          </div>
+
+          <div style="text-align:center; font-size:9.5px; border-top:1px solid #000; padding-top:6px;">
+            Thank you for choosing Moon Light Electricals!<br>
+            All electrical products covered under manufacturer warranty. Please keep this invoice safe for warranty claims.<br>
+            <b>THIS IS A COMPUTER-GENERATED DOCUMENT, NO SIGNATURE/STAMP REQUIRED.</b>
           </div>
         </div>
       `;
@@ -994,7 +1097,7 @@
 
     function triggerDirectPrint(customData) {
       const data = customData || lastGeneratedBillData;
-      if (!data) { alert("No bill data to print!"); return; }
+      if (!data) { alert("No bill data available to print!"); return; }
       const container = document.getElementById("printableReceipt");
       container.innerHTML = buildReceiptHtml(data);
       container.style.display = "block";
@@ -1004,21 +1107,28 @@
 
     function viewDownloadPdf(customData) {
       const data = customData || lastGeneratedBillData;
-      if (!data) { alert("No bill data to view!"); return; }
-      const w = window.open("", "_blank");
-      w.document.write(`<html><head><title>${data.docNo}</title></head><body>${buildReceiptHtml(data)}</body></html>`);
-      w.document.close();
+      if (!data) { alert("No bill data available to view!"); return; }
+      if (data.pdfUrl && data.pdfUrl.startsWith("http")) {
+        window.open(data.pdfUrl, '_blank');
+      } else {
+        const w = window.open("", "_blank");
+        w.document.write(`<html><head><title>${data.docNo}</title></head><body>${buildReceiptHtml(data)}</body></html>`);
+        w.document.close();
+      }
     }
 
-    // Exact WhatsApp Share (Correct Amount & Payment Mode)
+    // ⚡ 3RD POINT: WHATSAPP SHARE WITH GOOGLE DRIVE PDF DOWNLOAD LINK
     function shareBillOnWhatsApp(customData) {
       const d = customData || lastGeneratedBillData;
       if (!d) return;
 
       const docWord = (d.docNo && d.docNo.includes("EST")) ? "Estimate" : "Invoice";
       const totalAmt = parseFloat(d.grandTotal || d.amount || 0).toFixed(2);
+      const pdfSection = (d.pdfUrl && d.pdfUrl.startsWith("http")) 
+        ? `\n\n📄 *Download PDF Document:*\n${d.pdfUrl}` 
+        : `\n\n📄 *Download PDF Document:*\n_Invoice backed up in Moon Light Electricals secure cloud_`;
 
-      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Amount: *₹${totalAmt}*\n  • Payment Mode: ${d.paymentMode || 'Cash / Online'}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
+      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Amount: *₹${totalAmt}*\n  • Payment Mode: ${d.paymentMode || 'Cash / Online'}${pdfSection}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
 
       window.open(`https://wa.me/91${d.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
@@ -1056,7 +1166,7 @@
       if (view === 'stock') document.getElementById("tabStockBtn").classList.add("active");
     }
 
-    // History Lookup
+    // Bill History Engine
     async function loadBillHistory() {
       const container = document.getElementById("historyTableContainer");
       container.innerHTML = "Fetching invoices from Google Sheets...";
@@ -1111,7 +1221,7 @@
       container.innerHTML = html;
     }
 
-    // 100% Fixed Udhar Khata (Exact Column F Amount & G Status)
+    // Udhar Khata
     async function renderKhata() {
       const c = document.getElementById("khataListContainer");
       c.innerHTML = "Fetching pending udhar records...";
@@ -1186,12 +1296,20 @@
     function handleStockBlur() {
       setTimeout(() => {
         const input = document.getElementById("stkName");
-        if (input.value.trim() === "" && lastSelectedStockItem) input.value = lastSelectedStockItem;
+        const val = input.value.trim();
+        if (val === "" && lastSelectedStockItem) {
+          input.value = lastSelectedStockItem;
+          resolveSmartHsn(lastSelectedStockItem, "stkHsn", false);
+        } else if (val !== "") {
+          resolveSmartHsn(val, "stkHsn", true);
+        }
       }, 250);
     }
     function onStockSearchInput() {
       const val = document.getElementById("stkName").value.trim().toLowerCase();
       renderStockDropdown(val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(val)));
+      const auto = detectHsnFromName(val);
+      if (auto) document.getElementById("stkHsn").value = auto;
     }
     function renderStockDropdown(items) {
       const menu = document.getElementById("stockItemMenu");
@@ -1204,7 +1322,8 @@
         div.onmousedown = function(e) {
           e.preventDefault();
           document.getElementById("stkName").value = item.name;
-          document.getElementById("stkHsn").value = item.hsn || "8538";
+          lastSelectedStockItem = item.name;
+          resolveSmartHsn(item.name, "stkHsn", true);
           document.getElementById("stkCustRate").value = item.custRate || 0;
           document.getElementById("stkElecRate").value = item.elecRate || 0;
           document.getElementById("stkFamRate").value = item.famRate || 0;
@@ -1220,9 +1339,12 @@
       const qty = parseFloat(document.getElementById("stkQty").value) || 0;
       if (!name || qty <= 0) { alert("Please enter valid item name and quantity!"); return; }
 
+      let hsn = document.getElementById("stkHsn").value.trim();
+      if (!hsn) hsn = resolveSmartHsn(name, "stkHsn", true) || "-";
+
       const data = {
         name: name,
-        hsn: document.getElementById("stkHsn").value.trim() || "8538",
+        hsn: hsn || "-",
         qty: qty,
         custRate: parseFloat(document.getElementById("stkCustRate").value) || 0,
         elecRate: parseFloat(document.getElementById("stkElecRate").value) || 0,
