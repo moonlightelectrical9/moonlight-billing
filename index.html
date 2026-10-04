@@ -295,12 +295,29 @@
     .btn-print-direct { background: #0284c7; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
     .btn-view-pdf { background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
     .btn-next-bill { background: #f1f5f9; color: #0f172a; border: 1.5px solid #cbd5e1; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
+
+    /* Clean Thermal / Receipt Print Styling */
+    @media print {
+      body * { visibility: hidden; }
+      #printableReceipt, #printableReceipt * { visibility: visible; }
+      #printableReceipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        display: block !important;
+        background: #fff;
+        color: #000;
+        padding: 10px;
+        font-family: monospace;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Hidden iframe for instant one-click printer printing -->
-  <iframe id="silentPrintIframe" style="display:none; width:0; height:0;"></iframe>
+  <!-- Direct Printable Receipt Template -->
+  <div id="printableReceipt" style="display:none;"></div>
 
   <!-- Bill Success Modal -->
   <div id="billSuccessModal" style="display: none;">
@@ -312,7 +329,7 @@
       <div class="success-actions">
         <button class="btn-wa-share" onclick="shareBillOnWhatsApp()">📲 Send Invoice on WhatsApp</button>
         <button class="btn-print-direct" onclick="triggerDirectPrint()">🖨️ Print Invoice (Hard Copy)</button>
-        <button class="btn-view-pdf" onclick="viewDownloadPdf()">👁️ View / Download PDF</button>
+        <button class="btn-view-pdf" onclick="viewDownloadPdf()">👁️ View Bill Receipt</button>
         <button class="btn-next-bill" onclick="closeSuccessAndNextBill()">🧾 + Create Next Bill</button>
       </div>
     </div>
@@ -367,7 +384,7 @@
     <!-- 🧾 VIEW 1: BILLING -->
     <div id="viewBilling">
       <div class="alert-box" id="lowStockAlertBox">
-        <b>⚠️ LOW STOCK ALERT:</b>
+        <b>⚠️️ LOW STOCK ALERT:</b>
         <div id="lowStockItemsList" style="margin-top: 4px;"></div>
       </div>
 
@@ -917,7 +934,7 @@
             grandTotal: totalAmt,
             amount: totalAmt,
             date: payload.billDate,
-            pdfUrl: res.pdfUrl || ""
+            items: billItems
           };
           document.getElementById("lblSuccessDocNo").innerText = `Doc No: ${res.docNo} | Amount: ₹${totalAmt.toFixed(2)}`;
           document.getElementById("billSuccessModal").style.display = "flex";
@@ -929,38 +946,80 @@
       }
     }
 
-    // Direct Browser Hard Copy Printing (Fixes 404 Issue)
-    function triggerDirectPrint(customPdfUrl) {
-      const pdf = customPdfUrl || (lastGeneratedBillData ? lastGeneratedBillData.pdfUrl : null);
-      if (pdf && pdf.startsWith("http")) {
-        const iframe = document.getElementById("silentPrintIframe");
-        iframe.src = pdf;
-        iframe.onload = function() { iframe.contentWindow.print(); };
-      } else {
-        window.print();
-      }
+    // Direct Browser Receipt Printing (Fixes 404 & Empty Print Issue)
+    function buildPrintableReceiptHtml(billData) {
+      const b = billData || lastGeneratedBillData;
+      if (!b) return "";
+      let linesHtml = "";
+      const items = b.items || [];
+      items.forEach(it => {
+        linesHtml += `<tr>
+          <td style="padding:4px 0; border-bottom:1px dashed #ccc;">${it.name}</td>
+          <td style="padding:4px 0; border-bottom:1px dashed #ccc; text-align:center;">${it.qty || 1}</td>
+          <td style="padding:4px 0; border-bottom:1px dashed #ccc; text-align:right;">₹${parseFloat(it.total || 0).toFixed(2)}</td>
+        </tr>`;
+      });
+
+      return `
+        <div style="max-width:320px; margin:0 auto; padding:10px; font-family:monospace; font-size:12px; line-height:1.4;">
+          <div style="text-align:center; margin-bottom:8px;">
+            <div style="font-size:16px; font-weight:900;">MOON LIGHT ELECTRICALS</div>
+            <div>Shop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Sector 121, Noida</div>
+            <div>Ph: 9650897965 / 8860706865</div>
+          </div>
+          <div style="border-top:1px dashed #000; border-bottom:1px dashed #000; padding:4px 0; margin-bottom:8px;">
+            <div>Doc No: <b>${b.docNo}</b></div>
+            <div>Date: ${b.date}</div>
+            <div>Customer: ${b.customerName} (${b.phone || '-'})</div>
+            <div>Payment: ${b.paymentMode || 'Cash'}</div>
+          </div>
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:8px;">
+            <thead>
+              <tr style="border-bottom:1px solid #000;">
+                <th style="text-align:left;">Item</th>
+                <th style="text-align:center;">Qty</th>
+                <th style="text-align:right;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>${linesHtml}</tbody>
+          </table>
+          <div style="border-top:1px dashed #000; padding-top:4px; text-align:right; font-size:14px; font-weight:900;">
+            Grand Total: ₹${parseFloat(b.grandTotal || b.amount || 0).toFixed(2)}
+          </div>
+          <div style="text-align:center; margin-top:12px; font-size:11px;">
+            Thank you for shopping with us!<br>*** Powering Trust ***
+          </div>
+        </div>
+      `;
     }
 
-    // View PDF
-    function viewDownloadPdf(customPdfUrl) {
-      const pdf = customPdfUrl || (lastGeneratedBillData ? lastGeneratedBillData.pdfUrl : null);
-      if (pdf && pdf.startsWith("http")) {
-        window.open(pdf, '_blank');
-      } else {
-        alert("Invoice stored directly in Google Sheets. Click 'Print' for physical copy or download.");
-      }
+    function triggerDirectPrint(customData) {
+      const data = customData || lastGeneratedBillData;
+      if (!data) { alert("No bill data available to print!"); return; }
+      const container = document.getElementById("printableReceipt");
+      container.innerHTML = buildPrintableReceiptHtml(data);
+      container.style.display = "block";
+      window.print();
+      container.style.display = "none";
     }
 
-    // Exact WhatsApp Share (Fixes Issue 3: Correct Amount & Payment Mode)
+    function viewDownloadPdf(customData) {
+      const data = customData || lastGeneratedBillData;
+      if (!data) { alert("No bill data available!"); return; }
+      const w = window.open("", "_blank");
+      w.document.write(`<html><head><title>${data.docNo}</title></head><body>${buildPrintableReceiptHtml(data)}</body></html>`);
+      w.document.close();
+    }
+
+    // Exact WhatsApp Share with Complete Store Address
     function shareBillOnWhatsApp(customData) {
       const d = customData || lastGeneratedBillData;
       if (!d) return;
 
       const docWord = (d.docNo && d.docNo.includes("EST")) ? "Estimate" : "Invoice";
       const totalAmt = parseFloat(d.grandTotal || d.amount || 0).toFixed(2);
-      const pdfLink = (d.pdfUrl && d.pdfUrl.startsWith("http")) ? `\n\n📄 *Download PDF Document:*\n${d.pdfUrl}` : "";
 
-      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Amount: *₹${totalAmt}*\n  • Payment Mode: ${d.paymentMode || 'Cash / Online'}${pdfLink}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
+      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Amount: *₹${totalAmt}*\n  • Payment Mode: ${d.paymentMode || 'Cash / Online'}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
 
       window.open(`https://wa.me/91${d.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
@@ -999,7 +1058,7 @@
       if (view === 'stock') document.getElementById("tabStockBtn").classList.add("active");
     }
 
-    // History Lookup (Fixes Issue 4: Safe Re-print & WhatsApp)
+    // History Lookup (Exact Working Buttons)
     async function loadBillHistory() {
       const container = document.getElementById("historyTableContainer");
       container.innerHTML = "Fetching invoices from Google Sheets...";
@@ -1034,17 +1093,7 @@
       }
 
       let html = '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Doc No</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Actions</th></tr></thead><tbody>';
-      records.forEach(r => {
-        const safeData = JSON.stringify({
-          docNo: r.docNo,
-          customerName: r.customerName,
-          phone: r.phone,
-          amount: r.amount,
-          date: r.date,
-          pdfUrl: r.pdfUrl,
-          paymentMode: r.paymentMode || 'Cash'
-        }).replace(/"/g, '&quot;');
-
+      records.forEach((r, idx) => {
         html += `
           <tr>
             <td>${r.date || '-'}</td>
@@ -1053,9 +1102,9 @@
             <td>${r.phone || '-'}</td>
             <td><b>₹${parseFloat(r.amount || 0).toFixed(2)}</b></td>
             <td>
-              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px;" onclick="triggerDirectPrint('${r.pdfUrl || ''}')">🖨️ Re-Print</button>
-              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick='shareBillOnWhatsApp(${safeData})'>📲 WhatsApp</button>
-              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px;" onclick="viewDownloadPdf('${r.pdfUrl || ''}')">👁️ View</button>
+              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px;" onclick='triggerDirectPrint(cachedBillHistory[${idx}])'>🖨️ Re-Print</button>
+              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick='shareBillOnWhatsApp(cachedBillHistory[${idx}])'>📲 WhatsApp</button>
+              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px;" onclick='viewDownloadPdf(cachedBillHistory[${idx}])'>👁️ View</button>
             </td>
           </tr>
         `;
@@ -1064,7 +1113,7 @@
       container.innerHTML = html;
     }
 
-    // 100% Fixed Udhar Khata (Fixes Issue 5: Shows Correct Pending Amount & Actions)
+    // 100% Fixed Udhar Khata (Exact Column F Amount & G Status)
     async function renderKhata() {
       const c = document.getElementById("khataListContainer");
       c.innerHTML = "Fetching pending udhar records...";
@@ -1100,7 +1149,7 @@
                 <td><b style="color:${isPending ? '#d97706' : '#059669'}">${isPending ? 'Pending' : 'Paid'}</b></td>
                 <td>
                   ${isPending ? `<button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick="sendKhataReminder('${r.docNo}', '${r.customerName}', '${r.phone}', ${r.amount}, '${r.date}')">📲 WhatsApp</button>` : ''}
-                  ${isPending ? `<button class="btn-add" style="display:inline-block; width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="markPaid('${r.docNo}')">✓ Mark as Paid</button>` : '<span style="color:#059669; font-weight:800;">✓ Settled</span>'}
+                  ${isPending ? `<button class="btn-add" style="display:inline-block; width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="markPaid('${r.docNo}')">✓ Mark as Paid</button>` : '<span style="color:#059669; font-weight:800;">✓ Paid</span>'}
                 </td>
               </tr>
             `;
