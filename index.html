@@ -49,7 +49,7 @@
     .user-pill { background: #e2e8f0; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: #334155; }
     .btn-logout { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 800; cursor: pointer; }
 
-    /* Layout Structure (Hidden until Login) */
+    /* Main Container (Hidden completely until login) */
     #mainAppWrapper { display: flex; flex-direction: column; flex: 1; width: 100%; }
     .main-wrapper { display: flex; flex: 1; min-height: calc(100vh - 65px); }
 
@@ -97,7 +97,7 @@
       .sub-menu { padding-left: 0; flex-direction: row; flex-wrap: wrap; }
     }
 
-    /* Cards & Form Components */
+    /* Cards & Components */
     .card { background: #ffffff; border: 1.5px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 14px; }
     .alert-banner { background: var(--danger-bg); border: 1.5px solid #fca5a5; border-radius: 8px; padding: 10px 14px; color: var(--danger); font-size: 12.5px; margin-bottom: 14px; display: none; }
     
@@ -168,7 +168,7 @@
     .btn-checkout { background: var(--accent); color: #000; border: none; padding: 13px; border-radius: 6px; font-size: 14.5px; font-weight: 900; width: 100%; cursor: pointer; }
     .btn-checkout:disabled { background: #e2e8f0 !important; color: #94a3b8 !important; cursor: not-allowed; }
 
-    /* SOLID DARK BACKGROUND FOR LOGIN (NO BACKGROUND VISIBLE) */
+    /* SOLID DARK BACKGROUND FOR LOGIN */
     #authOverlay {
       position: fixed;
       inset: 0;
@@ -194,7 +194,7 @@
       display: inline-block;
     }
 
-    /* Exact Fixed Print Styling */
+    /* Fixed Bottom Invoice Print Layout */
     @media print {
       body * { visibility: hidden; }
       #printableInvoice, #printableInvoice * { visibility: visible; }
@@ -216,7 +216,7 @@
   <!-- Hidden Container for Exact Invoice Print -->
   <div id="printableInvoice" style="display:none;"></div>
 
-  <!-- 1. AUTH OVERLAY (SOLID OPAQUE - NO DASHBOARD VISIBLE BEHIND) -->
+  <!-- 1. AUTH OVERLAY (SOLID OPAQUE - ZERO DASHBOARD VISIBLE) -->
   <div id="authOverlay" style="display: flex;">
     <div class="auth-box">
       <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
@@ -234,10 +234,10 @@
         </div>
         <div id="pwdErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
         
-        <button type="button" class="btn-checkout" id="btnLoginWithPwd" style="background:#0284c7; color:#fff;">🔐 LOGIN WITH PASSWORD</button>
+        <button type="button" class="btn-checkout" id="btnLoginWithPwd" onclick="doPasswordLogin()" style="background:#0284c7; color:#fff;">🔐 LOGIN WITH PASSWORD</button>
         
         <div style="margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
-          <button type="button" class="login-toggle-btn" onclick="switchToOtpMode()">Or Login with WhatsApp OTP ➔</button>
+          <button type="button" class="login-toggle-btn" onclick="showOtpScreen()">Or Login with WhatsApp OTP ➔</button>
         </div>
       </div>
 
@@ -249,10 +249,10 @@
         </div>
         <div id="loginErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
         
-        <button type="button" class="btn-checkout" id="btnSendOtp" onclick="sendOtpFast()">📲 SEND OTP ON WHATSAPP</button>
+        <button type="button" class="btn-checkout" id="btnSendOtp" onclick="doSendOtp()">📲 SEND OTP ON WHATSAPP</button>
         
         <div style="margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
-          <button type="button" class="login-toggle-btn" onclick="switchToPasswordMode()">Back to Login with Password ➔</button>
+          <button type="button" class="login-toggle-btn" onclick="showPasswordScreen()">Back to Login with Password ➔</button>
         </div>
       </div>
 
@@ -260,12 +260,12 @@
       <div id="stepOtp" style="display: none;">
         <div style="font-size: 12px; color: #475569; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone"></b></div>
         <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;">
-        <button type="button" class="btn-checkout" onclick="verifyOtpFast()" style="background:#10b981; color:#fff;">VERIFY & LOGIN</button>
+        <button type="button" class="btn-checkout" onclick="doVerifyOtp()" style="background:#10b981; color:#fff;">VERIFY & LOGIN</button>
         <div style="margin-top: 14px;">
           <a id="waDirectBtn" href="#" target="_blank" style="font-size: 12px; color: #2563eb; font-weight: bold; text-decoration: underline;">Open WhatsApp chat for OTP ➔</a>
         </div>
         <div style="margin-top: 10px;">
-          <button type="button" class="login-toggle-btn" onclick="switchToPasswordMode()">Cancel & Login with Password</button>
+          <button type="button" class="login-toggle-btn" onclick="showPasswordScreen()">Cancel & Login with Password</button>
         </div>
       </div>
     </div>
@@ -296,7 +296,7 @@
     </div>
   </div>
 
-  <!-- 4. MAIN APPLICATION WRAPPER (100% HIDDEN UNTIL LOGGED IN) -->
+  <!-- 4. MAIN APPLICATION WRAPPER (HIDDEN UNTIL LOGIN SUCCESS) -->
   <div id="mainAppWrapper" style="display: none;">
     <!-- TOP BAR -->
     <header class="top-header">
@@ -330,7 +330,6 @@
       </aside>
 
       <main class="content-area">
-        <!-- Low Inventory Banner -->
         <div class="alert-banner" id="lowStockAlertBox">
           <b>⚠️ LOW INVENTORY ALERT:</b>
           <div id="lowStockItemsList" style="margin-top: 4px;"></div>
@@ -697,8 +696,27 @@
       "9264923954": { name: "Raja", role: "Staff", pin: "1234" }
     };
 
-    let currentUser = JSON.parse(localStorage.getItem("mle_user")) || null;
-    let cachedItems = JSON.parse(localStorage.getItem("mle_items")) || [];
+    // Safe Boot: Clear corrupted localStorage if any
+    let currentUser = null;
+    try {
+      const stored = localStorage.getItem("mle_user");
+      if (stored && stored.startsWith("{")) {
+        currentUser = JSON.parse(stored);
+      } else {
+        localStorage.removeItem("mle_user");
+      }
+    } catch(e) {
+      localStorage.removeItem("mle_user");
+    }
+
+    let cachedItems = [];
+    try {
+      const itemsStored = localStorage.getItem("mle_items");
+      if (itemsStored && itemsStored.startsWith("[")) {
+        cachedItems = JSON.parse(itemsStored);
+      }
+    } catch(e) {}
+
     let billItems = [];
     let currentItemObj = null;
     let lastGeneratedBillData = null;
@@ -729,25 +747,11 @@
       }
     }
 
-    // Direct Event Attachment on DOMContentLoaded
-    document.addEventListener("DOMContentLoaded", function() {
+    // Direct Boot
+    window.addEventListener("load", function() {
       const now = new Date();
       const bField = document.getElementById("billDate");
       if (bField) bField.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-
-      // Attach direct click to Login button
-      const btnPwd = document.getElementById("btnLoginWithPwd");
-      if (btnPwd) {
-        btnPwd.onclick = executePasswordLogin;
-      }
-
-      // Enter key support on password field
-      const pwdInput = document.getElementById("loginPassword");
-      if (pwdInput) {
-        pwdInput.addEventListener("keypress", function(e) {
-          if (e.key === "Enter") executePasswordLogin();
-        });
-      }
 
       // Check current login state
       if (!currentUser) {
@@ -761,6 +765,7 @@
     });
 
     function initSession() {
+      if (!currentUser) return;
       document.getElementById("lblUser").innerText = `${currentUser.name} (${currentUser.role})`;
       refreshAppData();
       startSessionTimer();
@@ -799,8 +804,8 @@
       location.reload();
     }
 
-    /* 🔐 DIRECT PASSWORD LOGIN (GUARANTEED ZERO-BLOCK) */
-    function executePasswordLogin() {
+    /* 🔐 1. BULLETPROOF DIRECT PASSWORD LOGIN */
+    function doPasswordLogin() {
       const phoneInput = document.getElementById("pwdLoginPhone").value.trim().replace(/\D/g, '');
       const phone = phoneInput.slice(-10);
       const pwd = document.getElementById("loginPassword").value.trim();
@@ -821,13 +826,12 @@
       err.style.display = "none";
       const user = KNOWN_USERS[phone] || { name: "Varun Sharma (Owner)", role: "Admin", pin: "1234" };
 
-      // Accept Default 1234 or configured PIN
       if (pwd === user.pin || pwd === "1234" || pwd === "8860") {
         currentUser = { name: user.name, phone: phone, role: user.role };
         localStorage.setItem("mle_user", JSON.stringify(currentUser));
         localStorage.setItem("mle_login_time", new Date().getTime());
 
-        // HIDE LOGIN & SHOW WELCOME
+        // HIDE LOGIN & SHOW WELCOME MODAL
         document.getElementById("authOverlay").style.display = "none";
         document.getElementById("lblWelcomeUser").innerText = currentUser.name;
         document.getElementById("welcomeModal").style.display = "flex";
@@ -843,20 +847,20 @@
       initSession();
     }
 
-    function switchToOtpMode() {
+    function showOtpScreen() {
       document.getElementById("stepPasswordMode").style.display = "none";
       document.getElementById("stepPhoneMode").style.display = "block";
       document.getElementById("stepOtp").style.display = "none";
     }
 
-    function switchToPasswordMode() {
+    function showPasswordScreen() {
       document.getElementById("stepPasswordMode").style.display = "block";
       document.getElementById("stepPhoneMode").style.display = "none";
       document.getElementById("stepOtp").style.display = "none";
     }
 
-    /* 📲 WHATSAPP OTP ENGINE */
-    function sendOtpFast() {
+    /* 📲 2. WHATSAPP OTP */
+    function doSendOtp() {
       const phoneInput = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
       const phone = phoneInput.slice(-10);
       const err = document.getElementById("loginErr");
@@ -886,7 +890,7 @@
       try { window.open(waUrl, '_blank'); } catch(e) {}
     }
 
-    function verifyOtpFast() {
+    function doVerifyOtp() {
       const enteredOtp = document.getElementById("loginOtp").value.trim();
       const savedOtp = localStorage.getItem("mle_active_otp");
       const phone = localStorage.getItem("mle_active_phone") || "8860706865";
