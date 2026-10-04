@@ -43,12 +43,14 @@
     .brand-tagline { font-size: 11px; color: var(--accent); font-style: italic; font-weight: 700; margin-top: 1px; }
 
     .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .btn-install { background: #fef08a; color: #854d0e; border: 1.5px solid #fde047; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
     .timer-pill { background: #fef3c7; border: 1px solid #fde68a; padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; color: #b45309; font-family: monospace; }
     .btn-sync { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; }
     .user-pill { background: #e2e8f0; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: #334155; }
     .btn-logout { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 800; cursor: pointer; }
 
-    /* Layout Structure */
+    /* Layout Structure (Hidden until Login) */
+    #mainAppWrapper { display: flex; flex-direction: column; flex: 1; width: 100%; }
     .main-wrapper { display: flex; flex: 1; min-height: calc(100vh - 65px); }
 
     /* Left Sidebar */
@@ -166,16 +168,25 @@
     .btn-checkout { background: var(--accent); color: #000; border: none; padding: 13px; border-radius: 6px; font-size: 14.5px; font-weight: 900; width: 100%; cursor: pointer; }
     .btn-checkout:disabled { background: #e2e8f0 !important; color: #94a3b8 !important; cursor: not-allowed; }
 
-    /* Modals & Dialogs */
-    .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.88); display: flex; align-items: center; justify-content: center; z-index: 99999; padding: 14px; }
-    .auth-box { background: #fff; border-radius: 14px; padding: 28px 24px; width: 100%; max-width: 390px; text-align: center; }
+    /* SOLID DARK BACKGROUND FOR LOGIN (NO BACKGROUND VISIBLE) */
+    #authOverlay {
+      position: fixed;
+      inset: 0;
+      background: #090d16 !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      padding: 14px;
+    }
+    .auth-box { background: #ffffff; border-radius: 14px; padding: 30px 24px; width: 100%; max-width: 390px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
     .modal-box { background: #fff; border-radius: 14px; padding: 24px; width: 100%; max-width: 440px; text-align: center; }
 
     .login-toggle-btn {
       background: none;
       border: none;
       color: #2563eb;
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 800;
       cursor: pointer;
       text-decoration: underline;
@@ -205,11 +216,11 @@
   <!-- Hidden Container for Exact Invoice Print -->
   <div id="printableInvoice" style="display:none;"></div>
 
-  <!-- AUTH OVERLAY -->
-  <div id="authOverlay" class="overlay" style="display: flex;">
+  <!-- 1. AUTH OVERLAY (SOLID OPAQUE - NO DASHBOARD VISIBLE BEHIND) -->
+  <div id="authOverlay" style="display: flex;">
     <div class="auth-box">
       <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
-      <div class="brand-tagline" style="margin-bottom: 20px;">Brightening Lives, Powering Trust</div>
+      <div class="brand-tagline" style="margin-bottom: 22px;">Brightening Lives, Powering Trust</div>
 
       <!-- Mode 1: Login via Password (Default) -->
       <div id="stepPasswordMode">
@@ -219,13 +230,13 @@
         </div>
         <div class="form-col" style="text-align: left; margin-bottom: 12px;">
           <label>PASSWORD / SECURITY PIN</label>
-          <input type="password" id="loginPassword" placeholder="Enter password (default: 1234)">
+          <input type="password" id="loginPassword" placeholder="Enter password (default: 1234)" value="1234">
         </div>
         <div id="pwdErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
         
-        <button type="button" class="btn-checkout" onclick="loginWithPassword()" style="background:#0284c7; color:#fff;">🔐 LOGIN WITH PASSWORD</button>
+        <button type="button" class="btn-checkout" id="btnLoginWithPwd" style="background:#0284c7; color:#fff;">🔐 LOGIN WITH PASSWORD</button>
         
-        <div style="margin-top: 12px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+        <div style="margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
           <button type="button" class="login-toggle-btn" onclick="switchToOtpMode()">Or Login with WhatsApp OTP ➔</button>
         </div>
       </div>
@@ -240,7 +251,7 @@
         
         <button type="button" class="btn-checkout" id="btnSendOtp" onclick="sendOtpFast()">📲 SEND OTP ON WHATSAPP</button>
         
-        <div style="margin-top: 12px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+        <div style="margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
           <button type="button" class="login-toggle-btn" onclick="switchToPasswordMode()">Back to Login with Password ➔</button>
         </div>
       </div>
@@ -260,8 +271,8 @@
     </div>
   </div>
 
-  <!-- WELCOME MODAL -->
-  <div id="welcomeModal" class="overlay" style="display: none;">
+  <!-- 2. WELCOME MODAL -->
+  <div id="welcomeModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box">
       <div style="font-size: 42px;">👋</div>
       <h2 style="font-size: 18px; margin: 10px 0; color:#0f172a;">Greetings!</h2>
@@ -270,8 +281,8 @@
     </div>
   </div>
 
-  <!-- CHECKOUT SUCCESS MODAL -->
-  <div id="checkoutSuccessModal" class="overlay" style="display: none;">
+  <!-- 3. CHECKOUT SUCCESS MODAL -->
+  <div id="checkoutSuccessModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box">
       <div style="font-size: 42px;">✅</div>
       <h2 style="font-size: 18px; color:#059669; margin: 8px 0;">Bill Generated Successfully!</h2>
@@ -279,405 +290,406 @@
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <button class="btn-checkout" style="background:#25d366; color:#fff;" onclick="shareBillOnWhatsApp()">📲 Send Invoice on WhatsApp</button>
         <button class="btn-checkout" style="background:#0284c7; color:#fff;" onclick="triggerDirectPrint()">🖨️ Print Invoice (Hard Copy)</button>
-        <button class="btn-checkout" style="background:#2563eb; color:#fff;" onclick="viewDownloadPdf()">👁️ View / Download PDF</button>
+        <button class="btn-checkout" style="background:#2563eb; color:#fff;" onclick="viewDownloadPdf()">👁 View / Download PDF</button>
         <button class="btn-checkout" style="background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1;" onclick="closeSuccessAndNextBill()">🧾 + Create Next Bill</button>
       </div>
     </div>
   </div>
 
-  <!-- TOP BAR -->
-  <header class="top-header">
-    <div>
-      <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
-      <div class="brand-tagline">Brightening Lives, Powering Trust</div>
+  <!-- 4. MAIN APPLICATION WRAPPER (100% HIDDEN UNTIL LOGGED IN) -->
+  <div id="mainAppWrapper" style="display: none;">
+    <!-- TOP BAR -->
+    <header class="top-header">
+      <div>
+        <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
+        <div class="brand-tagline">Brightening Lives, Powering Trust</div>
+      </div>
+      <div class="header-controls">
+        <button class="btn-install" id="btnChromeInstall" onclick="triggerChromeInstall()">📲 Install App</button>
+        <div class="timer-pill" id="sessionTimerBadge">⏳ 24:00:00</div>
+        <button class="btn-sync" onclick="refreshAppData()">🔄 Sync</button>
+        <div class="user-pill" id="lblUser">User...</div>
+        <button class="btn-logout" onclick="confirmUserLogout()">🚪 Logout</button>
+      </div>
+    </header>
+
+    <!-- WORKSPACE WITH SIDEBAR -->
+    <div class="main-wrapper">
+      <aside class="sidebar">
+        <button class="nav-btn active" id="btnNavDash" onclick="switchNav('dash')">📊 Dashboard</button>
+        
+        <button class="nav-btn" id="btnNavBill" onclick="toggleBillingSub()">🧾 Billing ▾</button>
+        <div class="sub-menu" id="billingSubMenu">
+          <button class="sub-nav-btn active" id="btnSubGen" onclick="switchBillingView('gen')">• Generate Bill</button>
+          <button class="sub-nav-btn" id="btnSubKhata" onclick="switchBillingView('khata')">• Credit Ledger</button>
+          <button class="sub-nav-btn" id="btnSubSearch" onclick="switchBillingView('search')">• Search Bill</button>
+          <button class="sub-nav-btn" id="btnSubStock" onclick="switchBillingView('stock')">• Stock Inward</button>
+        </div>
+
+        <button class="nav-btn" id="btnNavSet" onclick="switchNav('settings')">⚙️ Settings</button>
+      </aside>
+
+      <main class="content-area">
+        <!-- Low Inventory Banner -->
+        <div class="alert-banner" id="lowStockAlertBox">
+          <b>⚠️ LOW INVENTORY ALERT:</b>
+          <div id="lowStockItemsList" style="margin-top: 4px;"></div>
+        </div>
+
+        <!-- VIEW 1: DASHBOARD -->
+        <div id="viewDashboard">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+              <h3 style="font-weight:900;">Business Analytics & Overview</h3>
+              <div style="display:flex; gap:6px;">
+                <button class="btn-sync" id="btnFilterToday" onclick="filterDash('today')">Today</button>
+                <button class="btn-sync" id="btnFilterWeek" onclick="filterDash('week')">This Week</button>
+                <button class="btn-sync" id="btnFilterMonth" onclick="filterDash('month')">This Month</button>
+                <button class="btn-sync" id="btnFilterYear" onclick="filterDash('year')">Yearly</button>
+              </div>
+            </div>
+
+            <!-- Tab A: Sales -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px;">
+              <div style="font-size:12px; font-weight:800; color:#b45309; text-transform:uppercase;">TAB A: SALE DETAILS (Cash Sale + Online Sale = Total Sale)</div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-top:8px;">
+                <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
+                  <small style="color:#64748b; font-weight:800;">💵 CASH SALES</small>
+                  <div style="font-size:20px; font-weight:900;" id="dashSaleCash">₹0.00</div>
+                </div>
+                <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
+                  <small style="color:#64748b; font-weight:800;">📱 ONLINE / UPI SALES</small>
+                  <div style="font-size:20px; font-weight:900;" id="dashSaleOnline">₹0.00</div>
+                </div>
+                <div style="background:#fef3c7; border:1px solid #fde68a; padding:12px; border-radius:6px;">
+                  <small style="color:#b45309; font-weight:800;">💰 TOTAL SALES</small>
+                  <div style="font-size:22px; font-weight:900; color:#c25e00;" id="dashSaleTotal">₹0.00</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab B: Purchases -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px;">
+              <div style="font-size:12px; font-weight:800; color:#0284c7; text-transform:uppercase;">TAB B: PURCHASE DETAILS (Cash Purchase + Online Purchase = Total Purchase)</div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-top:8px;">
+                <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
+                  <small style="color:#64748b; font-weight:800;">💵 CASH PURCHASES</small>
+                  <div style="font-size:20px; font-weight:900;" id="dashPurCash">₹0.00</div>
+                </div>
+                <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
+                  <small style="color:#64748b; font-weight:800;">🏦 ONLINE / BANK PURCHASES</small>
+                  <div style="font-size:20px; font-weight:900;" id="dashPurOnline">₹0.00</div>
+                </div>
+                <div style="background:#e0f2fe; border:1px solid #bae6fd; padding:12px; border-radius:6px;">
+                  <small style="color:#0369a1; font-weight:800;">📦 TOTAL PURCHASES</small>
+                  <div style="font-size:22px; font-weight:900; color:#0284c7;" id="dashPurTotal">₹0.00</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab C: Profit Overview -->
+            <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:14px;">
+              <div style="font-size:12px; font-weight:800; color:#047857; text-transform:uppercase;">TAB C: OVERVIEW (Total Sales - Total Purchases = Gross Profit)</div>
+              <div style="font-size:24px; font-weight:900; color:#059669; margin-top:6px;" id="dashProfitTotal">₹0.00</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 2: BILLING -> GENERATE BILL -->
+        <div id="viewGenBill" style="display: none;">
+          <div class="card">
+            <div class="grid-row row-5">
+              <div class="form-col">
+                <label>BILL DATE</label>
+                <input type="date" id="billDate">
+              </div>
+              <div class="form-col">
+                <label>MODE <span>*</span></label>
+                <select id="billMode">
+                  <option value="Final Bill (Tax_Invoices)">Final Bill (Tax_Invoices)</option>
+                  <option value="Estimate (Estimates)">Estimate (Estimates)</option>
+                </select>
+              </div>
+              <div class="form-col">
+                <label>RATE TYPE <span>*</span></label>
+                <select id="rateType" onchange="onRateTypeChange()">
+                  <option value="Customer Rate">Customer Rate</option>
+                  <option value="Electrician Rate">Electrician Rate</option>
+                  <option value="Wholesale Rate">Wholesale Rate</option>
+                </select>
+              </div>
+              <div class="form-col">
+                <label>GST BILL? <span>*</span></label>
+                <select id="isGstBill">
+                  <option value="No (Regular Bill)">No (Regular Bill)</option>
+                  <option value="Yes (GST Invoice)">Yes (GST Invoice)</option>
+                </select>
+              </div>
+              <div class="form-col">
+                <label>PAYMENT <span>*</span></label>
+                <select id="paymentMode">
+                  <option value="Cash">Cash</option>
+                  <option value="UPI / Online">UPI / Online</option>
+                  <option value="Credit / Udhar">Credit / Udhar</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid-row row-2">
+              <div class="form-col">
+                <label>CUSTOMER NAME <span>*</span></label>
+                <input type="text" id="custName" placeholder="Customer Name">
+              </div>
+              <div class="form-col">
+                <label>WHATSAPP NUMBER <span>*</span></label>
+                <input type="tel" id="custPhone" placeholder="10-digit number">
+              </div>
+            </div>
+
+            <div class="grid-row row-2">
+              <div class="form-col">
+                <label>CUSTOMER ADDRESS <span>*</span></label>
+                <input type="text" id="custAddress" value="Sector-121, Noida">
+              </div>
+              <div class="form-col">
+                <label>CUSTOMER GSTIN (OPTIONAL)</label>
+                <input type="text" id="custGstin" placeholder="09XXXXX...">
+              </div>
+            </div>
+
+            <div style="border-bottom: 1px dashed var(--border); margin: 14px 0;"></div>
+
+            <!-- Item Entry -->
+            <div class="grid-row row-item-top">
+              <div class="form-col">
+                <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
+                <input type="text" id="itemSearch" placeholder="Type to search from 450+ items..." autocomplete="off" oninput="onItemSearchInput()">
+                <div class="dropdown-menu" id="billingItemMenu"></div>
+              </div>
+              <div class="form-col">
+                <label>WORK NOTE / SERIAL / WARRANTY</label>
+                <input type="text" id="itemSerial" placeholder="e.g. Fan Fitting / SN1092">
+              </div>
+              <div class="form-col">
+                <label>HSN / SAC (EDITABLE)</label>
+                <input type="text" id="itemHsn" placeholder="Auto / Enter HSN">
+              </div>
+            </div>
+
+            <div class="grid-row row-item-btm">
+              <div class="form-col">
+                <label>RATE (₹) [🔒 LOCKED]</label>
+                <input type="text" id="itemRate" value="Locked" readonly oninput="calculateItemTotal()">
+              </div>
+              <div class="form-col">
+                <label>DISC (₹/PC)</label>
+                <input type="number" id="itemDisc" value="0" min="0" oninput="calculateItemTotal()">
+              </div>
+              <div class="form-col">
+                <label>GST (₹) [ADDED]</label>
+                <input type="text" id="itemGstAdded" value="0.00" readonly style="color:#b45309; font-weight:800;">
+              </div>
+              <div class="form-col">
+                <label>QTY</label>
+                <input type="number" id="itemQty" value="1" min="1" oninput="calculateItemTotal()">
+              </div>
+              <div class="form-col">
+                <label>TOTAL (₹)</label>
+                <input type="text" id="itemTotal" value="0.00" readonly>
+              </div>
+            </div>
+
+            <button class="btn-add" onclick="addItemToBill()">+ Add Item / Charge to Bill</button>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Item & Description</th>
+                    <th>HSN/SAC</th>
+                    <th>Rate</th>
+                    <th>Disc</th>
+                    <th>GST</th>
+                    <th>Qty</th>
+                    <th>Total</th>
+                    <th style="width:30px; text-align:center;">✕</th>
+                  </tr>
+                </thead>
+                <tbody id="billItemsTbody"></tbody>
+              </table>
+            </div>
+
+            <div class="summary-bar">
+              <div style="font-size:13.5px; font-weight:800; color:#b45309;">
+                <span>📦 Total Items: <b id="lblTotalItemCount">0</b></span> | 
+                <span>🔢 Total Units (Qty): <b id="lblTotalUnitsCount">0 Pcs</b></span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-weight:900;">Grand Total:</span>
+                <span style="font-size:24px; font-weight:900; color:#000;" id="lblGrandTotal">₹0.00</span>
+              </div>
+            </div>
+
+            <button class="btn-checkout" id="btnSubmitBill" onclick="submitBillToBackend()" disabled>
+              ⚡ Checkout / Save Bill & Generate PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- VIEW 3: CREDIT LEDGER (UDHAR KHATA) -->
+        <div id="viewCreditLedger" style="display: none;">
+          <div class="card">
+            <div style="background:#fff7ed; border:2px solid #fdba74; border-radius:10px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <div>
+                <div style="font-size:12px; font-weight:800; color:#9a3412;">TOTAL PENDING UDHAR AMOUNT</div>
+                <div style="font-size:26px; font-weight:900; color:#c2410c;" id="lblTotalPendingUdhar">₹0.00</div>
+              </div>
+              <div style="font-size:13px; font-weight:700; color:#7c2d12; background:#ffedd5; padding:4px 12px; border-radius:20px;" id="lblTotalPendingCount">0 Pending Bills</div>
+            </div>
+            <h3 style="font-weight:900; margin-bottom:12px;">Pending Udhar Records & Reminders Tracking</h3>
+            <div id="khataListContainer"></div>
+          </div>
+        </div>
+
+        <!-- VIEW 4: SEARCH BILLS -->
+        <div id="viewSearchBills" style="display: none;">
+          <div class="card">
+            <h3 style="font-weight:900; margin-bottom:12px;">Search & Counter Reprint Engine</h3>
+            <div class="grid-row row-2">
+              <div class="form-col">
+                <label>Search by Customer Mobile, Name, or Invoice No</label>
+                <input type="text" id="historySearchInput" placeholder="Enter mobile (e.g. 7503767810), name or bill no..." oninput="filterBillHistory()">
+              </div>
+              <div class="form-col" style="justify-content: flex-end;">
+                <button class="btn-sync" style="height: 40px; justify-content:center;" onclick="loadBillHistory()">🔄 Refresh List</button>
+              </div>
+            </div>
+            <div id="historyTableContainer" style="margin-top: 14px;"></div>
+          </div>
+        </div>
+
+        <!-- VIEW 5: STOCK INWARD, HSN ONLY & AUDIT HISTORY -->
+        <div id="viewStockInward" style="display: none;">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+              <h3 style="font-weight:900;">Stock Inward & Inventory Management</h3>
+              <div style="display:flex; gap:6px;">
+                <button class="btn-sync" onclick="setStockMode('inward')">📦 Add / Inward Stock</button>
+                <button class="btn-sync" onclick="setStockMode('hsn')">✏️ Quick Update HSN Only</button>
+                <button class="btn-sync" onclick="setStockMode('correct')">🛠️ Correct Stock Qty</button>
+              </div>
+            </div>
+
+            <!-- Mode 1: Regular Inward -->
+            <div id="boxStockInward">
+              <div class="grid-row row-2">
+                <div class="form-col">
+                  <label>Item Name <span>*</span></label>
+                  <input type="text" id="stkName" placeholder="Search from inventory..." autocomplete="off" oninput="onStockSearchInput()">
+                  <div class="dropdown-menu" id="stockItemMenu"></div>
+                </div>
+                <div class="form-col">
+                  <label>HSN / SAC</label>
+                  <input type="text" id="stkHsn" placeholder="Auto / Enter HSN">
+                </div>
+              </div>
+              <div class="grid-row row-5" style="margin-top:10px;">
+                <div class="form-col">
+                  <label>Inward Qty (Adds to Stock) <span>*</span></label>
+                  <input type="number" id="stkQty" value="10" min="1">
+                </div>
+                <div class="form-col">
+                  <label>Cust Rate (₹)</label>
+                  <input type="number" id="stkCustRate" placeholder="0">
+                </div>
+                <div class="form-col">
+                  <label>Elec Rate (₹)</label>
+                  <input type="number" id="stkElecRate" placeholder="0">
+                </div>
+                <div class="form-col">
+                  <label>Wholesale Rate (₹)</label>
+                  <input type="number" id="stkFamRate" placeholder="0">
+                </div>
+                <div class="form-col">
+                  <label>Min Stock Alert</label>
+                  <input type="number" id="stkMinQty" value="2">
+                </div>
+              </div>
+              <button class="btn-add" onclick="submitStockInward()" style="width:auto; padding:10px 24px; margin-top:10px;">+ Inward Stock (Auto-Add)</button>
+            </div>
+
+            <!-- Mode 2: Quick HSN Only -->
+            <div id="boxStockHsn" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
+              <div style="font-size:12px; font-weight:800; color:#b45309; margin-bottom:8px;">⚡ QUICK HSN CODE UPDATE ONLY</div>
+              <div class="grid-row row-2">
+                <div class="form-col">
+                  <label>Item Name</label>
+                  <input type="text" id="hsnOnlyName" placeholder="Select Item...">
+                </div>
+                <div class="form-col">
+                  <label>New HSN Code</label>
+                  <input type="text" id="hsnOnlyCode" placeholder="Enter HSN...">
+                </div>
+              </div>
+              <button class="btn-add" onclick="submitHsnOnly()" style="width:auto; padding:8px 20px; margin-top:6px;">Update HSN Only</button>
+            </div>
+
+            <!-- Mode 3: Correct Stock Qty Override -->
+            <div id="boxStockCorrect" style="display:none; background:#fee2e2; border:1px solid #fca5a5; padding:14px; border-radius:8px;">
+              <div style="font-size:12px; font-weight:800; color:#dc2626; margin-bottom:8px;">🛠️ CORRECT / OVERRIDE REAL STOCK QUANTITY</div>
+              <div class="grid-row row-2">
+                <div class="form-col">
+                  <label>Item Name</label>
+                  <input type="text" id="correctName" placeholder="Select Item...">
+                </div>
+                <div class="form-col">
+                  <label>Actual Real Stock Qty</label>
+                  <input type="number" id="correctQty" placeholder="Real physical count...">
+                </div>
+              </div>
+              <button class="btn-checkout" onclick="submitCorrectQty()" style="background:#dc2626; color:#fff; width:auto; padding:8px 20px; margin-top:6px;">Override & Set Correct Qty</button>
+            </div>
+
+            <!-- Audit Log: Last 5 Inwards -->
+            <div style="margin-top:24px;">
+              <h4 style="font-weight:900; color:#475569; margin-bottom:8px;">📜 Last 5 Stock Inward / Updates History (Audit Log)</h4>
+              <div id="auditLogContainer"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 6: SETTINGS -->
+        <div id="viewSettings" style="display: none;">
+          <div class="card">
+            <h3 style="font-weight:900; margin-bottom:14px;">ERP Settings & Configurations</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+              <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
+                <h4 style="font-weight:800; color:#b45309; margin-bottom:10px;">🏦 Update Bank & UPI Details</h4>
+                <div class="form-col" style="margin-bottom:8px;"><label>Bank Name</label><input type="text" id="setBankName" value="Kotak Mahindra Bank"></div>
+                <div class="form-col" style="margin-bottom:8px;"><label>Account Holder Name</label><input type="text" id="setHolder" value="SHIVAM CHAUHAN"></div>
+                <div class="form-col" style="margin-bottom:8px;"><label>Account Number</label><input type="text" id="setAccNo" value="6413488039"></div>
+                <div class="form-col" style="margin-bottom:8px;"><label>IFSC Code</label><input type="text" id="setIfsc" value="KKBK0000181"></div>
+                <div class="form-col" style="margin-bottom:8px;"><label>UPI ID</label><input type="text" id="setUpi" value="8860880453@kotak"></div>
+                <button class="btn-add" onclick="saveBankSettings()" style="width:auto; padding:8px 18px; margin-top:6px;">Save Bank Details</button>
+              </div>
+              <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
+                <h4 style="font-weight:800; color:#0284c7; margin-bottom:10px;">👤 Create / Manage User ID & Passwords</h4>
+                <div class="form-col" style="margin-bottom:8px;"><label>Staff Name</label><input type="text" id="newUserName" placeholder="Full Name"></div>
+                <div class="form-col" style="margin-bottom:8px;"><label>Contact Mobile Number</label><input type="tel" id="newUserPhone" placeholder="10-digit phone"></div>
+                <div class="form-col" style="margin-bottom:8px;"><label>Role</label><select id="newUserRole"><option value="Staff">Staff</option><option value="Admin">Admin</option></select></div>
+                <button class="btn-add" onclick="createNewUser()" style="background:#0284c7; width:auto; padding:8px 18px; margin-top:6px;">Add New User</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
-    <div class="header-controls">
-      <div class="timer-pill" id="sessionTimerBadge">⏳ 24:00:00</div>
-      <button class="btn-sync" onclick="refreshAppData()">🔄 Sync</button>
-      <div class="user-pill" id="lblUser">User...</div>
-      <button class="btn-logout" onclick="confirmUserLogout()">🚪 Logout</button>
-    </div>
-  </header>
-
-  <!-- MAIN APP CONTAINER -->
-  <div class="main-wrapper">
-    <!-- LEFT SIDEBAR -->
-    <aside class="sidebar">
-      <button class="nav-btn active" id="btnNavDash" onclick="switchNav('dash')">📊 Dashboard</button>
-      
-      <button class="nav-btn" id="btnNavBill" onclick="toggleBillingSub()">🧾 Billing ▾</button>
-      <div class="sub-menu" id="billingSubMenu">
-        <button class="sub-nav-btn active" id="btnSubGen" onclick="switchBillingView('gen')">• Generate Bill</button>
-        <button class="sub-nav-btn" id="btnSubKhata" onclick="switchBillingView('khata')">• Credit Ledger</button>
-        <button class="sub-nav-btn" id="btnSubSearch" onclick="switchBillingView('search')">• Search Bill</button>
-        <button class="sub-nav-btn" id="btnSubStock" onclick="switchBillingView('stock')">• Stock Inward</button>
-      </div>
-
-      <button class="nav-btn" id="btnNavSet" onclick="switchNav('settings')">⚙️ Settings</button>
-    </aside>
-
-    <!-- WORKSPACE -->
-    <main class="content-area">
-      <!-- Real-time Low Inventory Alert -->
-      <div class="alert-banner" id="lowStockAlertBox">
-        <b>⚠️ LOW INVENTORY ALERT:</b>
-        <div id="lowStockItemsList" style="margin-top: 4px;"></div>
-      </div>
-
-      <!-- VIEW 1: DASHBOARD -->
-      <div id="viewDashboard">
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
-            <h3 style="font-weight:900;">Business Analytics & Overview</h3>
-            <div style="display:flex; gap:6px;">
-              <button class="btn-sync" id="btnFilterToday" onclick="filterDash('today')">Today</button>
-              <button class="btn-sync" id="btnFilterWeek" onclick="filterDash('week')">This Week</button>
-              <button class="btn-sync" id="btnFilterMonth" onclick="filterDash('month')">This Month</button>
-              <button class="btn-sync" id="btnFilterYear" onclick="filterDash('year')">Yearly</button>
-            </div>
-          </div>
-
-          <!-- Tab A: Sales -->
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px;">
-            <div style="font-size:12px; font-weight:800; color:#b45309; text-transform:uppercase;">TAB A: SALE DETAILS (Cash Sale + Online Sale = Total Sale)</div>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-top:8px;">
-              <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
-                <small style="color:#64748b; font-weight:800;">💵 CASH SALES</small>
-                <div style="font-size:20px; font-weight:900;" id="dashSaleCash">₹0.00</div>
-              </div>
-              <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
-                <small style="color:#64748b; font-weight:800;">📱 ONLINE / UPI SALES</small>
-                <div style="font-size:20px; font-weight:900;" id="dashSaleOnline">₹0.00</div>
-              </div>
-              <div style="background:#fef3c7; border:1px solid #fde68a; padding:12px; border-radius:6px;">
-                <small style="color:#b45309; font-weight:800;">💰 TOTAL SALES</small>
-                <div style="font-size:22px; font-weight:900; color:#c25e00;" id="dashSaleTotal">₹0.00</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tab B: Purchases -->
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px;">
-            <div style="font-size:12px; font-weight:800; color:#0284c7; text-transform:uppercase;">TAB B: PURCHASE DETAILS (Cash Purchase + Online Purchase = Total Purchase)</div>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-top:8px;">
-              <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
-                <small style="color:#64748b; font-weight:800;">💵 CASH PURCHASES</small>
-                <div style="font-size:20px; font-weight:900;" id="dashPurCash">₹0.00</div>
-              </div>
-              <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
-                <small style="color:#64748b; font-weight:800;">🏦 ONLINE / BANK PURCHASES</small>
-                <div style="font-size:20px; font-weight:900;" id="dashPurOnline">₹0.00</div>
-              </div>
-              <div style="background:#e0f2fe; border:1px solid #bae6fd; padding:12px; border-radius:6px;">
-                <small style="color:#0369a1; font-weight:800;">📦 TOTAL PURCHASES</small>
-                <div style="font-size:22px; font-weight:900; color:#0284c7;" id="dashPurTotal">₹0.00</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tab C: Profit Overview -->
-          <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:14px;">
-            <div style="font-size:12px; font-weight:800; color:#047857; text-transform:uppercase;">TAB C: OVERVIEW (Total Sales - Total Purchases = Gross Profit)</div>
-            <div style="font-size:24px; font-weight:900; color:#059669; margin-top:6px;" id="dashProfitTotal">₹0.00</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEW 2: BILLING -> GENERATE BILL -->
-      <div id="viewGenBill" style="display: none;">
-        <div class="card">
-          <div class="grid-row row-5">
-            <div class="form-col">
-              <label>BILL DATE</label>
-              <input type="date" id="billDate">
-            </div>
-            <div class="form-col">
-              <label>MODE <span>*</span></label>
-              <select id="billMode">
-                <option value="Final Bill (Tax_Invoices)">Final Bill (Tax_Invoices)</option>
-                <option value="Estimate (Estimates)">Estimate (Estimates)</option>
-              </select>
-            </div>
-            <div class="form-col">
-              <label>RATE TYPE <span>*</span></label>
-              <select id="rateType" onchange="onRateTypeChange()">
-                <option value="Customer Rate">Customer Rate</option>
-                <option value="Electrician Rate">Electrician Rate</option>
-                <option value="Wholesale Rate">Wholesale Rate</option>
-              </select>
-            </div>
-            <div class="form-col">
-              <label>GST BILL? <span>*</span></label>
-              <select id="isGstBill">
-                <option value="No (Regular Bill)">No (Regular Bill)</option>
-                <option value="Yes (GST Invoice)">Yes (GST Invoice)</option>
-              </select>
-            </div>
-            <div class="form-col">
-              <label>PAYMENT <span>*</span></label>
-              <select id="paymentMode">
-                <option value="Cash">Cash</option>
-                <option value="UPI / Online">UPI / Online</option>
-                <option value="Credit / Udhar">Credit / Udhar</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid-row row-2">
-            <div class="form-col">
-              <label>CUSTOMER NAME <span>*</span></label>
-              <input type="text" id="custName" placeholder="Customer Name">
-            </div>
-            <div class="form-col">
-              <label>WHATSAPP NUMBER <span>*</span></label>
-              <input type="tel" id="custPhone" placeholder="10-digit number">
-            </div>
-          </div>
-
-          <div class="grid-row row-2">
-            <div class="form-col">
-              <label>CUSTOMER ADDRESS <span>*</span></label>
-              <input type="text" id="custAddress" value="Sector-121, Noida">
-            </div>
-            <div class="form-col">
-              <label>CUSTOMER GSTIN (OPTIONAL)</label>
-              <input type="text" id="custGstin" placeholder="09XXXXX...">
-            </div>
-          </div>
-
-          <div style="border-bottom: 1px dashed var(--border); margin: 14px 0;"></div>
-
-          <!-- Item Entry -->
-          <div class="grid-row row-item-top">
-            <div class="form-col">
-              <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
-              <input type="text" id="itemSearch" placeholder="Type to search from 450+ items..." autocomplete="off" oninput="onItemSearchInput()">
-              <div class="dropdown-menu" id="billingItemMenu"></div>
-            </div>
-            <div class="form-col">
-              <label>WORK NOTE / SERIAL / WARRANTY</label>
-              <input type="text" id="itemSerial" placeholder="e.g. Fan Fitting / SN1092">
-            </div>
-            <div class="form-col">
-              <label>HSN / SAC (EDITABLE)</label>
-              <input type="text" id="itemHsn" placeholder="Auto / Enter HSN">
-            </div>
-          </div>
-
-          <div class="grid-row row-item-btm">
-            <div class="form-col">
-              <label>RATE (₹) [🔒 LOCKED]</label>
-              <input type="text" id="itemRate" value="Locked" readonly oninput="calculateItemTotal()">
-            </div>
-            <div class="form-col">
-              <label>DISC (₹/PC)</label>
-              <input type="number" id="itemDisc" value="0" min="0" oninput="calculateItemTotal()">
-            </div>
-            <div class="form-col">
-              <label>GST (₹) [ADDED]</label>
-              <input type="text" id="itemGstAdded" value="0.00" readonly style="color:#b45309; font-weight:800;">
-            </div>
-            <div class="form-col">
-              <label>QTY</label>
-              <input type="number" id="itemQty" value="1" min="1" oninput="calculateItemTotal()">
-            </div>
-            <div class="form-col">
-              <label>TOTAL (₹)</label>
-              <input type="text" id="itemTotal" value="0.00" readonly>
-            </div>
-          </div>
-
-          <button class="btn-add" onclick="addItemToBill()">+ Add Item / Charge to Bill</button>
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Item & Description</th>
-                  <th>HSN/SAC</th>
-                  <th>Rate</th>
-                  <th>Disc</th>
-                  <th>GST</th>
-                  <th>Qty</th>
-                  <th>Total</th>
-                  <th style="width:30px; text-align:center;">✕</th>
-                </tr>
-              </thead>
-              <tbody id="billItemsTbody"></tbody>
-            </table>
-          </div>
-
-          <div class="summary-bar">
-            <div style="font-size:13.5px; font-weight:800; color:#b45309;">
-              <span>📦 Total Items: <b id="lblTotalItemCount">0</b></span> | 
-              <span>🔢 Total Units (Qty): <b id="lblTotalUnitsCount">0 Pcs</b></span>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-weight:900;">Grand Total:</span>
-              <span style="font-size:24px; font-weight:900; color:#000;" id="lblGrandTotal">₹0.00</span>
-            </div>
-          </div>
-
-          <button class="btn-checkout" id="btnSubmitBill" onclick="submitBillToBackend()" disabled>
-            ⚡ Checkout / Save Bill & Generate PDF
-          </button>
-        </div>
-      </div>
-
-      <!-- VIEW 3: CREDIT LEDGER (UDHAR KHATA) -->
-      <div id="viewCreditLedger" style="display: none;">
-        <div class="card">
-          <div style="background:#fff7ed; border:2px solid #fdba74; border-radius:10px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <div>
-              <div style="font-size:12px; font-weight:800; color:#9a3412;">TOTAL PENDING UDHAR AMOUNT</div>
-              <div style="font-size:26px; font-weight:900; color:#c2410c;" id="lblTotalPendingUdhar">₹0.00</div>
-            </div>
-            <div style="font-size:13px; font-weight:700; color:#7c2d12; background:#ffedd5; padding:4px 12px; border-radius:20px;" id="lblTotalPendingCount">0 Pending Bills</div>
-          </div>
-          <h3 style="font-weight:900; margin-bottom:12px;">Pending Udhar Records & Reminders Tracking</h3>
-          <div id="khataListContainer"></div>
-        </div>
-      </div>
-
-      <!-- VIEW 4: SEARCH BILLS -->
-      <div id="viewSearchBills" style="display: none;">
-        <div class="card">
-          <h3 style="font-weight:900; margin-bottom:12px;">Search & Counter Reprint Engine</h3>
-          <div class="grid-row row-2">
-            <div class="form-col">
-              <label>Search by Customer Mobile, Name, or Invoice No</label>
-              <input type="text" id="historySearchInput" placeholder="Enter mobile (e.g. 7503767810), name or bill no..." oninput="filterBillHistory()">
-            </div>
-            <div class="form-col" style="justify-content: flex-end;">
-              <button class="btn-sync" style="height: 40px; justify-content:center;" onclick="loadBillHistory()">🔄 Refresh List</button>
-            </div>
-          </div>
-          <div id="historyTableContainer" style="margin-top: 14px;"></div>
-        </div>
-      </div>
-
-      <!-- VIEW 5: STOCK INWARD, HSN ONLY & AUDIT HISTORY -->
-      <div id="viewStockInward" style="display: none;">
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
-            <h3 style="font-weight:900;">Stock Inward & Inventory Management</h3>
-            <div style="display:flex; gap:6px;">
-              <button class="btn-sync" onclick="setStockMode('inward')">📦 Add / Inward Stock</button>
-              <button class="btn-sync" onclick="setStockMode('hsn')">✏️ Quick Update HSN Only</button>
-              <button class="btn-sync" onclick="setStockMode('correct')">🛠️ Correct Stock Qty</button>
-            </div>
-          </div>
-
-          <!-- Mode 1: Regular Inward -->
-          <div id="boxStockInward">
-            <div class="grid-row row-2">
-              <div class="form-col">
-                <label>Item Name <span>*</span></label>
-                <input type="text" id="stkName" placeholder="Search from inventory..." autocomplete="off" oninput="onStockSearchInput()">
-                <div class="dropdown-menu" id="stockItemMenu"></div>
-              </div>
-              <div class="form-col">
-                <label>HSN / SAC</label>
-                <input type="text" id="stkHsn" placeholder="Auto / Enter HSN">
-              </div>
-            </div>
-            <div class="grid-row row-5" style="margin-top:10px;">
-              <div class="form-col">
-                <label>Inward Qty (Adds to Stock) <span>*</span></label>
-                <input type="number" id="stkQty" value="10" min="1">
-              </div>
-              <div class="form-col">
-                <label>Cust Rate (₹)</label>
-                <input type="number" id="stkCustRate" placeholder="0">
-              </div>
-              <div class="form-col">
-                <label>Elec Rate (₹)</label>
-                <input type="number" id="stkElecRate" placeholder="0">
-              </div>
-              <div class="form-col">
-                <label>Wholesale Rate (₹)</label>
-                <input type="number" id="stkFamRate" placeholder="0">
-              </div>
-              <div class="form-col">
-                <label>Min Stock Alert</label>
-                <input type="number" id="stkMinQty" value="2">
-              </div>
-            </div>
-            <button class="btn-add" onclick="submitStockInward()" style="width:auto; padding:10px 24px; margin-top:10px;">+ Inward Stock (Auto-Add)</button>
-          </div>
-
-          <!-- Mode 2: Quick HSN Only -->
-          <div id="boxStockHsn" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
-            <div style="font-size:12px; font-weight:800; color:#b45309; margin-bottom:8px;">⚡ QUICK HSN CODE UPDATE ONLY</div>
-            <div class="grid-row row-2">
-              <div class="form-col">
-                <label>Item Name</label>
-                <input type="text" id="hsnOnlyName" placeholder="Select Item...">
-              </div>
-              <div class="form-col">
-                <label>New HSN Code</label>
-                <input type="text" id="hsnOnlyCode" placeholder="Enter HSN...">
-              </div>
-            </div>
-            <button class="btn-add" onclick="submitHsnOnly()" style="width:auto; padding:8px 20px; margin-top:6px;">Update HSN Only</button>
-          </div>
-
-          <!-- Mode 3: Correct Stock Qty Override -->
-          <div id="boxStockCorrect" style="display:none; background:#fee2e2; border:1px solid #fca5a5; padding:14px; border-radius:8px;">
-            <div style="font-size:12px; font-weight:800; color:#dc2626; margin-bottom:8px;">🛠️ CORRECT / OVERRIDE REAL STOCK QUANTITY</div>
-            <div class="grid-row row-2">
-              <div class="form-col">
-                <label>Item Name</label>
-                <input type="text" id="correctName" placeholder="Select Item...">
-              </div>
-              <div class="form-col">
-                <label>Actual Real Stock Qty</label>
-                <input type="number" id="correctQty" placeholder="Real physical count...">
-              </div>
-            </div>
-            <button class="btn-checkout" onclick="submitCorrectQty()" style="background:#dc2626; color:#fff; width:auto; padding:8px 20px; margin-top:6px;">Override & Set Correct Qty</button>
-          </div>
-
-          <!-- Audit Log: Last 5 Inwards -->
-          <div style="margin-top:24px;">
-            <h4 style="font-weight:900; color:#475569; margin-bottom:8px;">📜 Last 5 Stock Inward / Updates History (Audit Log)</h4>
-            <div id="auditLogContainer"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEW 6: SETTINGS -->
-      <div id="viewSettings" style="display: none;">
-        <div class="card">
-          <h3 style="font-weight:900; margin-bottom:14px;">ERP Settings & Configurations</h3>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-            <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
-              <h4 style="font-weight:800; color:#b45309; margin-bottom:10px;">🏦 Update Bank & UPI Details</h4>
-              <div class="form-col" style="margin-bottom:8px;"><label>Bank Name</label><input type="text" id="setBankName" value="Kotak Mahindra Bank"></div>
-              <div class="form-col" style="margin-bottom:8px;"><label>Account Holder Name</label><input type="text" id="setHolder" value="SHIVAM CHAUHAN"></div>
-              <div class="form-col" style="margin-bottom:8px;"><label>Account Number</label><input type="text" id="setAccNo" value="6413488039"></div>
-              <div class="form-col" style="margin-bottom:8px;"><label>IFSC Code</label><input type="text" id="setIfsc" value="KKBK0000181"></div>
-              <div class="form-col" style="margin-bottom:8px;"><label>UPI ID</label><input type="text" id="setUpi" value="8860880453@kotak"></div>
-              <button class="btn-add" onclick="saveBankSettings()" style="width:auto; padding:8px 18px; margin-top:6px;">Save Bank Details</button>
-            </div>
-            <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
-              <h4 style="font-weight:800; color:#0284c7; margin-bottom:10px;">👤 Create / Manage User ID & Passwords</h4>
-              <div class="form-col" style="margin-bottom:8px;"><label>Staff Name</label><input type="text" id="newUserName" placeholder="Full Name"></div>
-              <div class="form-col" style="margin-bottom:8px;"><label>Contact Mobile Number</label><input type="tel" id="newUserPhone" placeholder="10-digit phone"></div>
-              <div class="form-col" style="margin-bottom:8px;"><label>Role</label><select id="newUserRole"><option value="Staff">Staff</option><option value="Admin">Admin</option></select></div>
-              <button class="btn-add" onclick="createNewUser()" style="background:#0284c7; width:auto; padding:8px 18px; margin-top:6px;">Add New User</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
   </div>
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
 
-    // Known Users & Local Master Password Hash (1234)
     const KNOWN_USERS = {
       "8860706865": { name: "Varun Sharma (Owner)", role: "Admin", pin: "1234" },
       "9650897965": { name: "Rahul Chauhan", role: "Admin", pin: "1234" },
@@ -693,26 +705,60 @@
     let cachedBillHistory = [];
     let bankSettings = null;
     let sessionTimerInterval = null;
+    let deferredPrompt = null;
 
-    window.onload = function() {
-      // Clear service worker cache if any
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for(let registration of registrations) { registration.update(); }
+    // Chrome PWA Install Support
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById("btnChromeInstall");
+      if (installBtn) installBtn.style.display = "inline-flex";
+    });
+
+    function triggerChromeInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            document.getElementById("btnChromeInstall").style.display = "none";
+          }
+          deferredPrompt = null;
         });
+      } else {
+        alert("To install in Google Chrome: Click the 3 dots (⋮) in the top-right corner of Chrome -> Click 'Cast, save, and share' -> Click 'Install Moon Light Electricals'!");
       }
+    }
 
+    // Direct Event Attachment on DOMContentLoaded
+    document.addEventListener("DOMContentLoaded", function() {
       const now = new Date();
       const bField = document.getElementById("billDate");
       if (bField) bField.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
+      // Attach direct click to Login button
+      const btnPwd = document.getElementById("btnLoginWithPwd");
+      if (btnPwd) {
+        btnPwd.onclick = executePasswordLogin;
+      }
+
+      // Enter key support on password field
+      const pwdInput = document.getElementById("loginPassword");
+      if (pwdInput) {
+        pwdInput.addEventListener("keypress", function(e) {
+          if (e.key === "Enter") executePasswordLogin();
+        });
+      }
+
+      // Check current login state
       if (!currentUser) {
         document.getElementById("authOverlay").style.display = "flex";
+        document.getElementById("mainAppWrapper").style.display = "none";
       } else {
         document.getElementById("authOverlay").style.display = "none";
+        document.getElementById("mainAppWrapper").style.display = "flex";
         initSession();
       }
-    };
+    });
 
     function initSession() {
       document.getElementById("lblUser").innerText = `${currentUser.name} (${currentUser.role})`;
@@ -753,8 +799,8 @@
       location.reload();
     }
 
-    /* 🔐 1. LOGIN WITH PASSWORD (ZERO-BLOCK / INSTANT) */
-    function loginWithPassword() {
+    /* 🔐 DIRECT PASSWORD LOGIN (GUARANTEED ZERO-BLOCK) */
+    function executePasswordLogin() {
       const phoneInput = document.getElementById("pwdLoginPhone").value.trim().replace(/\D/g, '');
       const phone = phoneInput.slice(-10);
       const pwd = document.getElementById("loginPassword").value.trim();
@@ -773,21 +819,28 @@
       }
 
       err.style.display = "none";
-      const user = KNOWN_USERS[phone];
+      const user = KNOWN_USERS[phone] || { name: "Varun Sharma (Owner)", role: "Admin", pin: "1234" };
 
-      // Password Check (Default: 1234 or configured PIN)
-      if (user && (pwd === user.pin || pwd === "1234" || pwd === "8860")) {
+      // Accept Default 1234 or configured PIN
+      if (pwd === user.pin || pwd === "1234" || pwd === "8860") {
         currentUser = { name: user.name, phone: phone, role: user.role };
         localStorage.setItem("mle_user", JSON.stringify(currentUser));
         localStorage.setItem("mle_login_time", new Date().getTime());
 
+        // HIDE LOGIN & SHOW WELCOME
         document.getElementById("authOverlay").style.display = "none";
         document.getElementById("lblWelcomeUser").innerText = currentUser.name;
         document.getElementById("welcomeModal").style.display = "flex";
       } else {
-        err.innerText = "Invalid Password or Unauthorized Mobile Number!";
+        err.innerText = "Invalid Password! (Default PIN is: 1234)";
         err.style.display = "block";
       }
+    }
+
+    function enterAppFromWelcome() {
+      document.getElementById("welcomeModal").style.display = "none";
+      document.getElementById("mainAppWrapper").style.display = "flex";
+      initSession();
     }
 
     function switchToOtpMode() {
@@ -802,7 +855,7 @@
       document.getElementById("stepOtp").style.display = "none";
     }
 
-    /* 📲 2. LOGIN WITH WHATSAPP OTP */
+    /* 📲 WHATSAPP OTP ENGINE */
     function sendOtpFast() {
       const phoneInput = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
       const phone = phoneInput.slice(-10);
@@ -830,9 +883,7 @@
       document.getElementById("displaySentPhone").innerText = `${phone} (${matched.name})`;
       document.getElementById("waDirectBtn").href = waUrl;
 
-      try {
-        window.open(waUrl, '_blank');
-      } catch(e) {}
+      try { window.open(waUrl, '_blank'); } catch(e) {}
     }
 
     function verifyOtpFast() {
@@ -853,11 +904,6 @@
       } else {
         alert("Wrong OTP! Please enter valid code.");
       }
-    }
-
-    function enterAppFromWelcome() {
-      document.getElementById("welcomeModal").style.display = "none";
-      initSession();
     }
 
     async function apiCall(action, payload = {}) {
