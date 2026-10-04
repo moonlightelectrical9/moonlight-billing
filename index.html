@@ -287,7 +287,7 @@
       cursor: pointer;
     }
 
-    /* 📊 Grand Total Bar with Items & Units Summary */
+    /* Grand Total Bar with Items & Units Summary */
     .total-bar {
       background: var(--yellow-bar);
       border: 1.5px solid var(--yellow-border);
@@ -350,7 +350,7 @@
       margin-top: 10px;
     }
 
-    /* 📒 Top Udhar Summary Card */
+    /* Top Udhar Summary Card */
     .udhar-summary-card {
       background: #fff7ed;
       border: 2px solid #fdba74;
@@ -367,7 +367,7 @@
     .udhar-sum-amt { font-size: 26px; font-weight: 900; color: #c2410c; }
     .udhar-sum-count { font-size: 12.5px; font-weight: 700; color: #7c2d12; background: #ffedd5; padding: 4px 12px; border-radius: 20px; }
 
-    /* 🔒 Solid Opacity Authentication Overlay */
+    /* Solid Opacity Authentication Overlay */
     #authOverlay {
       position: fixed;
       inset: 0;
@@ -389,7 +389,7 @@
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
     }
 
-    /* 🎉 Bill Success Action Modal */
+    /* Bill Success Action Modal */
     #billSuccessModal {
       position: fixed;
       inset: 0;
@@ -478,7 +478,6 @@
     }
     .btn-next-bill:hover { background: #e2e8f0; }
 
-    /* Hidden Iframe for Direct Silent Print */
     #silentPrintIframe {
       display: none;
       width: 0;
@@ -489,7 +488,6 @@
 </head>
 <body>
 
-  <!-- Hidden iframe for instant one-click printer printing -->
   <iframe id="silentPrintIframe"></iframe>
 
   <!-- 🎉 BILL SUCCESS ACTION MODAL -->
@@ -500,19 +498,15 @@
       <div class="success-sub" id="lblSuccessDocNo">Doc No: -</div>
       
       <div class="success-actions">
-        <!-- 1. Send WhatsApp Message -->
         <button class="btn-wa-share" id="btnShareWhatsApp" onclick="shareBillOnWhatsApp()">
           📲 Send Invoice on WhatsApp
         </button>
-        <!-- 2. One-Click Instant Print (Active Printer) -->
         <button class="btn-print-direct" onclick="triggerDirectPrint()">
           🖨️ Print Invoice (Hard Copy)
         </button>
-        <!-- 3. View / Download PDF -->
         <button class="btn-view-pdf" id="btnViewDownloadPdf" onclick="viewDownloadPdf()">
           👁️ View / Download PDF
         </button>
-        <!-- 4. Create Next Bill -->
         <button class="btn-next-bill" onclick="closeSuccessAndNextBill()">
           🧾 + Create Next Bill
         </button>
@@ -546,7 +540,6 @@
 
   <!-- 🏠 MAIN APPLICATION CONTAINER -->
   <div class="container" id="mainAppWrapper" style="display: none;">
-    <!-- Top Nav with View Tabs, 24H Timer, PWA Install, Refresh & Logout -->
     <div class="top-nav">
       <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
         <div class="brand-wrap">
@@ -565,7 +558,6 @@
           🔄 Refresh
         </button>
         <div class="user-pill" id="lblUser">Session...</div>
-        <!-- Safe logout confirmation flow -->
         <button class="btn-logout" onclick="confirmUserLogout()" title="Logout from System">🚪 Logout</button>
       </div>
     </div>
@@ -645,7 +637,7 @@
 
       <div class="separator"></div>
 
-      <!-- ROW 4: Item Name (Fast Type-To-Search + Inventory Verification), Work Note, HSN -->
+      <!-- ROW 4: Item Name (Fast Type-To-Search), Work Note, HSN -->
       <div class="grid-row row-item-top">
         <div class="form-col">
           <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
@@ -708,7 +700,7 @@
         </table>
       </div>
 
-      <!-- 📊 Grand Total Bar with Total Items & Total Units Qty Display -->
+      <!-- Grand Total Bar with Items & Units Summary -->
       <div class="total-bar">
         <div class="total-meta">
           <span>📦 Total Items: <b id="lblTotalItemCount" style="color:#0f172a;">0</b></span>
@@ -734,10 +726,10 @@
         <div class="grid-row row-2">
           <div class="form-col">
             <label>Search by Customer Mobile, Name, or Invoice / Estimate No</label>
-            <input type="text" id="historySearchInput" placeholder="Enter 10-digit phone, customer name, or MLE-INV..." oninput="filterBillHistory()">
+            <input type="text" id="historySearchInput" placeholder="Enter mobile number (e.g. 7503767810), name or bill no..." oninput="filterBillHistory()">
           </div>
           <div class="form-col" style="justify-content: flex-end;">
-            <button class="btn-refresh" style="height: 40px; justify-content: center;" onclick="loadBillHistory()">
+            <button class="btn-refresh" id="btnSyncHistory" style="height: 40px; justify-content: center;" onclick="loadBillHistory()">
               🔄 Refresh Invoices List
             </button>
           </div>
@@ -923,7 +915,7 @@
       }, 1000);
     }
 
-    // 🔒 SAFE LOGOUT CONFIRMATION FLOW
+    // Safe Logout Confirmation Flow
     function confirmUserLogout() {
       const isConfirmed = confirm("Are you sure you want to log out of your session?");
       if (isConfirmed) {
@@ -1041,21 +1033,18 @@
         return "";
       }
 
-      // 1. Sheet Match
       const sheetMatch = cachedItems.find(x => x.name.toLowerCase() === cleanName.toLowerCase());
       if (sheetMatch && sheetMatch.hsn && sheetMatch.hsn !== "-" && sheetMatch.hsn.trim() !== "") {
         hsnInput.value = sheetMatch.hsn.trim();
         return sheetMatch.hsn.trim();
       }
 
-      // 2. Category Match
       const catHsn = detectHsnFromName(cleanName);
       if (catHsn) {
         hsnInput.value = catHsn;
         return catHsn;
       }
 
-      // 3. New / Unknown Popup
       if (allowPopup && lastPromptedHsnItem !== cleanName.toLowerCase()) {
         lastPromptedHsnItem = cleanName.toLowerCase();
         const userChoice = confirm(`"${cleanName}" is a new item without a matched HSN category.\n\nDo you want to assign the default general electrical HSN (8538)?\n\n[OK = Assign 8538]\n[Cancel = Enter Custom HSN]`);
@@ -1072,7 +1061,7 @@
       return "";
     }
 
-    // ⚡ BILLING: FAST TYPE-TO-SEARCH
+    // BILLING: Fast Type-to-Search
     function handleItemDirectClick() {
       const input = document.getElementById("itemSearch");
       if (input.value.trim() !== "") {
@@ -1106,7 +1095,6 @@
       const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(lower));
       renderBillingDropdown(filtered);
 
-      // Labour Charge Unlock
       if (lower.includes("labour") || lower.includes("service")) {
         currentItemObj = { name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
         document.getElementById("itemHsn").value = "998519";
@@ -1164,7 +1152,7 @@
       calculateItemTotal();
     }
 
-    // Stock Inward: Direct Click Clear & Blur
+    // Stock Inward
     function handleStockDirectClick() {
       const input = document.getElementById("stkName");
       if (input.value.trim() !== "") {
@@ -1281,7 +1269,6 @@
       return { finalUnitRate, total, gstPerPc, discountedRate };
     }
 
-    // ⚡ STRICT INVENTORY VALIDATION ON ADD
     function addItemToBill() {
       const name = document.getElementById("itemSearch").value.trim();
       const serial = document.getElementById("itemSerial").value.trim();
@@ -1360,7 +1347,6 @@
       checkFormState();
     }
 
-    // ⚡ AUTO-CALCULATE TOTAL ITEMS & TOTAL UNITS
     function renderBillTable() {
       const tbody = document.getElementById("billItemsTbody");
       tbody.innerHTML = "";
@@ -1420,7 +1406,6 @@
       btn.disabled = !isReady;
     }
 
-    // ⚡ SUBMIT BILL TO BACKEND
     async function submitBillToBackend() {
       const btn = document.getElementById("btnSubmitBill");
       btn.disabled = true;
@@ -1487,7 +1472,6 @@
       }
     }
 
-    // 🖨️ DIRECT ONE-CLICK SILENT PRINTING (ACTIVE PRINTER)
     function triggerDirectPrint(customPdfUrl) {
       const pdfToPrint = customPdfUrl || (lastGeneratedBillData ? lastGeneratedBillData.pdfUrl : null);
       if (!pdfToPrint) {
@@ -1507,12 +1491,11 @@
       };
     }
 
-    // 📲 WhatsApp Message with Full Store Address
     function shareBillOnWhatsApp(customData) {
       const d = customData || lastGeneratedBillData;
       if (!d) return;
       
-      const docTypeWord = d.docNo.includes("EST") ? "Estimate" : "Invoice";
+      const docTypeWord = (d.docNo && d.docNo.includes("EST")) ? "Estimate" : "Invoice";
       const pdfSection = d.pdfUrl ? `\n\n📄 *Download PDF Document:*\n${d.pdfUrl}` : "";
 
       const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docTypeWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Amount: *₹${parseFloat(d.grandTotal || d.amount || 0).toFixed(2)}*\n  • Payment Mode: ${d.paymentMode || 'Cash / Online'}${pdfSection}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
@@ -1547,7 +1530,6 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // ⚡ VIEW SWITCHER (Billing, History, Khata, Stock Inward)
     function switchView(view) {
       document.querySelectorAll(".nav-tab-btn").forEach(b => b.classList.remove("active"));
       document.getElementById("viewBilling").style.display = (view === 'billing') ? 'block' : 'none';
@@ -1570,33 +1552,40 @@
     // 🔍 BILL HISTORY & REPRINT SEARCH ENGINE
     async function loadBillHistory() {
       const container = document.getElementById("historyTableContainer");
-      container.innerHTML = "Fetching invoices history...";
+      const btn = document.getElementById("btnSyncHistory");
+      if (btn) btn.innerText = "⏳ Syncing Invoices...";
+      container.innerHTML = "Fetching invoices from Google Sheets...";
 
       try {
         const res = await apiCall("getBillHistory", { role: currentUser.role });
-        if (res && res.records) {
+        if (btn) btn.innerText = "🔄 Refresh Invoices List";
+        if (res && res.records && res.records.length > 0) {
           cachedBillHistory = res.records;
-          renderHistoryTable(cachedBillHistory);
+          filterBillHistory();
         } else {
-          container.innerHTML = "No invoices found!";
+          container.innerHTML = "No invoices found in database!";
         }
       } catch(e) {
-        container.innerHTML = "Failed to load invoices history. Please refresh.";
+        if (btn) btn.innerText = "🔄 Refresh Invoices List";
+        container.innerHTML = "Failed to load invoices. Please ensure Apps Script deployment is updated.";
       }
     }
 
     function filterBillHistory() {
-      const query = document.getElementById("historySearchInput").value.trim().toLowerCase();
+      const input = document.getElementById("historySearchInput");
+      const query = (input ? input.value : "").trim().toLowerCase();
+      
       if (!query) {
         renderHistoryTable(cachedBillHistory);
         return;
       }
 
-      const filtered = cachedBillHistory.filter(r => 
-        (r.docNo && r.docNo.toLowerCase().includes(query)) ||
-        (r.customerName && r.customerName.toLowerCase().includes(query)) ||
-        (r.phone && r.phone.toLowerCase().includes(query))
-      );
+      const filtered = cachedBillHistory.filter(r => {
+        const docMatch = r.docNo && r.docNo.toLowerCase().includes(query);
+        const nameMatch = r.customerName && r.customerName.toLowerCase().includes(query);
+        const phoneMatch = r.phone && String(r.phone).includes(query);
+        return docMatch || nameMatch || phoneMatch;
+      });
 
       renderHistoryTable(filtered);
     }
@@ -1604,20 +1593,20 @@
     function renderHistoryTable(records) {
       const container = document.getElementById("historyTableContainer");
       if (!records || records.length === 0) {
-        container.innerHTML = "No matching bills found!";
+        container.innerHTML = '<div style="padding:16px; color:#b91c1c; font-weight:700;">No matching invoices found!</div>';
         return;
       }
 
       let html = '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Doc No</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Actions</th></tr></thead><tbody>';
       records.forEach(r => {
-        const dataObj = JSON.stringify({
+        const safeData = JSON.stringify({
           docNo: r.docNo,
           customerName: r.customerName,
           phone: r.phone,
           amount: r.amount,
           date: r.date,
           pdfUrl: r.pdfUrl,
-          paymentMode: r.paymentMode || 'Online / Cash'
+          paymentMode: r.paymentMode || 'Cash'
         }).replace(/"/g, '&quot;');
 
         html += `
@@ -1629,7 +1618,7 @@
             <td><b>₹${parseFloat(r.amount || 0).toFixed(2)}</b></td>
             <td>
               <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px;" onclick="triggerDirectPrint('${r.pdfUrl}')">🖨️ Re-Print</button>
-              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick='shareBillOnWhatsApp(${dataObj})'>📲 WhatsApp</button>
+              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick='shareBillOnWhatsApp(${safeData})'>📲 WhatsApp</button>
               <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px;" onclick="viewDownloadPdf('${r.pdfUrl}')">👁️ View</button>
             </td>
           </tr>
@@ -1639,7 +1628,7 @@
       container.innerHTML = html;
     }
 
-    // ⚡ UDHAR KHATA RENDERING WITH TOP PENDING SUMMARY
+    // Udhar Khata
     async function renderKhata() {
       const c = document.getElementById("khataListContainer");
       c.innerHTML = "Fetching pending udhar records...";
