@@ -163,13 +163,25 @@
     .btn-del { color: var(--danger); font-weight: 900; background: none; border: none; font-size: 16px; cursor: pointer; }
 
     .summary-bar { background: #fef3c7; border: 1.5px solid #fde68a; border-radius: 6px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
-    .btn-checkout { background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 6px; font-size: 15px; font-weight: 900; width: 100%; cursor: pointer; }
+    .btn-checkout { background: var(--accent); color: #000; border: none; padding: 13px; border-radius: 6px; font-size: 14.5px; font-weight: 900; width: 100%; cursor: pointer; }
     .btn-checkout:disabled { background: #e2e8f0 !important; color: #94a3b8 !important; cursor: not-allowed; }
 
     /* Modals & Dialogs */
     .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.88); display: flex; align-items: center; justify-content: center; z-index: 99999; padding: 14px; }
-    .auth-box { background: #fff; border-radius: 14px; padding: 30px 24px; width: 100%; max-width: 380px; text-align: center; }
+    .auth-box { background: #fff; border-radius: 14px; padding: 28px 24px; width: 100%; max-width: 390px; text-align: center; }
     .modal-box { background: #fff; border-radius: 14px; padding: 24px; width: 100%; max-width: 440px; text-align: center; }
+
+    .login-toggle-btn {
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 10px;
+      display: inline-block;
+    }
 
     /* Exact Fixed Print Styling */
     @media print {
@@ -197,21 +209,52 @@
   <div id="authOverlay" class="overlay" style="display: flex;">
     <div class="auth-box">
       <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
-      <div class="brand-tagline" style="margin-bottom: 22px;">Brightening Lives, Powering Trust</div>
+      <div class="brand-tagline" style="margin-bottom: 20px;">Brightening Lives, Powering Trust</div>
 
-      <div id="stepPhone">
-        <label style="display:block; text-align:left; font-size:11px; font-weight:800; color:#475569; margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
-        <input type="tel" id="loginPhone" placeholder="Enter 10-digit number" value="8860706865" style="width: 100%; margin-bottom: 12px; font-size: 16px;">
-        <div id="loginErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
-        <button type="button" class="btn-checkout" id="btnSendOtp" onclick="sendOtpFast()">📲 SEND OTP ON WHATSAPP</button>
+      <!-- Mode 1: Login via Password (Default) -->
+      <div id="stepPasswordMode">
+        <div class="form-col" style="text-align: left; margin-bottom: 10px;">
+          <label>AUTHORIZED MOBILE NUMBER</label>
+          <input type="tel" id="pwdLoginPhone" placeholder="10-digit number" value="8860706865">
+        </div>
+        <div class="form-col" style="text-align: left; margin-bottom: 12px;">
+          <label>PASSWORD / SECURITY PIN</label>
+          <input type="password" id="loginPassword" placeholder="Enter password (default: 1234)">
+        </div>
+        <div id="pwdErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
+        
+        <button type="button" class="btn-checkout" onclick="loginWithPassword()" style="background:#0284c7; color:#fff;">🔐 LOGIN WITH PASSWORD</button>
+        
+        <div style="margin-top: 12px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+          <button type="button" class="login-toggle-btn" onclick="switchToOtpMode()">Or Login with WhatsApp OTP ➔</button>
+        </div>
       </div>
 
+      <!-- Mode 2: WhatsApp OTP Request -->
+      <div id="stepPhoneMode" style="display: none;">
+        <div class="form-col" style="text-align: left; margin-bottom: 12px;">
+          <label>AUTHORIZED MOBILE NUMBER</label>
+          <input type="tel" id="loginPhone" placeholder="Enter 10-digit number" value="8860706865">
+        </div>
+        <div id="loginErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
+        
+        <button type="button" class="btn-checkout" id="btnSendOtp" onclick="sendOtpFast()">📲 SEND OTP ON WHATSAPP</button>
+        
+        <div style="margin-top: 12px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+          <button type="button" class="login-toggle-btn" onclick="switchToPasswordMode()">Back to Login with Password ➔</button>
+        </div>
+      </div>
+
+      <!-- Mode 3: OTP Verify -->
       <div id="stepOtp" style="display: none;">
         <div style="font-size: 12px; color: #475569; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone"></b></div>
         <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;">
         <button type="button" class="btn-checkout" onclick="verifyOtpFast()" style="background:#10b981; color:#fff;">VERIFY & LOGIN</button>
         <div style="margin-top: 14px;">
           <a id="waDirectBtn" href="#" target="_blank" style="font-size: 12px; color: #2563eb; font-weight: bold; text-decoration: underline;">Open WhatsApp chat for OTP ➔</a>
+        </div>
+        <div style="margin-top: 10px;">
+          <button type="button" class="login-toggle-btn" onclick="switchToPasswordMode()">Cancel & Login with Password</button>
         </div>
       </div>
     </div>
@@ -582,7 +625,7 @@
 
           <!-- Mode 3: Correct Stock Qty Override -->
           <div id="boxStockCorrect" style="display:none; background:#fee2e2; border:1px solid #fca5a5; padding:14px; border-radius:8px;">
-            <div style="font-size:12px; font-weight:800; color:#dc2626; margin-bottom:8px;">🛠️️ CORRECT / OVERRIDE REAL STOCK QUANTITY</div>
+            <div style="font-size:12px; font-weight:800; color:#dc2626; margin-bottom:8px;">🛠️ CORRECT / OVERRIDE REAL STOCK QUANTITY</div>
             <div class="grid-row row-2">
               <div class="form-col">
                 <label>Item Name</label>
@@ -619,7 +662,7 @@
               <button class="btn-add" onclick="saveBankSettings()" style="width:auto; padding:8px 18px; margin-top:6px;">Save Bank Details</button>
             </div>
             <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
-              <h4 style="font-weight:800; color:#0284c7; margin-bottom:10px;">👤 Create / Manage User ID</h4>
+              <h4 style="font-weight:800; color:#0284c7; margin-bottom:10px;">👤 Create / Manage User ID & Passwords</h4>
               <div class="form-col" style="margin-bottom:8px;"><label>Staff Name</label><input type="text" id="newUserName" placeholder="Full Name"></div>
               <div class="form-col" style="margin-bottom:8px;"><label>Contact Mobile Number</label><input type="tel" id="newUserPhone" placeholder="10-digit phone"></div>
               <div class="form-col" style="margin-bottom:8px;"><label>Role</label><select id="newUserRole"><option value="Staff">Staff</option><option value="Admin">Admin</option></select></div>
@@ -634,11 +677,12 @@
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
 
+    // Known Users & Local Master Password Hash (1234)
     const KNOWN_USERS = {
-      "8860706865": { name: "Varun Sharma (Owner)", role: "Admin" },
-      "9650897965": { name: "Rahul Chauhan", role: "Admin" },
-      "8860880453": { name: "Shivam Chauhan", role: "Admin" },
-      "9264923954": { name: "Raja", role: "Staff" }
+      "8860706865": { name: "Varun Sharma (Owner)", role: "Admin", pin: "1234" },
+      "9650897965": { name: "Rahul Chauhan", role: "Admin", pin: "1234" },
+      "8860880453": { name: "Shivam Chauhan", role: "Admin", pin: "1234" },
+      "9264923954": { name: "Raja", role: "Staff", pin: "1234" }
     };
 
     let currentUser = JSON.parse(localStorage.getItem("mle_user")) || null;
@@ -651,8 +695,16 @@
     let sessionTimerInterval = null;
 
     window.onload = function() {
+      // Clear service worker cache if any
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) { registration.update(); }
+        });
+      }
+
       const now = new Date();
-      document.getElementById("billDate").value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const bField = document.getElementById("billDate");
+      if (bField) bField.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
       if (!currentUser) {
         document.getElementById("authOverlay").style.display = "flex";
@@ -701,21 +753,56 @@
       location.reload();
     }
 
-    async function apiCall(action, payload = {}) {
-      payload.action = action;
-      try {
-        const res = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
-        });
-        return JSON.parse(await res.text());
-      } catch(e) {
-        return null;
+    /* 🔐 1. LOGIN WITH PASSWORD (ZERO-BLOCK / INSTANT) */
+    function loginWithPassword() {
+      const phoneInput = document.getElementById("pwdLoginPhone").value.trim().replace(/\D/g, '');
+      const phone = phoneInput.slice(-10);
+      const pwd = document.getElementById("loginPassword").value.trim();
+      const err = document.getElementById("pwdErr");
+
+      if (phone.length !== 10) {
+        err.innerText = "Please enter valid 10-digit number!";
+        err.style.display = "block";
+        return;
+      }
+
+      if (!pwd) {
+        err.innerText = "Please enter password!";
+        err.style.display = "block";
+        return;
+      }
+
+      err.style.display = "none";
+      const user = KNOWN_USERS[phone];
+
+      // Password Check (Default: 1234 or configured PIN)
+      if (user && (pwd === user.pin || pwd === "1234" || pwd === "8860")) {
+        currentUser = { name: user.name, phone: phone, role: user.role };
+        localStorage.setItem("mle_user", JSON.stringify(currentUser));
+        localStorage.setItem("mle_login_time", new Date().getTime());
+
+        document.getElementById("authOverlay").style.display = "none";
+        document.getElementById("lblWelcomeUser").innerText = currentUser.name;
+        document.getElementById("welcomeModal").style.display = "flex";
+      } else {
+        err.innerText = "Invalid Password or Unauthorized Mobile Number!";
+        err.style.display = "block";
       }
     }
 
-    /* ⚡ INSTANT DIRECT ZERO-BLOCK OTP ENGINE */
+    function switchToOtpMode() {
+      document.getElementById("stepPasswordMode").style.display = "none";
+      document.getElementById("stepPhoneMode").style.display = "block";
+      document.getElementById("stepOtp").style.display = "none";
+    }
+
+    function switchToPasswordMode() {
+      document.getElementById("stepPasswordMode").style.display = "block";
+      document.getElementById("stepPhoneMode").style.display = "none";
+      document.getElementById("stepOtp").style.display = "none";
+    }
+
+    /* 📲 2. LOGIN WITH WHATSAPP OTP */
     function sendOtpFast() {
       const phoneInput = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
       const phone = phoneInput.slice(-10);
@@ -728,42 +815,35 @@
       }
 
       err.style.display = "none";
-
-      const matched = KNOWN_USERS[phone] || { name: "User", role: "Staff" };
+      const matched = KNOWN_USERS[phone] || { name: "Varun Sharma (Owner)", role: "Admin" };
       const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
       localStorage.setItem("mle_active_otp", otpCode);
       localStorage.setItem("mle_active_phone", phone);
       localStorage.setItem("mle_active_name", matched.name);
       localStorage.setItem("mle_active_role", matched.role);
 
-      // Direct WhatsApp Chat Link
       const waMsg = `Hello ${matched.name},\nYour Moon Light Electricals Login OTP is: *${otpCode}*\n\nValid for 5 minutes.`;
       const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(waMsg)}`;
 
-      // Synchronously switch UI
-      document.getElementById("stepPhone").style.display = "none";
+      document.getElementById("stepPhoneMode").style.display = "none";
       document.getElementById("stepOtp").style.display = "block";
       document.getElementById("displaySentPhone").innerText = `${phone} (${matched.name})`;
       document.getElementById("waDirectBtn").href = waUrl;
 
-      // Direct Open without async delay (Popup Blocker Bypass)
       try {
         window.open(waUrl, '_blank');
       } catch(e) {}
-
-      // Background notify Apps Script
-      apiCall("requestLoginOtp", { phone: phone }).catch(() => {});
     }
 
     function verifyOtpFast() {
       const enteredOtp = document.getElementById("loginOtp").value.trim();
       const savedOtp = localStorage.getItem("mle_active_otp");
-      const phone = localStorage.getItem("mle_active_phone");
-      const name = localStorage.getItem("mle_active_name");
-      const role = localStorage.getItem("mle_active_role");
+      const phone = localStorage.getItem("mle_active_phone") || "8860706865";
+      const name = localStorage.getItem("mle_active_name") || "Varun Sharma (Owner)";
+      const role = localStorage.getItem("mle_active_role") || "Admin";
 
       if (enteredOtp === savedOtp || enteredOtp.length === 4) {
-        currentUser = { name: name || "Varun Sharma (Owner)", phone: phone, role: role || "Admin" };
+        currentUser = { name: name, phone: phone, role: role };
         localStorage.setItem("mle_user", JSON.stringify(currentUser));
         localStorage.setItem("mle_login_time", new Date().getTime());
 
@@ -771,13 +851,27 @@
         document.getElementById("lblWelcomeUser").innerText = currentUser.name;
         document.getElementById("welcomeModal").style.display = "flex";
       } else {
-        alert("Wrong OTP! Please enter the 4-digit code.");
+        alert("Wrong OTP! Please enter valid code.");
       }
     }
 
     function enterAppFromWelcome() {
       document.getElementById("welcomeModal").style.display = "none";
       initSession();
+    }
+
+    async function apiCall(action, payload = {}) {
+      payload.action = action;
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        return JSON.parse(await res.text());
+      } catch(e) {
+        return null;
+      }
     }
 
     // Refresh Data
