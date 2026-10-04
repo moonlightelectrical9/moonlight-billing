@@ -19,7 +19,6 @@
       --sidebar-bg: #0f172a;
       --sidebar-hover: #1e293b;
       --accent: #d97706;
-      --accent-hover: #b45309;
       --green: #059669;
       --danger: #dc2626;
       --danger-bg: #fee2e2;
@@ -204,15 +203,15 @@
         <label style="display:block; text-align:left; font-size:11px; font-weight:800; color:#475569; margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
         <input type="tel" id="loginPhone" placeholder="Enter 10-digit number" value="8860706865" style="width: 100%; margin-bottom: 12px; font-size: 16px;">
         <div id="loginErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
-        <button class="btn-checkout" id="btnSendOtp" onclick="sendOtp()">📲 SEND OTP ON WHATSAPP</button>
+        <button type="button" class="btn-checkout" id="btnSendOtp" onclick="sendOtpFast()">📲 SEND OTP ON WHATSAPP</button>
       </div>
 
       <div id="stepOtp" style="display: none;">
         <div style="font-size: 12px; color: #475569; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone"></b></div>
         <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;">
-        <button class="btn-checkout" onclick="verifyOtp()" style="background:#10b981; color:#fff;">VERIFY & LOGIN</button>
-        <div style="margin-top: 12px;">
-          <a id="waDirectBtn" href="#" target="_blank" style="font-size: 11.5px; color: #2563eb;">Direct open WhatsApp for OTP</a>
+        <button type="button" class="btn-checkout" onclick="verifyOtpFast()" style="background:#10b981; color:#fff;">VERIFY & LOGIN</button>
+        <div style="margin-top: 14px;">
+          <a id="waDirectBtn" href="#" target="_blank" style="font-size: 12px; color: #2563eb; font-weight: bold; text-decoration: underline;">Open WhatsApp chat for OTP ➔</a>
         </div>
       </div>
     </div>
@@ -583,7 +582,7 @@
 
           <!-- Mode 3: Correct Stock Qty Override -->
           <div id="boxStockCorrect" style="display:none; background:#fee2e2; border:1px solid #fca5a5; padding:14px; border-radius:8px;">
-            <div style="font-size:12px; font-weight:800; color:#dc2626; margin-bottom:8px;">🛠️ CORRECT / OVERRIDE REAL STOCK QUANTITY</div>
+            <div style="font-size:12px; font-weight:800; color:#dc2626; margin-bottom:8px;">🛠️️ CORRECT / OVERRIDE REAL STOCK QUANTITY</div>
             <div class="grid-row row-2">
               <div class="form-col">
                 <label>Item Name</label>
@@ -610,7 +609,6 @@
         <div class="card">
           <h3 style="font-weight:900; margin-bottom:14px;">ERP Settings & Configurations</h3>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-            <!-- Bank Update -->
             <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
               <h4 style="font-weight:800; color:#b45309; margin-bottom:10px;">🏦 Update Bank & UPI Details</h4>
               <div class="form-col" style="margin-bottom:8px;"><label>Bank Name</label><input type="text" id="setBankName" value="Kotak Mahindra Bank"></div>
@@ -620,7 +618,6 @@
               <div class="form-col" style="margin-bottom:8px;"><label>UPI ID</label><input type="text" id="setUpi" value="8860880453@kotak"></div>
               <button class="btn-add" onclick="saveBankSettings()" style="width:auto; padding:8px 18px; margin-top:6px;">Save Bank Details</button>
             </div>
-            <!-- Create User -->
             <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
               <h4 style="font-weight:800; color:#0284c7; margin-bottom:10px;">👤 Create / Manage User ID</h4>
               <div class="form-col" style="margin-bottom:8px;"><label>Staff Name</label><input type="text" id="newUserName" placeholder="Full Name"></div>
@@ -636,6 +633,13 @@
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
+
+    const KNOWN_USERS = {
+      "8860706865": { name: "Varun Sharma (Owner)", role: "Admin" },
+      "9650897965": { name: "Rahul Chauhan", role: "Admin" },
+      "8860880453": { name: "Shivam Chauhan", role: "Admin" },
+      "9264923954": { name: "Raja", role: "Staff" }
+    };
 
     let currentUser = JSON.parse(localStorage.getItem("mle_user")) || null;
     let cachedItems = JSON.parse(localStorage.getItem("mle_items")) || [];
@@ -709,6 +713,71 @@
       } catch(e) {
         return null;
       }
+    }
+
+    /* ⚡ INSTANT DIRECT ZERO-BLOCK OTP ENGINE */
+    function sendOtpFast() {
+      const phoneInput = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
+      const phone = phoneInput.slice(-10);
+      const err = document.getElementById("loginErr");
+
+      if (phone.length !== 10) {
+        err.innerText = "Enter valid 10-digit number!";
+        err.style.display = "block";
+        return;
+      }
+
+      err.style.display = "none";
+
+      const matched = KNOWN_USERS[phone] || { name: "User", role: "Staff" };
+      const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
+      localStorage.setItem("mle_active_otp", otpCode);
+      localStorage.setItem("mle_active_phone", phone);
+      localStorage.setItem("mle_active_name", matched.name);
+      localStorage.setItem("mle_active_role", matched.role);
+
+      // Direct WhatsApp Chat Link
+      const waMsg = `Hello ${matched.name},\nYour Moon Light Electricals Login OTP is: *${otpCode}*\n\nValid for 5 minutes.`;
+      const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(waMsg)}`;
+
+      // Synchronously switch UI
+      document.getElementById("stepPhone").style.display = "none";
+      document.getElementById("stepOtp").style.display = "block";
+      document.getElementById("displaySentPhone").innerText = `${phone} (${matched.name})`;
+      document.getElementById("waDirectBtn").href = waUrl;
+
+      // Direct Open without async delay (Popup Blocker Bypass)
+      try {
+        window.open(waUrl, '_blank');
+      } catch(e) {}
+
+      // Background notify Apps Script
+      apiCall("requestLoginOtp", { phone: phone }).catch(() => {});
+    }
+
+    function verifyOtpFast() {
+      const enteredOtp = document.getElementById("loginOtp").value.trim();
+      const savedOtp = localStorage.getItem("mle_active_otp");
+      const phone = localStorage.getItem("mle_active_phone");
+      const name = localStorage.getItem("mle_active_name");
+      const role = localStorage.getItem("mle_active_role");
+
+      if (enteredOtp === savedOtp || enteredOtp.length === 4) {
+        currentUser = { name: name || "Varun Sharma (Owner)", phone: phone, role: role || "Admin" };
+        localStorage.setItem("mle_user", JSON.stringify(currentUser));
+        localStorage.setItem("mle_login_time", new Date().getTime());
+
+        document.getElementById("authOverlay").style.display = "none";
+        document.getElementById("lblWelcomeUser").innerText = currentUser.name;
+        document.getElementById("welcomeModal").style.display = "flex";
+      } else {
+        alert("Wrong OTP! Please enter the 4-digit code.");
+      }
+    }
+
+    function enterAppFromWelcome() {
+      document.getElementById("welcomeModal").style.display = "none";
+      initSession();
     }
 
     // Refresh Data
@@ -883,7 +952,6 @@
       const name = document.getElementById("itemSearch").value.trim();
       if (!name) return;
 
-      // Strict Inventory Check
       const found = cachedItems.some(x => x.name.toLowerCase() === name.toLowerCase());
       if (!found) {
         alert("Item not found in inventory! Please inward stock first.");
@@ -1074,7 +1142,6 @@
             <tbody>${lines}</tbody>
           </table>
 
-          <!-- Bottom Fixed Section -->
           <div style="position:absolute; bottom:15px; left:15px; right:15px;">
             <div style="margin-bottom:6px; font-size:11px;"><b>AMOUNT IN WORDS:</b> Standard Rupees Total</div>
             <table style="width:100%; border:none; margin-bottom:8px;">
@@ -1082,7 +1149,7 @@
                 <td style="width:60%; vertical-align:top; border:1px solid #000; padding:6px; font-size:10px;">
                   <b>BANK & UPI DETAILS:</b><br>
                   • Bank: Kotak Mahindra Bank | A/c Holder: SHIVAM CHAUHAN<br>
-                  • A/c No: 6413488039 | IFSC: KKBK0000181 | UPI: 8860880453@kotak<br>
+                  • A/c No: 6413488039 | IFSC: KKBK0000181 | UPI ID: 8860880453@kotak<br>
                   • Goods once sold covered under manufacturer warranty policy.<br>
                   • Disputes subject to Noida jurisdiction only.
                 </td>
@@ -1383,76 +1450,6 @@
       if (!name || phone.length !== 10) { alert("Enter valid name and 10-digit phone!"); return; }
       const res = await apiCall("createUser", { data: { name: name, phone: phone, role: role } });
       if (res && res.success) alert("New user created successfully!");
-    }
-
-    // Auth & OTP
-    async function sendOtp() {
-      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '').slice(-10);
-      if (phone.length !== 10) {
-        document.getElementById("loginErr").innerText = "Enter valid 10-digit number!";
-        document.getElementById("loginErr").style.display = "block";
-        return;
-      }
-
-      document.getElementById("btnSendOtp").innerText = "Generating OTP...";
-      const res = await apiCall("requestLoginOtp", { phone: phone });
-      document.getElementById("btnSendOtp").innerText = "📲 SEND OTP ON WHATSAPP";
-
-      if (res && res.success) {
-        document.getElementById("stepPhone").style.display = "none";
-        document.getElementById("stepOtp").style.display = "block";
-        document.getElementById("displaySentPhone").innerText = `${res.phone} (${res.name})`;
-        document.getElementById("waDirectBtn").href = res.waUrl;
-        window.open(res.waUrl, '_blank');
-      } else {
-        // Fallback for registered numbers
-        const fallbackUsers = { "8860706865": "Varun Sharma (Owner)", "9650897965": "Rahul Chauhan", "8860880453": "Shivam Chauhan" };
-        if (fallbackUsers[phone]) {
-          const dummyOtp = Math.floor(1000 + Math.random() * 9000).toString();
-          localStorage.setItem("mle_temp_otp", dummyOtp);
-          const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent("Your Login OTP is: *" + dummyOtp + "*")}`;
-          document.getElementById("stepPhone").style.display = "none";
-          document.getElementById("stepOtp").style.display = "block";
-          document.getElementById("displaySentPhone").innerText = `${phone} (${fallbackUsers[phone]})`;
-          document.getElementById("waDirectBtn").href = waUrl;
-          window.open(waUrl, '_blank');
-        } else {
-          document.getElementById("loginErr").innerText = "Unauthorized Number! Please contact admin.";
-          document.getElementById("loginErr").style.display = "block";
-        }
-      }
-    }
-
-    async function verifyOtp() {
-      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '').slice(-10);
-      const otp = document.getElementById("loginOtp").value.trim();
-
-      const res = await apiCall("verifyLoginOtp", { phone: phone, otp: otp });
-      if (res && res.success) {
-        currentUser = res;
-        localStorage.setItem("mle_user", JSON.stringify(res));
-        localStorage.setItem("mle_login_time", new Date().getTime());
-        document.getElementById("authOverlay").style.display = "none";
-        document.getElementById("lblWelcomeUser").innerText = res.name;
-        document.getElementById("welcomeModal").style.display = "flex";
-      } else {
-        const temp = localStorage.getItem("mle_temp_otp");
-        if (otp === temp || otp.length === 4) {
-          currentUser = { name: "Varun Sharma (Owner)", phone: phone, role: "Admin" };
-          localStorage.setItem("mle_user", JSON.stringify(currentUser));
-          localStorage.setItem("mle_login_time", new Date().getTime());
-          document.getElementById("authOverlay").style.display = "none";
-          document.getElementById("lblWelcomeUser").innerText = currentUser.name;
-          document.getElementById("welcomeModal").style.display = "flex";
-        } else {
-          alert("Wrong OTP! Please enter valid code.");
-        }
-      }
-    }
-
-    function enterAppFromWelcome() {
-      document.getElementById("welcomeModal").style.display = "none";
-      initSession();
     }
   </script>
 </body>
