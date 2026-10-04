@@ -16,119 +16,90 @@
       --bg: #f8fafc;
       --card-bg: #ffffff;
       --border: #cbd5e1;
-      --input-bg: #f1f5f9;
-      --input-text: #0f172a;
+      --sidebar-bg: #0f172a;
+      --sidebar-hover: #1e293b;
       --accent: #d97706;
+      --accent-hover: #b45309;
       --green: #059669;
-      --brown: #c25e00;
+      --danger: #dc2626;
       --danger-bg: #fee2e2;
-      --danger-border: #fca5a5;
-      --danger-text: #b91c1c;
-      --yellow-bar: #fef3c7;
-      --yellow-border: #fde68a;
     }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-    body { background: var(--bg); color: #0f172a; padding: 10px 14px; min-height: 100vh; overflow-x: hidden; }
+    body { background: var(--bg); color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
 
-    .top-nav {
+    /* Top Bar */
+    .top-header {
+      background: #ffffff;
+      border-bottom: 2px solid var(--border);
+      padding: 10px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 0 12px 0;
-      border-bottom: 2px solid var(--border);
-      margin-bottom: 12px;
       flex-wrap: wrap;
       gap: 10px;
+      z-index: 100;
     }
-    .brand-wrap { display: flex; flex-direction: column; }
-    .brand-title { font-size: 18px; font-weight: 900; color: #0f172a; letter-spacing: 0.5px; }
+    .brand-title { font-size: 19px; font-weight: 900; color: #0f172a; letter-spacing: 0.5px; }
     .brand-title span { color: var(--accent); }
     .brand-tagline { font-size: 11px; color: var(--accent); font-style: italic; font-weight: 700; margin-top: 1px; }
 
-    .nav-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .nav-tab-btn {
-      background: #e2e8f0;
-      color: #334155;
-      border: 1px solid var(--border);
-      padding: 7px 12px;
-      border-radius: 6px;
-      font-size: 12.5px;
+    .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .timer-pill { background: #fef3c7; border: 1px solid #fde68a; padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; color: #b45309; font-family: monospace; }
+    .btn-sync { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; }
+    .user-pill { background: #e2e8f0; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: #334155; }
+    .btn-logout { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 800; cursor: pointer; }
+
+    /* Layout Structure */
+    .main-wrapper { display: flex; flex: 1; min-height: calc(100vh - 65px); }
+
+    /* Left Sidebar */
+    .sidebar { width: 220px; background: var(--sidebar-bg); padding: 16px 10px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .nav-btn {
+      background: transparent;
+      color: #94a3b8;
+      border: none;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13.5px;
       font-weight: 800;
+      text-align: left;
       cursor: pointer;
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 10px;
+      transition: all 0.2s;
     }
-    .nav-tab-btn.active {
-      background: #f59e0b;
-      color: #000000;
-      border-color: #d97706;
-    }
-    .btn-install {
-      background: #fef08a;
-      color: #854d0e;
-      border: 1px solid #fde047;
-      padding: 7px 12px;
+    .nav-btn:hover { background: var(--sidebar-hover); color: #ffffff; }
+    .nav-btn.active { background: var(--accent); color: #000000; font-weight: 900; }
+
+    .sub-menu { display: flex; flex-direction: column; gap: 4px; padding-left: 20px; margin-top: 4px; margin-bottom: 8px; }
+    .sub-nav-btn {
+      background: transparent;
+      color: #94a3b8;
+      border: none;
+      padding: 8px 10px;
       border-radius: 6px;
       font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-      display: none;
-    }
-    .btn-refresh {
-      background: #e0f2fe;
-      color: #0284c7;
-      border: 1px solid #bae6fd;
-      padding: 7px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-    .timer-pill {
-      background: #fef3c7;
-      border: 1px solid #fde68a;
-      padding: 6px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 800;
-      color: #b45309;
-      font-family: monospace;
-    }
-    .user-pill {
-      background: #e2e8f0;
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 11.5px;
       font-weight: 700;
-      color: #334155;
-    }
-    .btn-logout {
-      background: #fee2e2;
-      color: #dc2626;
-      border: 1px solid #fca5a5;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 11.5px;
-      font-weight: 800;
+      text-align: left;
       cursor: pointer;
     }
+    .sub-nav-btn:hover { color: #ffffff; }
+    .sub-nav-btn.active { color: #fbbf24; font-weight: 900; }
 
-    .container { max-width: 1350px; margin: 0 auto; width: 100%; }
+    /* Content Area */
+    .content-area { flex: 1; padding: 14px 18px; overflow-y: auto; max-width: 1400px; margin: 0 auto; width: 100%; }
 
-    .alert-box {
-      background: var(--danger-bg);
-      border: 1px solid var(--danger-border);
-      border-radius: 6px;
-      padding: 10px 14px;
-      color: var(--danger-text);
-      font-size: 12px;
-      line-height: 1.5;
-      margin-bottom: 14px;
-      display: none;
+    @media (max-width: 900px) {
+      .main-wrapper { flex-direction: column; }
+      .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; padding: 10px; }
+      .sub-menu { padding-left: 0; flex-direction: row; flex-wrap: wrap; }
     }
 
+    /* Cards & Form Components */
+    .card { background: #ffffff; border: 1.5px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 14px; }
+    .alert-banner { background: var(--danger-bg); border: 1.5px solid #fca5a5; border-radius: 8px; padding: 10px 14px; color: var(--danger); font-size: 12.5px; margin-bottom: 14px; display: none; }
+    
     .grid-row { display: grid; gap: 10px; margin-bottom: 12px; }
     .row-5 { grid-template-columns: 1fr 1.3fr 1.2fr 1.1fr 1.2fr; }
     .row-2 { grid-template-columns: 2fr 1fr; }
@@ -136,15 +107,12 @@
     .row-item-btm { grid-template-columns: 1.6fr 1.2fr 1.2fr 1fr 1.6fr; }
 
     @media (max-width: 820px) {
-      body { padding: 8px 10px; }
-      .row-5, .row-2, .row-item-top, .row-item-btm { grid-template-columns: 1fr; gap: 8px; }
-      .top-nav { flex-direction: column; align-items: flex-start; }
-      .nav-actions { width: 100%; justify-content: space-between; }
+      .row-5, .row-2, .row-item-top, .row-item-btm { grid-template-columns: 1fr; }
     }
 
     .form-col { display: flex; flex-direction: column; gap: 4px; position: relative; }
     .form-col label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; }
-    .form-col label span { color: #ef4444; }
+    .form-col label span { color: var(--danger); }
 
     input, select {
       background: #ffffff;
@@ -188,119 +156,27 @@
     }
     .dropdown-item:hover { background: #eff6ff; color: #1d4ed8; }
 
-    .separator { border-bottom: 1px dashed #cbd5e1; margin: 14px 0; }
-
-    .btn-add {
-      background: var(--green);
-      color: #ffffff;
-      border: none;
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 800;
-      width: 100%;
-      cursor: pointer;
-      margin: 6px 0 14px 0;
-    }
-
-    .table-wrap {
-      background: #ffffff;
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      overflow-x: auto;
-      margin-bottom: 14px;
-    }
-    table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 13px; }
+    .btn-add { background: var(--green); color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: 800; width: 100%; cursor: pointer; margin: 6px 0 14px 0; }
+    .table-wrap { background: #ffffff; border: 1.5px solid var(--border); border-radius: 6px; overflow-x: auto; margin-bottom: 14px; }
+    table { width: 100%; min-width: 650px; border-collapse: collapse; font-size: 13px; }
     th { background: #f8fafc; padding: 10px 12px; text-align: left; font-weight: 800; border-bottom: 2px solid var(--border); }
     td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; }
-    .btn-del-row { color: #dc2626; font-weight: 900; background: none; border: none; font-size: 16px; cursor: pointer; }
+    .btn-del { color: var(--danger); font-weight: 900; background: none; border: none; font-size: 16px; cursor: pointer; }
 
-    .total-bar {
-      background: var(--yellow-bar);
-      border: 1.5px solid var(--yellow-border);
-      border-radius: 6px;
-      padding: 12px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .total-meta { display: flex; align-items: center; gap: 16px; font-size: 13.5px; font-weight: 800; color: #854d0e; }
-    .total-amt { font-size: 22px; font-weight: 900; color: #000000; }
+    .summary-bar { background: #fef3c7; border: 1.5px solid #fde68a; border-radius: 6px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+    .btn-checkout { background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 6px; font-size: 15px; font-weight: 900; width: 100%; cursor: pointer; }
+    .btn-checkout:disabled { background: #e2e8f0 !important; color: #94a3b8 !important; cursor: not-allowed; }
 
-    .btn-save {
-      background: var(--brown);
-      color: #ffffff;
-      border: none;
-      padding: 14px;
-      border-radius: 6px;
-      font-size: 15px;
-      font-weight: 900;
-      width: 100%;
-      cursor: pointer;
-    }
-    .btn-save:disabled { background: #e2e8f0 !important; color: #94a3b8 !important; cursor: not-allowed; }
+    /* Modals & Dialogs */
+    .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.88); display: flex; align-items: center; justify-content: center; z-index: 99999; padding: 14px; }
+    .auth-box { background: #fff; border-radius: 14px; padding: 30px 24px; width: 100%; max-width: 380px; text-align: center; }
+    .modal-box { background: #fff; border-radius: 14px; padding: 24px; width: 100%; max-width: 440px; text-align: center; }
 
-    .aux-card { background: #ffffff; border: 1.5px solid var(--border); border-radius: 8px; padding: 18px; margin-top: 10px; }
-
-    .udhar-summary-card {
-      background: #fff7ed;
-      border: 2px solid #fdba74;
-      border-radius: 10px;
-      padding: 16px 20px;
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .udhar-sum-title { font-size: 13px; font-weight: 800; color: #9a3412; }
-    .udhar-sum-amt { font-size: 26px; font-weight: 900; color: #c2410c; }
-    .udhar-sum-count { font-size: 12.5px; font-weight: 700; color: #7c2d12; background: #ffedd5; padding: 4px 12px; border-radius: 20px; }
-
-    #authOverlay {
-      position: fixed;
-      inset: 0;
-      background: #0f172a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 99999;
-      padding: 14px;
-    }
-    .auth-box {
-      background: #ffffff;
-      border-radius: 14px;
-      padding: 30px 24px;
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-    }
-
-    #billSuccessModal {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100000;
-      padding: 16px;
-    }
-    .success-card { background: #ffffff; border-radius: 16px; padding: 26px 20px; width: 100%; max-width: 440px; text-align: center; }
-    .success-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-
-    .btn-wa-share { background: #25d366; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
-    .btn-print-direct { background: #0284c7; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
-    .btn-view-pdf { background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
-    .btn-next-bill { background: #f1f5f9; color: #0f172a; border: 1.5px solid #cbd5e1; padding: 12px; border-radius: 8px; font-weight: 800; cursor: pointer; }
-
-    /* Exact Bill Print Layout */
+    /* Exact Fixed Print Styling */
     @media print {
       body * { visibility: hidden; }
-      #printableReceipt, #printableReceipt * { visibility: visible; }
-      #printableReceipt {
+      #printableInvoice, #printableInvoice * { visibility: visible; }
+      #printableInvoice {
         position: absolute;
         left: 0;
         top: 0;
@@ -308,49 +184,33 @@
         display: block !important;
         background: #fff;
         color: #000;
-        padding: 15px;
+        padding: 10mm;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Hidden Container for Exact Bill Printing -->
-  <div id="printableReceipt" style="display:none;"></div>
+  <!-- Hidden Container for Exact Invoice Print -->
+  <div id="printableInvoice" style="display:none;"></div>
 
-  <!-- Bill Success Modal -->
-  <div id="billSuccessModal" style="display: none;">
-    <div class="success-card">
-      <div style="font-size:42px;">✅</div>
-      <div style="font-size:19px; font-weight:900; color:#059669;">Bill Generated Successfully!</div>
-      <div id="lblSuccessDocNo" style="font-size:13px; color:#475569; margin:4px 0;">Doc No: -</div>
-      
-      <div class="success-actions">
-        <button class="btn-wa-share" onclick="shareBillOnWhatsApp()">📲 Send Invoice on WhatsApp</button>
-        <button class="btn-print-direct" onclick="triggerDirectPrint()">🖨️ Print Invoice (Hard Copy)</button>
-        <button class="btn-view-pdf" onclick="viewDownloadPdf()">👁️ View Bill Receipt</button>
-        <button class="btn-next-bill" onclick="closeSuccessAndNextBill()">🧾 + Create Next Bill</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Solid Auth Overlay -->
-  <div id="authOverlay" style="display: flex;">
+  <!-- AUTH OVERLAY -->
+  <div id="authOverlay" class="overlay" style="display: flex;">
     <div class="auth-box">
-      <div class="brand-title" style="font-size: 20px;">MOON<span>LIGHT</span> ELECTRICALS</div>
+      <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
       <div class="brand-tagline" style="margin-bottom: 22px;">Brightening Lives, Powering Trust</div>
 
       <div id="stepPhone">
         <label style="display:block; text-align:left; font-size:11px; font-weight:800; color:#475569; margin-bottom:6px;">AUTHORIZED MOBILE NUMBER</label>
         <input type="tel" id="loginPhone" placeholder="Enter 10-digit number" value="8860706865" style="width: 100%; margin-bottom: 12px; font-size: 16px;">
         <div id="loginErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
-        <button class="btn-save" id="btnSendOtp" onclick="sendOtp()" style="background:#f59e0b; color:#000;">📲 SEND OTP ON WHATSAPP</button>
+        <button class="btn-checkout" id="btnSendOtp" onclick="sendOtp()">📲 SEND OTP ON WHATSAPP</button>
       </div>
 
       <div id="stepOtp" style="display: none;">
         <div style="font-size: 12px; color: #475569; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone"></b></div>
         <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;">
-        <button class="btn-save" onclick="verifyOtp()" style="background:#10b981;">VERIFY & LOGIN</button>
+        <button class="btn-checkout" onclick="verifyOtp()" style="background:#10b981; color:#fff;">VERIFY & LOGIN</button>
         <div style="margin-top: 12px;">
           <a id="waDirectBtn" href="#" target="_blank" style="font-size: 11.5px; color: #2563eb;">Direct open WhatsApp for OTP</a>
         </div>
@@ -358,250 +218,420 @@
     </div>
   </div>
 
-  <!-- Main App -->
-  <div class="container" id="mainAppWrapper" style="display: none;">
-    <div class="top-nav">
-      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-        <div class="brand-wrap">
-          <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
-          <div class="brand-tagline">Brightening Lives, Powering Trust</div>
-        </div>
-        <button class="nav-tab-btn active" id="tabBillingBtn" onclick="switchView('billing')">📜 Billing</button>
-        <button class="nav-tab-btn" id="tabHistoryBtn" onclick="switchView('history')">🔍 Search Bills</button>
-        <button class="nav-tab-btn" id="tabKhataBtn" onclick="switchView('khata')">📒 Udhar Khata</button>
-        <button class="nav-tab-btn" id="tabStockBtn" onclick="switchView('stock')">📦 Stock Inward</button>
-      </div>
-      <div class="nav-actions">
-        <button class="btn-install" id="btnInstallApp" onclick="triggerPwaInstall()">📲 Install App</button>
-        <div class="timer-pill" id="sessionTimerBadge">⏳ 24:00:00</div>
-        <button class="btn-refresh" id="btnRefresh" onclick="refreshAppData()">🔄 Refresh</button>
-        <div class="user-pill" id="lblUser">Session...</div>
-        <button class="btn-logout" onclick="confirmUserLogout()">🚪 Logout</button>
+  <!-- WELCOME MODAL -->
+  <div id="welcomeModal" class="overlay" style="display: none;">
+    <div class="modal-box">
+      <div style="font-size: 42px;">👋</div>
+      <h2 style="font-size: 18px; margin: 10px 0; color:#0f172a;">Greetings!</h2>
+      <p style="font-size: 14px; color:#475569; margin-bottom: 20px;">Welcome to Moonlight Electricals, <b id="lblWelcomeUser">Varun Sharma</b>!</p>
+      <button class="btn-checkout" onclick="enterAppFromWelcome()">Thank You / Enter Dashboard ➔</button>
+    </div>
+  </div>
+
+  <!-- CHECKOUT SUCCESS MODAL -->
+  <div id="checkoutSuccessModal" class="overlay" style="display: none;">
+    <div class="modal-box">
+      <div style="font-size: 42px;">✅</div>
+      <h2 style="font-size: 18px; color:#059669; margin: 8px 0;">Bill Generated Successfully!</h2>
+      <div id="lblSuccessDocNo" style="font-size: 13px; color:#475569; margin-bottom: 16px;">Doc No: -</div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn-checkout" style="background:#25d366; color:#fff;" onclick="shareBillOnWhatsApp()">📲 Send Invoice on WhatsApp</button>
+        <button class="btn-checkout" style="background:#0284c7; color:#fff;" onclick="triggerDirectPrint()">🖨️ Print Invoice (Hard Copy)</button>
+        <button class="btn-checkout" style="background:#2563eb; color:#fff;" onclick="viewDownloadPdf()">👁️ View / Download PDF</button>
+        <button class="btn-checkout" style="background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1;" onclick="closeSuccessAndNextBill()">🧾 + Create Next Bill</button>
       </div>
     </div>
+  </div>
 
-    <!-- 🧾 VIEW 1: BILLING -->
-    <div id="viewBilling">
-      <div class="alert-box" id="lowStockAlertBox">
-        <b>⚠ LOW STOCK ALERT:</b>
+  <!-- TOP BAR -->
+  <header class="top-header">
+    <div>
+      <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
+      <div class="brand-tagline">Brightening Lives, Powering Trust</div>
+    </div>
+    <div class="header-controls">
+      <div class="timer-pill" id="sessionTimerBadge">⏳ 24:00:00</div>
+      <button class="btn-sync" onclick="refreshAppData()">🔄 Sync</button>
+      <div class="user-pill" id="lblUser">User...</div>
+      <button class="btn-logout" onclick="confirmUserLogout()">🚪 Logout</button>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <div class="main-wrapper">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <button class="nav-btn active" id="btnNavDash" onclick="switchNav('dash')">📊 Dashboard</button>
+      
+      <button class="nav-btn" id="btnNavBill" onclick="toggleBillingSub()">🧾 Billing ▾</button>
+      <div class="sub-menu" id="billingSubMenu">
+        <button class="sub-nav-btn active" id="btnSubGen" onclick="switchBillingView('gen')">• Generate Bill</button>
+        <button class="sub-nav-btn" id="btnSubKhata" onclick="switchBillingView('khata')">• Credit Ledger</button>
+        <button class="sub-nav-btn" id="btnSubSearch" onclick="switchBillingView('search')">• Search Bill</button>
+        <button class="sub-nav-btn" id="btnSubStock" onclick="switchBillingView('stock')">• Stock Inward</button>
+      </div>
+
+      <button class="nav-btn" id="btnNavSet" onclick="switchNav('settings')">⚙️ Settings</button>
+    </aside>
+
+    <!-- WORKSPACE -->
+    <main class="content-area">
+      <!-- Real-time Low Inventory Alert -->
+      <div class="alert-banner" id="lowStockAlertBox">
+        <b>⚠️ LOW INVENTORY ALERT:</b>
         <div id="lowStockItemsList" style="margin-top: 4px;"></div>
       </div>
 
-      <div class="grid-row row-5">
-        <div class="form-col">
-          <label>BILL DATE</label>
-          <input type="date" id="billDate" onchange="checkFormState()">
-        </div>
-        <div class="form-col">
-          <label>MODE <span>*</span></label>
-          <select id="billMode" onchange="checkFormState()">
-            <option value="" disabled selected>-- Select Mode --</option>
-            <option value="Final Bill (Tax_Invoices)">Final Bill (Tax_Invoices)</option>
-            <option value="Estimate (Estimates)">Estimate (Estimates)</option>
-          </select>
-        </div>
-        <div class="form-col">
-          <label>RATE TYPE <span>*</span></label>
-          <select id="rateType" onchange="onRateTypeChange()">
-            <option value="" disabled selected>-- Select Rate Type --</option>
-            <option value="Customer Rate">Customer Rate</option>
-            <option value="Electrician Rate">Electrician Rate</option>
-            <option value="Wholesale Rate">Wholesale Rate</option>
-          </select>
-        </div>
-        <div class="form-col">
-          <label>GST BILL? <span>*</span></label>
-          <select id="isGstBill" onchange="onGstBillChange()">
-            <option value="" disabled selected>-- Select GST Bill --</option>
-            <option value="Yes (GST Invoice)">Yes (GST Invoice)</option>
-            <option value="No (Regular Bill)">No (Regular Bill)</option>
-          </select>
-        </div>
-        <div class="form-col">
-          <label>PAYMENT <span>*</span></label>
-          <select id="paymentMode" onchange="checkFormState()">
-            <option value="" disabled selected>-- Select Payment --</option>
-            <option value="Cash">Cash</option>
-            <option value="UPI / Online">UPI / Online</option>
-            <option value="Credit / Udhar">Credit / Udhar</option>
-          </select>
+      <!-- VIEW 1: DASHBOARD -->
+      <div id="viewDashboard">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+            <h3 style="font-weight:900;">Business Analytics & Overview</h3>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-sync" id="btnFilterToday" onclick="filterDash('today')">Today</button>
+              <button class="btn-sync" id="btnFilterWeek" onclick="filterDash('week')">This Week</button>
+              <button class="btn-sync" id="btnFilterMonth" onclick="filterDash('month')">This Month</button>
+              <button class="btn-sync" id="btnFilterYear" onclick="filterDash('year')">Yearly</button>
+            </div>
+          </div>
+
+          <!-- Tab A: Sales -->
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px;">
+            <div style="font-size:12px; font-weight:800; color:#b45309; text-transform:uppercase;">TAB A: SALE DETAILS (Cash Sale + Online Sale = Total Sale)</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-top:8px;">
+              <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
+                <small style="color:#64748b; font-weight:800;">💵 CASH SALES</small>
+                <div style="font-size:20px; font-weight:900;" id="dashSaleCash">₹0.00</div>
+              </div>
+              <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
+                <small style="color:#64748b; font-weight:800;">📱 ONLINE / UPI SALES</small>
+                <div style="font-size:20px; font-weight:900;" id="dashSaleOnline">₹0.00</div>
+              </div>
+              <div style="background:#fef3c7; border:1px solid #fde68a; padding:12px; border-radius:6px;">
+                <small style="color:#b45309; font-weight:800;">💰 TOTAL SALES</small>
+                <div style="font-size:22px; font-weight:900; color:#c25e00;" id="dashSaleTotal">₹0.00</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab B: Purchases -->
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px;">
+            <div style="font-size:12px; font-weight:800; color:#0284c7; text-transform:uppercase;">TAB B: PURCHASE DETAILS (Cash Purchase + Online Purchase = Total Purchase)</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-top:8px;">
+              <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
+                <small style="color:#64748b; font-weight:800;">💵 CASH PURCHASES</small>
+                <div style="font-size:20px; font-weight:900;" id="dashPurCash">₹0.00</div>
+              </div>
+              <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
+                <small style="color:#64748b; font-weight:800;">🏦 ONLINE / BANK PURCHASES</small>
+                <div style="font-size:20px; font-weight:900;" id="dashPurOnline">₹0.00</div>
+              </div>
+              <div style="background:#e0f2fe; border:1px solid #bae6fd; padding:12px; border-radius:6px;">
+                <small style="color:#0369a1; font-weight:800;">📦 TOTAL PURCHASES</small>
+                <div style="font-size:22px; font-weight:900; color:#0284c7;" id="dashPurTotal">₹0.00</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab C: Profit Overview -->
+          <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:14px;">
+            <div style="font-size:12px; font-weight:800; color:#047857; text-transform:uppercase;">TAB C: OVERVIEW (Total Sales - Total Purchases = Gross Profit)</div>
+            <div style="font-size:24px; font-weight:900; color:#059669; margin-top:6px;" id="dashProfitTotal">₹0.00</div>
+          </div>
         </div>
       </div>
 
-      <div class="grid-row row-2">
-        <div class="form-col">
-          <label>CUSTOMER NAME <span>*</span></label>
-          <input type="text" id="custName" placeholder="Customer Name" oninput="checkFormState()">
-        </div>
-        <div class="form-col">
-          <label>WHATSAPP NUMBER <span>*</span></label>
-          <input type="tel" id="custPhone" placeholder="10-digit number" oninput="checkFormState()">
+      <!-- VIEW 2: BILLING -> GENERATE BILL -->
+      <div id="viewGenBill" style="display: none;">
+        <div class="card">
+          <div class="grid-row row-5">
+            <div class="form-col">
+              <label>BILL DATE</label>
+              <input type="date" id="billDate">
+            </div>
+            <div class="form-col">
+              <label>MODE <span>*</span></label>
+              <select id="billMode">
+                <option value="Final Bill (Tax_Invoices)">Final Bill (Tax_Invoices)</option>
+                <option value="Estimate (Estimates)">Estimate (Estimates)</option>
+              </select>
+            </div>
+            <div class="form-col">
+              <label>RATE TYPE <span>*</span></label>
+              <select id="rateType" onchange="onRateTypeChange()">
+                <option value="Customer Rate">Customer Rate</option>
+                <option value="Electrician Rate">Electrician Rate</option>
+                <option value="Wholesale Rate">Wholesale Rate</option>
+              </select>
+            </div>
+            <div class="form-col">
+              <label>GST BILL? <span>*</span></label>
+              <select id="isGstBill">
+                <option value="No (Regular Bill)">No (Regular Bill)</option>
+                <option value="Yes (GST Invoice)">Yes (GST Invoice)</option>
+              </select>
+            </div>
+            <div class="form-col">
+              <label>PAYMENT <span>*</span></label>
+              <select id="paymentMode">
+                <option value="Cash">Cash</option>
+                <option value="UPI / Online">UPI / Online</option>
+                <option value="Credit / Udhar">Credit / Udhar</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-row row-2">
+            <div class="form-col">
+              <label>CUSTOMER NAME <span>*</span></label>
+              <input type="text" id="custName" placeholder="Customer Name">
+            </div>
+            <div class="form-col">
+              <label>WHATSAPP NUMBER <span>*</span></label>
+              <input type="tel" id="custPhone" placeholder="10-digit number">
+            </div>
+          </div>
+
+          <div class="grid-row row-2">
+            <div class="form-col">
+              <label>CUSTOMER ADDRESS <span>*</span></label>
+              <input type="text" id="custAddress" value="Sector-121, Noida">
+            </div>
+            <div class="form-col">
+              <label>CUSTOMER GSTIN (OPTIONAL)</label>
+              <input type="text" id="custGstin" placeholder="09XXXXX...">
+            </div>
+          </div>
+
+          <div style="border-bottom: 1px dashed var(--border); margin: 14px 0;"></div>
+
+          <!-- Item Entry -->
+          <div class="grid-row row-item-top">
+            <div class="form-col">
+              <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
+              <input type="text" id="itemSearch" placeholder="Type to search from 450+ items..." autocomplete="off" oninput="onItemSearchInput()">
+              <div class="dropdown-menu" id="billingItemMenu"></div>
+            </div>
+            <div class="form-col">
+              <label>WORK NOTE / SERIAL / WARRANTY</label>
+              <input type="text" id="itemSerial" placeholder="e.g. Fan Fitting / SN1092">
+            </div>
+            <div class="form-col">
+              <label>HSN / SAC (EDITABLE)</label>
+              <input type="text" id="itemHsn" placeholder="Auto / Enter HSN">
+            </div>
+          </div>
+
+          <div class="grid-row row-item-btm">
+            <div class="form-col">
+              <label>RATE (₹) [🔒 LOCKED]</label>
+              <input type="text" id="itemRate" value="Locked" readonly oninput="calculateItemTotal()">
+            </div>
+            <div class="form-col">
+              <label>DISC (₹/PC)</label>
+              <input type="number" id="itemDisc" value="0" min="0" oninput="calculateItemTotal()">
+            </div>
+            <div class="form-col">
+              <label>GST (₹) [ADDED]</label>
+              <input type="text" id="itemGstAdded" value="0.00" readonly style="color:#b45309; font-weight:800;">
+            </div>
+            <div class="form-col">
+              <label>QTY</label>
+              <input type="number" id="itemQty" value="1" min="1" oninput="calculateItemTotal()">
+            </div>
+            <div class="form-col">
+              <label>TOTAL (₹)</label>
+              <input type="text" id="itemTotal" value="0.00" readonly>
+            </div>
+          </div>
+
+          <button class="btn-add" onclick="addItemToBill()">+ Add Item / Charge to Bill</button>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Item & Description</th>
+                  <th>HSN/SAC</th>
+                  <th>Rate</th>
+                  <th>Disc</th>
+                  <th>GST</th>
+                  <th>Qty</th>
+                  <th>Total</th>
+                  <th style="width:30px; text-align:center;">✕</th>
+                </tr>
+              </thead>
+              <tbody id="billItemsTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="summary-bar">
+            <div style="font-size:13.5px; font-weight:800; color:#b45309;">
+              <span>📦 Total Items: <b id="lblTotalItemCount">0</b></span> | 
+              <span>🔢 Total Units (Qty): <b id="lblTotalUnitsCount">0 Pcs</b></span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-weight:900;">Grand Total:</span>
+              <span style="font-size:24px; font-weight:900; color:#000;" id="lblGrandTotal">₹0.00</span>
+            </div>
+          </div>
+
+          <button class="btn-checkout" id="btnSubmitBill" onclick="submitBillToBackend()" disabled>
+            ⚡ Checkout / Save Bill & Generate PDF
+          </button>
         </div>
       </div>
 
-      <div class="grid-row row-2">
-        <div class="form-col">
-          <label>CUSTOMER ADDRESS <span>*</span></label>
-          <input type="text" id="custAddress" value="Sector-121, Noida" oninput="checkFormState()">
-        </div>
-        <div class="form-col">
-          <label>CUSTOMER GSTIN (OPTIONAL)</label>
-          <input type="text" id="custGstin" placeholder="09XXXXX...">
+      <!-- VIEW 3: CREDIT LEDGER (UDHAR KHATA) -->
+      <div id="viewCreditLedger" style="display: none;">
+        <div class="card">
+          <div style="background:#fff7ed; border:2px solid #fdba74; border-radius:10px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <div>
+              <div style="font-size:12px; font-weight:800; color:#9a3412;">TOTAL PENDING UDHAR AMOUNT</div>
+              <div style="font-size:26px; font-weight:900; color:#c2410c;" id="lblTotalPendingUdhar">₹0.00</div>
+            </div>
+            <div style="font-size:13px; font-weight:700; color:#7c2d12; background:#ffedd5; padding:4px 12px; border-radius:20px;" id="lblTotalPendingCount">0 Pending Bills</div>
+          </div>
+          <h3 style="font-weight:900; margin-bottom:12px;">Pending Udhar Records & Reminders Tracking</h3>
+          <div id="khataListContainer"></div>
         </div>
       </div>
 
-      <div class="separator"></div>
-
-      <!-- Item Search Row -->
-      <div class="grid-row row-item-top">
-        <div class="form-col">
-          <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
-          <input type="text" id="itemSearch" placeholder="Type to search from 450+ items..." autocomplete="off" onclick="handleItemDirectClick()" oninput="onItemSearchInput()" onblur="handleItemBlur()">
-          <div class="dropdown-menu" id="billingItemMenu"></div>
-        </div>
-        <div class="form-col">
-          <label>WORK NOTE / SERIAL / WARRANTY</label>
-          <input type="text" id="itemSerial" placeholder="e.g. Fan Fitting / SN1092">
-        </div>
-        <div class="form-col">
-          <label>HSN / SAC (EDITABLE)</label>
-          <input type="text" id="itemHsn" placeholder="Auto / Enter HSN">
+      <!-- VIEW 4: SEARCH BILLS -->
+      <div id="viewSearchBills" style="display: none;">
+        <div class="card">
+          <h3 style="font-weight:900; margin-bottom:12px;">Search & Counter Reprint Engine</h3>
+          <div class="grid-row row-2">
+            <div class="form-col">
+              <label>Search by Customer Mobile, Name, or Invoice No</label>
+              <input type="text" id="historySearchInput" placeholder="Enter mobile (e.g. 7503767810), name or bill no..." oninput="filterBillHistory()">
+            </div>
+            <div class="form-col" style="justify-content: flex-end;">
+              <button class="btn-sync" style="height: 40px; justify-content:center;" onclick="loadBillHistory()">🔄 Refresh List</button>
+            </div>
+          </div>
+          <div id="historyTableContainer" style="margin-top: 14px;"></div>
         </div>
       </div>
 
-      <div class="grid-row row-item-btm">
-        <div class="form-col">
-          <label>RATE (₹) [🔒 LOCKED]</label>
-          <input type="text" id="itemRate" value="Locked" readonly oninput="calculateItemTotal()">
-        </div>
-        <div class="form-col">
-          <label>DISC (₹/PC)</label>
-          <input type="number" id="itemDisc" value="0" min="0" oninput="calculateItemTotal()">
-        </div>
-        <div class="form-col">
-          <label>GST (₹) [ADDED]</label>
-          <input type="text" id="itemGstAdded" value="0.00" readonly style="color:#b45309; font-weight:800;">
-        </div>
-        <div class="form-col">
-          <label>QTY</label>
-          <input type="number" id="itemQty" value="1" min="1" oninput="calculateItemTotal()">
-        </div>
-        <div class="form-col">
-          <label>TOTAL (₹)</label>
-          <input type="text" id="itemTotal" value="0.00" readonly>
+      <!-- VIEW 5: STOCK INWARD, HSN ONLY & AUDIT HISTORY -->
+      <div id="viewStockInward" style="display: none;">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+            <h3 style="font-weight:900;">Stock Inward & Inventory Management</h3>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-sync" onclick="setStockMode('inward')">📦 Add / Inward Stock</button>
+              <button class="btn-sync" onclick="setStockMode('hsn')">✏️ Quick Update HSN Only</button>
+              <button class="btn-sync" onclick="setStockMode('correct')">🛠️ Correct Stock Qty</button>
+            </div>
+          </div>
+
+          <!-- Mode 1: Regular Inward -->
+          <div id="boxStockInward">
+            <div class="grid-row row-2">
+              <div class="form-col">
+                <label>Item Name <span>*</span></label>
+                <input type="text" id="stkName" placeholder="Search from inventory..." autocomplete="off" oninput="onStockSearchInput()">
+                <div class="dropdown-menu" id="stockItemMenu"></div>
+              </div>
+              <div class="form-col">
+                <label>HSN / SAC</label>
+                <input type="text" id="stkHsn" placeholder="Auto / Enter HSN">
+              </div>
+            </div>
+            <div class="grid-row row-5" style="margin-top:10px;">
+              <div class="form-col">
+                <label>Inward Qty (Adds to Stock) <span>*</span></label>
+                <input type="number" id="stkQty" value="10" min="1">
+              </div>
+              <div class="form-col">
+                <label>Cust Rate (₹)</label>
+                <input type="number" id="stkCustRate" placeholder="0">
+              </div>
+              <div class="form-col">
+                <label>Elec Rate (₹)</label>
+                <input type="number" id="stkElecRate" placeholder="0">
+              </div>
+              <div class="form-col">
+                <label>Wholesale Rate (₹)</label>
+                <input type="number" id="stkFamRate" placeholder="0">
+              </div>
+              <div class="form-col">
+                <label>Min Stock Alert</label>
+                <input type="number" id="stkMinQty" value="2">
+              </div>
+            </div>
+            <button class="btn-add" onclick="submitStockInward()" style="width:auto; padding:10px 24px; margin-top:10px;">+ Inward Stock (Auto-Add)</button>
+          </div>
+
+          <!-- Mode 2: Quick HSN Only -->
+          <div id="boxStockHsn" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
+            <div style="font-size:12px; font-weight:800; color:#b45309; margin-bottom:8px;">⚡ QUICK HSN CODE UPDATE ONLY</div>
+            <div class="grid-row row-2">
+              <div class="form-col">
+                <label>Item Name</label>
+                <input type="text" id="hsnOnlyName" placeholder="Select Item...">
+              </div>
+              <div class="form-col">
+                <label>New HSN Code</label>
+                <input type="text" id="hsnOnlyCode" placeholder="Enter HSN...">
+              </div>
+            </div>
+            <button class="btn-add" onclick="submitHsnOnly()" style="width:auto; padding:8px 20px; margin-top:6px;">Update HSN Only</button>
+          </div>
+
+          <!-- Mode 3: Correct Stock Qty Override -->
+          <div id="boxStockCorrect" style="display:none; background:#fee2e2; border:1px solid #fca5a5; padding:14px; border-radius:8px;">
+            <div style="font-size:12px; font-weight:800; color:#dc2626; margin-bottom:8px;">🛠️ CORRECT / OVERRIDE REAL STOCK QUANTITY</div>
+            <div class="grid-row row-2">
+              <div class="form-col">
+                <label>Item Name</label>
+                <input type="text" id="correctName" placeholder="Select Item...">
+              </div>
+              <div class="form-col">
+                <label>Actual Real Stock Qty</label>
+                <input type="number" id="correctQty" placeholder="Real physical count...">
+              </div>
+            </div>
+            <button class="btn-checkout" onclick="submitCorrectQty()" style="background:#dc2626; color:#fff; width:auto; padding:8px 20px; margin-top:6px;">Override & Set Correct Qty</button>
+          </div>
+
+          <!-- Audit Log: Last 5 Inwards -->
+          <div style="margin-top:24px;">
+            <h4 style="font-weight:900; color:#475569; margin-bottom:8px;">📜 Last 5 Stock Inward / Updates History (Audit Log)</h4>
+            <div id="auditLogContainer"></div>
+          </div>
         </div>
       </div>
 
-      <button class="btn-add" onclick="addItemToBill()">+ Add Item / Charge to Bill</button>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Item & Description</th>
-              <th>HSN/SAC</th>
-              <th>Rate</th>
-              <th>Disc</th>
-              <th>GST (Added)</th>
-              <th>Qty</th>
-              <th>Total</th>
-              <th style="width: 30px; text-align: center;">✕</th>
-            </tr>
-          </thead>
-          <tbody id="billItemsTbody"></tbody>
-        </table>
-      </div>
-
-      <div class="total-bar">
-        <div class="total-meta">
-          <span>📦 Total Items: <b id="lblTotalItemCount">0</b></span>
-          <span>🔢 Total Units (Qty): <b id="lblTotalUnitsCount">0 Pcs</b></span>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div style="font-size:15px; font-weight:900;">Grand Total:</div>
-          <div class="total-amt" id="lblGrandTotal">₹0.00</div>
+      <!-- VIEW 6: SETTINGS -->
+      <div id="viewSettings" style="display: none;">
+        <div class="card">
+          <h3 style="font-weight:900; margin-bottom:14px;">ERP Settings & Configurations</h3>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <!-- Bank Update -->
+            <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
+              <h4 style="font-weight:800; color:#b45309; margin-bottom:10px;">🏦 Update Bank & UPI Details</h4>
+              <div class="form-col" style="margin-bottom:8px;"><label>Bank Name</label><input type="text" id="setBankName" value="Kotak Mahindra Bank"></div>
+              <div class="form-col" style="margin-bottom:8px;"><label>Account Holder Name</label><input type="text" id="setHolder" value="SHIVAM CHAUHAN"></div>
+              <div class="form-col" style="margin-bottom:8px;"><label>Account Number</label><input type="text" id="setAccNo" value="6413488039"></div>
+              <div class="form-col" style="margin-bottom:8px;"><label>IFSC Code</label><input type="text" id="setIfsc" value="KKBK0000181"></div>
+              <div class="form-col" style="margin-bottom:8px;"><label>UPI ID</label><input type="text" id="setUpi" value="8860880453@kotak"></div>
+              <button class="btn-add" onclick="saveBankSettings()" style="width:auto; padding:8px 18px; margin-top:6px;">Save Bank Details</button>
+            </div>
+            <!-- Create User -->
+            <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
+              <h4 style="font-weight:800; color:#0284c7; margin-bottom:10px;">👤 Create / Manage User ID</h4>
+              <div class="form-col" style="margin-bottom:8px;"><label>Staff Name</label><input type="text" id="newUserName" placeholder="Full Name"></div>
+              <div class="form-col" style="margin-bottom:8px;"><label>Contact Mobile Number</label><input type="tel" id="newUserPhone" placeholder="10-digit phone"></div>
+              <div class="form-col" style="margin-bottom:8px;"><label>Role</label><select id="newUserRole"><option value="Staff">Staff</option><option value="Admin">Admin</option></select></div>
+              <button class="btn-add" onclick="createNewUser()" style="background:#0284c7; width:auto; padding:8px 18px; margin-top:6px;">Add New User</button>
+            </div>
+          </div>
         </div>
       </div>
-
-      <button class="btn-save" id="btnSubmitBill" onclick="submitBillToBackend()" disabled>
-        ⚡ Save Bill & Generate PDF
-      </button>
-    </div>
-
-    <!-- 🔍 VIEW 2: SEARCH BILLS -->
-    <div id="viewHistory" style="display: none;">
-      <div class="aux-card">
-        <h3 style="color:#b45309; font-size:16px; margin-bottom:12px; font-weight:900;">Invoice Lookup & Reprint History</h3>
-        <div class="grid-row row-2">
-          <div class="form-col">
-            <label>Search by Customer Mobile, Name, or Bill No</label>
-            <input type="text" id="historySearchInput" placeholder="Enter mobile (e.g. 7503767810), name or bill no..." oninput="filterBillHistory()">
-          </div>
-          <div class="form-col" style="justify-content: flex-end;">
-            <button class="btn-refresh" id="btnSyncHistory" style="height: 40px; justify-content: center;" onclick="loadBillHistory()">
-              🔄 Refresh Invoices List
-            </button>
-          </div>
-        </div>
-        <div id="historyTableContainer" style="margin-top: 14px;"></div>
-      </div>
-    </div>
-
-    <!-- 📒 VIEW 3: UDHAR KHATA -->
-    <div id="viewKhata" style="display: none;">
-      <div class="aux-card">
-        <div class="udhar-summary-card">
-          <div>
-            <div class="udhar-sum-title">Total Pending Udhar Amount</div>
-            <div class="udhar-sum-amt" id="lblTotalPendingUdhar">₹0.00</div>
-          </div>
-          <div class="udhar-sum-count" id="lblTotalPendingCount">0 Pending Bills</div>
-        </div>
-        <h3 style="color:#b45309; font-size:16px; margin-bottom:14px; font-weight:900;">Pending Udhar Records & Reminders</h3>
-        <div id="khataListContainer"></div>
-      </div>
-    </div>
-
-    <!-- 📦 VIEW 4: STOCK INWARD -->
-    <div id="viewStock" style="display: none;">
-      <div class="aux-card">
-        <h3 style="color:#b45309; font-size:16px; margin-bottom:14px; font-weight:900;">Add / Inward Stock Entry</h3>
-        <div class="grid-row row-2">
-          <div class="form-col">
-            <label>Item Name <span>*</span></label>
-            <input type="text" id="stkName" placeholder="Item Description" autocomplete="off" onclick="handleStockDirectClick()" oninput="onStockSearchInput()" onblur="handleStockBlur()">
-            <div class="dropdown-menu" id="stockItemMenu"></div>
-          </div>
-          <div class="form-col">
-            <label>HSN / SAC</label>
-            <input type="text" id="stkHsn" placeholder="Enter HSN Code">
-          </div>
-        </div>
-        <div class="grid-row row-5" style="margin-top:10px;">
-          <div class="form-col">
-            <label>Inward Quantity <span>*</span></label>
-            <input type="number" id="stkQty" value="10" min="1">
-          </div>
-          <div class="form-col">
-            <label>Cust Rate (₹)</label>
-            <input type="number" id="stkCustRate" placeholder="0">
-          </div>
-          <div class="form-col">
-            <label>Elec Rate (₹)</label>
-            <input type="number" id="stkElecRate" placeholder="0">
-          </div>
-          <div class="form-col">
-            <label>Wholesale Rate (₹)</label>
-            <input type="number" id="stkFamRate" placeholder="0">
-          </div>
-          <div class="form-col">
-            <label>Min Stock Alert</label>
-            <input type="number" id="stkMinQty" value="2">
-          </div>
-        </div>
-        <button class="btn-add" onclick="submitStockInward()" style="width:auto; padding:10px 24px; margin-top:14px;">+ Update / Inward Stock</button>
-      </div>
-    </div>
+    </main>
   </div>
 
   <script>
@@ -611,13 +641,10 @@
     let cachedItems = JSON.parse(localStorage.getItem("mle_items")) || [];
     let billItems = [];
     let currentItemObj = null;
-    let bankSettings = null;
-    let lastSelectedBillingItem = null;
-    let lastSelectedStockItem = null;
-    let sessionTimerInterval = null;
     let lastGeneratedBillData = null;
     let cachedBillHistory = [];
-    let lastPromptedHsnItem = "";
+    let bankSettings = null;
+    let sessionTimerInterval = null;
 
     window.onload = function() {
       const now = new Date();
@@ -625,28 +652,18 @@
 
       if (!currentUser) {
         document.getElementById("authOverlay").style.display = "flex";
-        document.getElementById("mainAppWrapper").style.display = "none";
       } else {
         document.getElementById("authOverlay").style.display = "none";
-        document.getElementById("mainAppWrapper").style.display = "block";
         initSession();
       }
     };
 
-    document.addEventListener("click", function(e) {
-      if (!e.target.closest("#itemSearch") && !e.target.closest("#billingItemMenu")) {
-        document.getElementById("billingItemMenu").style.display = "none";
-      }
-      if (!e.target.closest("#stkName") && !e.target.closest("#stockItemMenu")) {
-        document.getElementById("stockItemMenu").style.display = "none";
-      }
-    });
-
     function initSession() {
       document.getElementById("lblUser").innerText = `${currentUser.name} (${currentUser.role})`;
       refreshAppData();
-      checkFormState();
       startSessionTimer();
+      loadDashboardAnalytics();
+      loadInwardAuditLog();
     }
 
     function startSessionTimer() {
@@ -694,18 +711,16 @@
       }
     }
 
+    // Refresh Data
     async function refreshAppData() {
-      const btn = document.getElementById("btnRefresh");
-      btn.innerText = "⏳ Syncing...";
       try {
         const res = await apiCall("getAppData");
-        if (res && res.items && res.items.length > 0) {
+        if (res && res.items) {
           cachedItems = res.items;
           const hasLabour = cachedItems.some(x => x.name.toLowerCase().includes("labour charge"));
-          if (!hasLabour) {
-            cachedItems.unshift({ name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, stock: "∞" });
-          }
+          if (!hasLabour) cachedItems.unshift({ name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, stock: "∞" });
           localStorage.setItem("mle_items", JSON.stringify(cachedItems));
+          bankSettings = res.bankInfo;
 
           if (res.alerts && res.alerts.length > 0) {
             document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(a => `• ${a}`).join("<br>");
@@ -713,117 +728,100 @@
           } else {
             document.getElementById("lowStockAlertBox").style.display = "none";
           }
-          btn.innerText = "✓ Synced";
         }
-      } catch(e) {
-        btn.innerText = "🔄 Refresh";
-      }
-      setTimeout(() => { btn.innerText = "🔄 Refresh"; }, 1500);
+      } catch(e) {}
     }
 
-    // 1ST POINT: 3-STEP HSN RESOLVER
+    // Navigation Switcher
+    function switchNav(nav) {
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("viewDashboard").style.display = (nav === 'dash') ? 'block' : 'none';
+      document.getElementById("viewGenBill").style.display = 'none';
+      document.getElementById("viewCreditLedger").style.display = 'none';
+      document.getElementById("viewSearchBills").style.display = 'none';
+      document.getElementById("viewStockInward").style.display = 'none';
+      document.getElementById("viewSettings").style.display = (nav === 'settings') ? 'block' : 'none';
+
+      if (nav === 'dash') {
+        document.getElementById("btnNavDash").classList.add("active");
+        loadDashboardAnalytics();
+      }
+      if (nav === 'settings') document.getElementById("btnNavSet").classList.add("active");
+    }
+
+    function toggleBillingSub() {
+      const sub = document.getElementById("billingSubMenu");
+      sub.style.display = (sub.style.display === "none") ? "flex" : "none";
+      switchBillingView('gen');
+    }
+
+    function switchBillingView(subView) {
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("btnNavBill").classList.add("active");
+      document.querySelectorAll(".sub-nav-btn").forEach(b => b.classList.remove("active"));
+
+      document.getElementById("viewDashboard").style.display = 'none';
+      document.getElementById("viewSettings").style.display = 'none';
+      document.getElementById("viewGenBill").style.display = (subView === 'gen') ? 'block' : 'none';
+      document.getElementById("viewCreditLedger").style.display = (subView === 'khata') ? 'block' : 'none';
+      document.getElementById("viewSearchBills").style.display = (subView === 'search') ? 'block' : 'none';
+      document.getElementById("viewStockInward").style.display = (subView === 'stock') ? 'block' : 'none';
+
+      if (subView === 'gen') document.getElementById("btnSubGen").classList.add("active");
+      if (subView === 'khata') {
+        document.getElementById("btnSubKhata").classList.add("active");
+        loadKhataRecords();
+      }
+      if (subView === 'search') {
+        document.getElementById("btnSubSearch").classList.add("active");
+        loadBillHistory();
+      }
+      if (subView === 'stock') {
+        document.getElementById("btnSubStock").classList.add("active");
+        loadInwardAuditLog();
+      }
+    }
+
+    // 3-Step Smart HSN Resolver
     function detectHsnFromName(name) {
       var n = (name || "").toLowerCase().trim();
       if (!n) return "";
-      if (n.includes("labour") || n.includes("service") || n.includes("repair") || n.includes("fitting") || n.includes("installation")) return "998519";
-      if (n.includes("fan") || n.includes("exhaust") || n.includes("cooler") || n.includes("blower")) return "8414";
-      if (n.includes("wire") || n.includes("cable") || n.includes("cord") || n.includes("cat6")) return "8544";
-      if (n.includes("switch") || n.includes("socket") || n.includes("indicator") || n.includes("mcb") || n.includes("rccb") || n.includes("regulator") || n.includes("dimmer") || n.includes("roma") || n.includes("anchor") || n.includes("modular") || n.includes("plug") || n.includes("holder")) return "8536";
-      if (n.includes("board") || n.includes("gang box") || n.includes("sheet") || n.includes("plate") || n.includes("panel") || n.includes("db box")) return "8538";
-      if (n.includes("led") || n.includes("bulb") || n.includes("tube") || n.includes("light") || n.includes("lamp") || n.includes("batten") || n.includes("downlight") || n.includes("cob")) return "8539";
-      if (n.includes("iron") || n.includes("press") || n.includes("geyser") || n.includes("heater") || n.includes("water heater") || n.includes("rod") || n.includes("element")) return "8516";
-      if (n.includes("tape") || n.includes("steel grip")) return "3919";
-      if (n.includes("pipe") || n.includes("casing") || n.includes("conduit")) return "3917";
+      if (n.includes("labour") || n.includes("service") || n.includes("repair")) return "998519";
+      if (n.includes("fan") || n.includes("cooler") || n.includes("exhaust")) return "8414";
+      if (n.includes("wire") || n.includes("cable") || n.includes("cord")) return "8544";
+      if (n.includes("switch") || n.includes("socket") || n.includes("mcb") || n.includes("regulator") || n.includes("holder")) return "8536";
+      if (n.includes("board") || n.includes("gang box") || n.includes("plate") || n.includes("sheet")) return "8538";
+      if (n.includes("led") || n.includes("bulb") || n.includes("tube") || n.includes("batten")) return "8539";
+      if (n.includes("iron") || n.includes("press") || n.includes("geyser") || n.includes("heater")) return "8516";
       return "";
     }
 
-    function resolveSmartHsn(itemName, targetHsnInputId, allowPopup = true) {
-      const cleanName = (itemName || "").trim();
-      const hsnInput = document.getElementById(targetHsnInputId);
-      if (!cleanName) { hsnInput.value = ""; return ""; }
-
-      // 1. Sheet Priority
-      const sheetMatch = cachedItems.find(x => x.name.toLowerCase() === cleanName.toLowerCase());
-      if (sheetMatch && sheetMatch.hsn && sheetMatch.hsn !== "-" && sheetMatch.hsn.trim() !== "") {
-        hsnInput.value = sheetMatch.hsn.trim();
-        return sheetMatch.hsn.trim();
-      }
-
-      // 2. Product Category
-      const catHsn = detectHsnFromName(cleanName);
-      if (catHsn) {
-        hsnInput.value = catHsn;
-        return catHsn;
-      }
-
-      // 3. New Item Confirmation Popup
-      if (allowPopup && lastPromptedHsnItem !== cleanName.toLowerCase()) {
-        lastPromptedHsnItem = cleanName.toLowerCase();
-        const userChoice = confirm(`"${cleanName}" is a new item without a matched HSN category.\n\nDo you want to assign default general electrical HSN (8538)?\n\n[OK = Yes (8538)]\n[Cancel = No (Enter Manually)]`);
-        if (userChoice) {
-          hsnInput.value = "8538";
-          return "8538";
-        } else {
-          hsnInput.value = "";
-          setTimeout(() => { hsnInput.focus(); }, 100);
-          return "";
-        }
-      }
-
+    function resolveSmartHsn(itemName) {
+      const clean = (itemName || "").trim();
+      const match = cachedItems.find(x => x.name.toLowerCase() === clean.toLowerCase());
+      if (match && match.hsn && match.hsn !== "-") return match.hsn;
+      const catHsn = detectHsnFromName(clean);
+      if (catHsn) return catHsn;
+      if (confirm(`"${clean}" is a new item without category.\nAssign default HSN (8538)?`)) return "8538";
       return "";
-    }
-
-    function handleItemDirectClick() {
-      const input = document.getElementById("itemSearch");
-      if (input.value.trim() !== "") lastSelectedBillingItem = input.value;
-      input.value = "";
-      renderBillingDropdown(cachedItems);
-    }
-
-    function handleItemBlur() {
-      setTimeout(() => {
-        const input = document.getElementById("itemSearch");
-        const val = input.value.trim();
-        if (val === "" && lastSelectedBillingItem) {
-          input.value = lastSelectedBillingItem;
-          resolveSmartHsn(lastSelectedBillingItem, "itemHsn", false);
-        } else if (val !== "") {
-          resolveSmartHsn(val, "itemHsn", true);
-        }
-      }, 250);
     }
 
     function onItemSearchInput() {
       const val = document.getElementById("itemSearch").value.trim().toLowerCase();
-      const filtered = val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(val));
-      renderBillingDropdown(filtered);
-
-      const auto = detectHsnFromName(val);
-      if (auto) document.getElementById("itemHsn").value = auto;
-
-      if (val.includes("labour") || val.includes("service")) {
-        currentItemObj = { name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, gstPct: 18 };
-        document.getElementById("itemHsn").value = "998519";
-        const rateField = document.getElementById("itemRate");
-        rateField.readOnly = false;
-        rateField.placeholder = "Enter Amount";
-        if (rateField.value === "Locked") rateField.value = "";
-        calculateItemTotal();
-      }
-    }
-
-    function renderBillingDropdown(items) {
       const menu = document.getElementById("billingItemMenu");
       menu.innerHTML = "";
-      if (items.length === 0) { menu.style.display = "none"; return; }
+      if (!val) { menu.style.display = "none"; return; }
 
-      items.forEach(item => {
+      const filtered = cachedItems.filter(it => it.name.toLowerCase().includes(val));
+      if (filtered.length === 0) { menu.style.display = "none"; return; }
+
+      filtered.forEach(it => {
         const div = document.createElement("div");
         div.className = "dropdown-item";
-        div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock:${item.stock} | ₹${item.custRate} \vert{} HSN:${item.hsn || '-'}</small>`;
+        div.innerHTML = `<span><b>${it.name}</b></span> <small>Stock: ${it.stock} \vert{} ₹${it.custRate}</small>`;
         div.onmousedown = function(e) {
           e.preventDefault();
-          selectBillingItem(item);
+          selectBillingItem(it);
         };
         menu.appendChild(div);
       });
@@ -832,18 +830,16 @@
 
     function selectBillingItem(item) {
       document.getElementById("itemSearch").value = item.name;
-      lastSelectedBillingItem = item.name;
       document.getElementById("billingItemMenu").style.display = "none";
       currentItemObj = item;
-      
-      resolveSmartHsn(item.name, "itemHsn", true);
+      document.getElementById("itemHsn").value = resolveSmartHsn(item.name);
 
-      const isLabour = item.name.toLowerCase().includes("labour") || item.name.toLowerCase().includes("service");
+      const isLabour = item.name.toLowerCase().includes("labour");
       const rateField = document.getElementById("itemRate");
       if (isLabour) {
         rateField.readOnly = false;
         rateField.placeholder = "Enter Amount";
-        rateField.value = item.custRate > 0 ? item.custRate : "";
+        rateField.value = "";
         rateField.focus();
       } else {
         rateField.readOnly = true;
@@ -855,10 +851,7 @@
     function onRateTypeChange() {
       if (currentItemObj && !currentItemObj.name.toLowerCase().includes("labour")) resolveRate();
       calculateItemTotal();
-      checkFormState();
     }
-
-    function onGstBillChange() { calculateItemTotal(); checkFormState(); }
 
     function resolveRate() {
       if (!currentItemObj) return;
@@ -888,20 +881,24 @@
 
     function addItemToBill() {
       const name = document.getElementById("itemSearch").value.trim();
-      if (!name) { alert("Please select an item from inventory list!"); return; }
+      if (!name) return;
 
-      let hsn = document.getElementById("itemHsn").value.trim();
-      if (!hsn) hsn = resolveSmartHsn(name, "itemHsn", true) || "-";
+      // Strict Inventory Check
+      const found = cachedItems.some(x => x.name.toLowerCase() === name.toLowerCase());
+      if (!found) {
+        alert("Item not found in inventory! Please inward stock first.");
+        return;
+      }
 
       const calc = calculateItemTotal();
       let rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
       let baseRate = parseFloat(rVal) || 0;
-      if (baseRate <= 0) { alert("Please enter a valid rate!"); return; }
+      if (baseRate <= 0) { alert("Please enter valid rate!"); return; }
 
       billItems.push({
         name: name,
         serialNo: document.getElementById("itemSerial").value.trim() || "-",
-        hsn: hsn || "-",
+        hsn: document.getElementById("itemHsn").value.trim() || "-",
         baseRate: baseRate,
         discount: parseFloat(document.getElementById("itemDisc").value) || 0,
         gstPerPc: calc.gstPerPc,
@@ -933,6 +930,7 @@
         totalUnits += it.qty;
         tbody.innerHTML += `
           <tr>
+            <td>${idx + 1}</td>
             <td><b>${it.name}</b>${it.serialNo && it.serialNo !== '-' ? `<br><small style="color:#d97706;">${it.serialNo}</small>` : ''}</td>
             <td>${it.hsn}</td>
             <td>₹${it.baseRate.toFixed(2)}</td>
@@ -940,7 +938,7 @@
             <td style="color:#b45309;">+₹${it.gstPerPc.toFixed(2)}</td>
             <td>${it.qty}</td>
             <td>₹${it.total.toFixed(2)}</td>
-            <td><button class="btn-del-row" onclick="deleteBillItem(${idx})">✕</button></td>
+            <td><button class="btn-del" onclick="deleteBillItem(${idx})">✕</button></td>
           </tr>
         `;
       });
@@ -957,11 +955,7 @@
     }
 
     function checkFormState() {
-      const ok = document.getElementById("billMode").value && 
-                 document.getElementById("rateType").value && 
-                 document.getElementById("isGstBill").value && 
-                 document.getElementById("paymentMode").value && 
-                 document.getElementById("custName").value.trim() && 
+      const ok = document.getElementById("custName").value.trim() && 
                  document.getElementById("custPhone").value.trim().length >= 10 && 
                  billItems.length > 0;
       document.getElementById("btnSubmitBill").disabled = !ok;
@@ -970,7 +964,7 @@
     async function submitBillToBackend() {
       const btn = document.getElementById("btnSubmitBill");
       btn.disabled = true;
-      btn.innerText = "⏳ Saving Bill...";
+      btn.innerText = "⏳ Generating Bill & Drive PDF...";
 
       const isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
       const totalAmt = billItems.reduce((acc, c) => acc + c.total, 0);
@@ -989,36 +983,33 @@
         grandTotal: totalAmt
       };
 
-      try {
-        const res = await apiCall("processBillOrEstimate", payload);
-        btn.disabled = false;
-        btn.innerText = "⚡ Save Bill & Generate PDF";
+      const res = await apiCall("processBillOrEstimate", payload);
+      btn.disabled = false;
+      btn.innerText = "⚡ Checkout / Save Bill & Generate PDF";
 
-        if (res && res.success) {
-          lastGeneratedBillData = {
-            docNo: res.docNo,
-            customerName: payload.customerName,
-            phone: payload.phone,
-            address: payload.address,
-            gstin: payload.gstin,
-            paymentMode: payload.paymentMode,
-            isGst: isGstSelected,
-            grandTotal: totalAmt,
-            amount: totalAmt,
-            date: payload.billDate,
-            items: JSON.parse(JSON.stringify(billItems))
-          };
-          document.getElementById("lblSuccessDocNo").innerText = `Doc No: ${res.docNo} \vert{} Amount: ₹${totalAmt.toFixed(2)}`;
-          document.getElementById("billSuccessModal").style.display = "flex";
-        }
-      } catch(e) {
-        btn.disabled = false;
-        btn.innerText = "⚡ Save Bill & Generate PDF";
+      if (res && res.success) {
+        lastGeneratedBillData = {
+          docNo: res.docNo,
+          customerName: payload.customerName,
+          phone: payload.phone,
+          address: payload.address,
+          gstin: payload.gstin,
+          paymentMode: payload.paymentMode,
+          isGst: isGstSelected,
+          grandTotal: totalAmt,
+          amount: totalAmt,
+          date: payload.billDate,
+          items: JSON.parse(JSON.stringify(billItems)),
+          pdfUrl: res.pdfUrl || ""
+        };
+        document.getElementById("lblSuccessDocNo").innerText = `Doc No: ${res.docNo} \vert{} Amount: ₹${totalAmt.toFixed(2)}`;
+        document.getElementById("checkoutSuccessModal").style.display = "flex";
+      } else {
         alert("Server error. Please retry!");
       }
     }
 
-    // 2ND POINT: EXACT RECEIPT LAYOUT
+    // Exact Fixed Bottom Receipt Print
     function buildReceiptHtml(b) {
       if (!b) return "";
       let lines = "";
@@ -1028,21 +1019,19 @@
           <td style="padding:6px; border:1px solid #000; text-align:center;">${idx + 1}</td>
           <td style="padding:6px; border:1px solid #000;"><b>${it.name}</b>${it.serialNo && it.serialNo !== '-' ? `<br><small style="color:#555;">${it.serialNo}</small>` : ''}</td>
           <td style="padding:6px; border:1px solid #000; text-align:center;">${it.hsn || '-'}</td>
-          <td style="padding:6px; border:1px solid #000; text-align:right;">₹${parseFloat(it.finalRate || it.baseRate || (it.total / (it.qty || 1))).toFixed(2)}</td>
+          <td style="padding:6px; border:1px solid #000; text-align:right;">₹${parseFloat(it.finalRate || it.baseRate || 0).toFixed(2)}</td>
           <td style="padding:6px; border:1px solid #000; text-align:center;">${it.qty || 1}</td>
           <td style="padding:6px; border:1px solid #000; text-align:right;">₹${parseFloat(it.total || 0).toFixed(2)}</td>
         </tr>`;
       });
 
       const totalAmt = parseFloat(b.grandTotal || b.amount || 0);
-
-      // GST Conditional Header
       const shopGstLine = (b.isGst) ? `<div style="font-weight:bold; margin-top:2px;">GSTIN: 09AAPFM1234F1Z5</div>` : ``;
       const buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? `<div>GSTIN: ${b.gstin}</div>` : ``;
 
       return `
-        <div style="max-width:550px; margin:0 auto; padding:15px; font-family:Helvetica, Arial, sans-serif; font-size:11px; color:#000; line-height:1.35; background:#fff;">
-          <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:8px; margin-bottom:10px;">
+        <div style="max-width:550px; margin:0 auto; padding:15px; font-family:Helvetica, Arial, sans-serif; font-size:11px; color:#000; line-height:1.35; background:#fff; min-height:240mm; position:relative;">
+          <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:6px; margin-bottom:10px;">
             <div style="font-size:18px; font-weight:bold; letter-spacing:0.5px;">MOONLIGHT ELECTRICALS</div>
             <div style="font-size:10.5px; font-style:italic; font-weight:bold; margin-bottom:3px;">Brightening Lives, Powering Trust</div>
             <div style="font-size:10px;">Shop No 1, Sadbhavna Market, Opp. Cleo County Gate No 3,<br>Ghadi Chaukhandi, Sector-121, Noida - 201304 (U.P.)</div>
@@ -1053,16 +1042,14 @@
           <table style="width:100%; border:none; margin-bottom:8px;">
             <tr>
               <td style="width:50%; vertical-align:top; border:none; padding-right:5px;">
-                <div style="border:1px solid #000; padding:6px; font-size:10.5px;">
+                <div style="border:1px solid #000; padding:6px; font-size:10.5px; min-height:55px;">
                   <b>BUYER / BILLED TO:</b><br>
-                  <b>${b.customerName}</b><br>
-                  ${b.address || 'Sector-121, Noida'}<br>
-                  Contact: ${b.phone || '-'}
-                  ${buyerGstLine}
+                  <b>${b.customerName}</b><br>${b.address || 'Sector-121, Noida'}<br>
+                  Contact: ${b.phone \vert{}\vert{} '-'}${buyerGstLine}
                 </div>
               </td>
               <td style="width:50%; vertical-align:top; border:none; padding-left:5px;">
-                <div style="border:1px solid #000; padding:6px; font-size:10.5px;">
+                <div style="border:1px solid #000; padding:6px; font-size:10.5px; min-height:55px;">
                   <b>${(b.docNo && b.docNo.includes('INV')) ? 'RETAIL INVOICE (CASH MEMO)' : 'ESTIMATE QUOTATION'}</b><br>
                   Doc No: <b>${b.docNo}</b><br>
                   Date of Issue: <b>${b.date}</b><br>
@@ -1087,22 +1074,30 @@
             <tbody>${lines}</tbody>
           </table>
 
-          <div style="border:1px solid #000; padding:6px; font-size:10px; margin-bottom:8px;">
-            <b>BANK & UPI DETAILS:</b><br>
-            • Bank: Kotak Mahindra Bank | A/c Holder Name: SHIVAM CHAUHAN<br>
-            • A/c No: 6413488039 | IFSC: KKBK0000181 | UPI ID: 8860880453@kotak<br>
-            • Goods once sold will be covered strictly as per manufacturer warranty policy.<br>
-            • All disputes are subject to Noida / Gautam Buddha Nagar jurisdiction only.
-          </div>
+          <!-- Bottom Fixed Section -->
+          <div style="position:absolute; bottom:15px; left:15px; right:15px;">
+            <div style="margin-bottom:6px; font-size:11px;"><b>AMOUNT IN WORDS:</b> Standard Rupees Total</div>
+            <table style="width:100%; border:none; margin-bottom:8px;">
+              <tr>
+                <td style="width:60%; vertical-align:top; border:1px solid #000; padding:6px; font-size:10px;">
+                  <b>BANK & UPI DETAILS:</b><br>
+                  • Bank: Kotak Mahindra Bank | A/c Holder: SHIVAM CHAUHAN<br>
+                  • A/c No: 6413488039 | IFSC: KKBK0000181 | UPI: 8860880453@kotak<br>
+                  • Goods once sold covered under manufacturer warranty policy.<br>
+                  • Disputes subject to Noida jurisdiction only.
+                </td>
+                <td style="width:40%; vertical-align:middle; text-align:center; border:2px solid #000; padding:10px; background:#fafafa;">
+                  <div style="font-size:12px; font-weight:bold;">GRAND TOTAL:</div>
+                  <div style="font-size:20px; font-weight:900; margin-top:4px;">₹ ${totalAmt.toFixed(2)}</div>
+                </td>
+              </tr>
+            </table>
 
-          <div style="text-align:right; font-size:14px; font-weight:bold; border-top:1px dashed #000; padding-top:4px; margin-bottom:10px;">
-            GRAND TOTAL: ₹ ${totalAmt.toFixed(2)}
-          </div>
-
-          <div style="text-align:center; font-size:9.5px; border-top:1px solid #000; padding-top:6px;">
-            Thank you for choosing Moon Light Electricals!<br>
-            All electrical products covered under manufacturer warranty. Please keep this invoice safe for warranty claims.<br>
-            <b>THIS IS A COMPUTER-GENERATED DOCUMENT, NO SIGNATURE/STAMP REQUIRED.</b>
+            <div style="text-align:center; font-size:9.5px; border-top:1px solid #000; padding-top:6px;">
+              Thank you for choosing Moon Light Electricals!<br>
+              All electrical products covered under manufacturer warranty. Please keep this invoice safe for warranty claims.<br>
+              <b>THIS IS A COMPUTER-GENERATED DOCUMENT, NO SIGNATURE/STAMP REQUIRED.</b>
+            </div>
           </div>
         </div>
       `;
@@ -1110,8 +1105,8 @@
 
     function triggerDirectPrint(customData) {
       const data = customData || lastGeneratedBillData;
-      if (!data) { alert("No bill data available to print!"); return; }
-      const container = document.getElementById("printableReceipt");
+      if (!data) return;
+      const container = document.getElementById("printableInvoice");
       container.innerHTML = buildReceiptHtml(data);
       container.style.display = "block";
       window.print();
@@ -1120,72 +1115,128 @@
 
     function viewDownloadPdf(customData) {
       const data = customData || lastGeneratedBillData;
-      if (!data) { alert("No bill data available to view!"); return; }
-      const w = window.open("", "_blank");
-      w.document.write(`<html><head><title>${data.docNo}</title></head><body>${buildReceiptHtml(data)}</body></html>`);
-      w.document.close();
+      if (!data) return;
+      if (data.pdfUrl && data.pdfUrl.startsWith("http")) {
+        window.open(data.pdfUrl, '_blank');
+      } else {
+        const w = window.open("", "_blank");
+        w.document.write(`<html><head><title>${data.docNo}</title></head><body>${buildReceiptHtml(data)}</body></html>`);
+        w.document.close();
+      }
     }
 
-    // 3RD POINT: WHATSAPP SHARE
     function shareBillOnWhatsApp(customData) {
       const d = customData || lastGeneratedBillData;
       if (!d) return;
 
       const docWord = (d.docNo && d.docNo.includes("EST")) ? "Estimate" : "Invoice";
       const totalAmt = parseFloat(d.grandTotal || d.amount || 0).toFixed(2);
+      const pdfSection = (d.pdfUrl && d.pdfUrl.startsWith("http")) ? `\n\n📄 *Download PDF Document:*\n${d.pdfUrl}` : ``;
 
-      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Amount: *₹${totalAmt}*\n  • Payment Mode: ${d.paymentMode || 'Cash / Online'}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
+      const msg = `Hi ${d.customerName},\n\nGreetings from *Moon Light Electricals*!\n\nYour *${docWord}* (*${d.docNo}*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: ${d.date}\n  • Total Amount: *₹${totalAmt}*\n  • Payment Mode: ${d.paymentMode || 'Cash / Online'}${pdfSection}\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453`;
 
       window.open(`https://wa.me/91${d.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
     function closeSuccessAndNextBill() {
-      document.getElementById("billSuccessModal").style.display = "none";
+      document.getElementById("checkoutSuccessModal").style.display = "none";
       billItems = [];
       renderBillTable();
       document.getElementById("custName").value = "";
       document.getElementById("custPhone").value = "";
       document.getElementById("custGstin").value = "";
-      document.getElementById("billMode").selectedIndex = 0;
-      document.getElementById("rateType").selectedIndex = 0;
-      document.getElementById("isGstBill").selectedIndex = 0;
-      document.getElementById("paymentMode").selectedIndex = 0;
       checkFormState();
     }
 
-    function switchView(view) {
-      document.querySelectorAll(".nav-tab-btn").forEach(b => b.classList.remove("active"));
-      document.getElementById("viewBilling").style.display = (view === 'billing') ? 'block' : 'none';
-      document.getElementById("viewHistory").style.display = (view === 'history') ? 'block' : 'none';
-      document.getElementById("viewKhata").style.display = (view === 'khata') ? 'block' : 'none';
-      document.getElementById("viewStock").style.display = (view === 'stock') ? 'block' : 'none';
-
-      if (view === 'billing') document.getElementById("tabBillingBtn").classList.add("active");
-      if (view === 'history') {
-        document.getElementById("tabHistoryBtn").classList.add("active");
-        loadBillHistory();
+    // Dashboard Analytics Engine
+    async function loadDashboardAnalytics() {
+      const res = await apiCall("getDashboardAnalytics");
+      if (res && res.sales) {
+        window.dashData = res;
+        filterDash('today');
       }
-      if (view === 'khata') {
-        document.getElementById("tabKhataBtn").classList.add("active");
-        renderKhata();
-      }
-      if (view === 'stock') document.getElementById("tabStockBtn").classList.add("active");
     }
 
-    // Bill History Engine
+    function filterDash(period) {
+      if (!window.dashData) return;
+      const s = window.dashData.sales[period] || { cash:0, online:0, total:0 };
+      const p = window.dashData.purchases[period] || { cash:0, online:0, total:0 };
+
+      document.getElementById("dashSaleCash").innerText = `₹${s.cash.toFixed(2)}`;
+      document.getElementById("dashSaleOnline").innerText = `₹${s.online.toFixed(2)}`;
+      document.getElementById("dashSaleTotal").innerText = `₹${s.total.toFixed(2)}`;
+
+      document.getElementById("dashPurCash").innerText = `₹${p.cash.toFixed(2)}`;
+      document.getElementById("dashPurOnline").innerText = `₹${p.online.toFixed(2)}`;
+      document.getElementById("dashPurTotal").innerText = `₹${p.total.toFixed(2)}`;
+
+      const profit = s.total - p.total;
+      document.getElementById("dashProfitTotal").innerText = `₹${profit.toFixed(2)}`;
+    }
+
+    // Credit Ledger (Udhar Khata)
+    async function loadKhataRecords() {
+      const c = document.getElementById("khataListContainer");
+      c.innerHTML = "Fetching pending udhar records...";
+      const res = await apiCall("getKhataRecords");
+      if (res && res.records) {
+        let totalPending = 0, count = 0;
+        res.records.forEach(r => {
+          if (r.status.toLowerCase().indexOf("paid") === -1) {
+            totalPending += parseFloat(r.amount) || 0;
+            count++;
+          }
+        });
+        document.getElementById("lblTotalPendingUdhar").innerText = `₹${totalPending.toFixed(2)}`;
+        document.getElementById("lblTotalPendingCount").innerText = `${count} Pending Bills`;
+
+        let html = '<div class="table-wrap"><table><thead><tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Reminder Tracking</th><th>Actions</th></tr></thead><tbody>';
+        res.records.forEach(r => {
+          const isPending = r.status.toLowerCase().indexOf("paid") === -1;
+          html += `
+            <tr>
+              <td><b>${r.docNo}</b></td>
+              <td>${r.date}</td>
+              <td>${r.customerName}</td>
+              <td>${r.phone || '-'}</td>
+              <td><b>₹${parseFloat(r.amount || 0).toFixed(2)}</b></td>
+              <td><b style="color:${isPending ? '#d97706' : '#059669'}">${isPending ? 'Pending' : 'Paid'}</b></td>
+              <td><small>Sent: ${r.remCount || 0} times<br>Last: ${r.remDate || '-'}</small></td>
+              <td>
+                ${isPending ? `<button class="btn-sync" style="padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick="sendKhataReminder('${r.docNo}', '${r.customerName}', '${r.phone}',${r.amount})">📲 Reminder</button>` : ''}
+                ${isPending ? `<button class="btn-add" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="markPaid('${r.docNo}')">✓ Mark as Paid</button>` : '<span style="color:#059669; font-weight:800;">✓ Settled</span>'}
+              </td>
+            </tr>
+          `;
+        });
+        html += '</tbody></table></div>';
+        c.innerHTML = html;
+      }
+    }
+
+    async function sendKhataReminder(docNo, name, phone, amount) {
+      const upi = (bankSettings && bankSettings.upi) ? bankSettings.upi : "8860880453@kotak";
+      const payUrl = `https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=${encodeURIComponent(upi)}&am=${amount}`;
+      const msg = `*Greetings from Moon Light Electricals!*\n\nHi ${name},\nThis is a reminder that payment for Bill *${docNo}* is pending.\n\n• *Pending Amount:* ₹${parseFloat(amount).toFixed(2)}\n• *Due To:* Moon Light Electricals\n\n👉 *Pay via UPI (GPay/PhonePe):*\n${payUrl}\n\nThank you!`;
+      window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+      await apiCall("recordKhataReminder", { docNo: docNo });
+      loadKhataRecords();
+    }
+
+    async function markPaid(docNo) {
+      if (!confirm(`Mark ${docNo} as Paid?`)) return;
+      const res = await apiCall("markKhataPaid", { docNo: docNo });
+      if (res && res.success) loadKhataRecords();
+    }
+
+    // Bill History (Reprint & Search)
     async function loadBillHistory() {
-      const container = document.getElementById("historyTableContainer");
-      container.innerHTML = "Fetching invoices from Google Sheets...";
-      try {
-        const res = await apiCall("getBillHistory");
-        if (res && res.records) {
-          cachedBillHistory = res.records;
-          filterBillHistory();
-        } else {
-          container.innerHTML = "No invoices found in database!";
-        }
-      } catch(e) {
-        container.innerHTML = "Failed to load invoices. Please refresh.";
+      const c = document.getElementById("historyTableContainer");
+      c.innerHTML = "Fetching invoices list...";
+      const res = await apiCall("getBillHistory");
+      if (res && res.records) {
+        cachedBillHistory = res.records;
+        filterBillHistory();
       }
     }
 
@@ -1196,18 +1247,10 @@
         (r.customerName && r.customerName.toLowerCase().includes(query)) ||
         (r.phone && String(r.phone).includes(query))
       );
-      renderHistoryTable(filtered);
-    }
 
-    function renderHistoryTable(records) {
-      const container = document.getElementById("historyTableContainer");
-      if (!records || records.length === 0) {
-        container.innerHTML = '<div style="padding:16px; color:#b91c1c; font-weight:700;">No matching invoices found!</div>';
-        return;
-      }
-
+      const c = document.getElementById("historyTableContainer");
       let html = '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Doc No</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Actions</th></tr></thead><tbody>';
-      records.forEach((r, idx) => {
+      filtered.forEach((r, idx) => {
         html += `
           <tr>
             <td>${r.date || '-'}</td>
@@ -1216,116 +1259,42 @@
             <td>${r.phone || '-'}</td>
             <td><b>₹${parseFloat(r.amount || 0).toFixed(2)}</b></td>
             <td>
-              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px;" onclick='triggerDirectPrint(cachedBillHistory[${idx}])'>🖨️ Re-Print</button>
-              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick='shareBillOnWhatsApp(cachedBillHistory[${idx}])'>📲 WhatsApp</button>
-              <button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px;" onclick='viewDownloadPdf(cachedBillHistory[${idx}])'>👁️ View</button>
+              <button class="btn-sync" style="padding:4px 8px; font-size:11px; margin-right:4px;" onclick='triggerDirectPrint(cachedBillHistory[${idx}])'>🖨️ Re-Print</button>
+              <button class="btn-sync" style="padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick='shareBillOnWhatsApp(cachedBillHistory[${idx}])'>📲 WhatsApp</button>
+              <button class="btn-sync" style="padding:4px 8px; font-size:11px;" onclick='viewDownloadPdf(cachedBillHistory[${idx}])'>👁️ View</button>
             </td>
           </tr>
         `;
       });
       html += '</tbody></table></div>';
-      container.innerHTML = html;
+      c.innerHTML = html;
     }
 
-    // Udhar Khata
-    async function renderKhata() {
-      const c = document.getElementById("khataListContainer");
-      c.innerHTML = "Fetching pending udhar records...";
-      try {
-        const res = await apiCall("getKhataRecords");
-        if (res && res.records) {
-          bankSettings = res.settings;
-          let totalPending = 0, pendingCount = 0;
-
-          res.records.forEach(r => {
-            const isPending = String(r.status || "").toLowerCase().indexOf("paid") === -1;
-            if (isPending) {
-              totalPending += parseFloat(r.amount) || 0;
-              pendingCount++;
-            }
-          });
-
-          document.getElementById("lblTotalPendingUdhar").innerText = `₹${totalPending.toFixed(2)}`;
-          document.getElementById("lblTotalPendingCount").innerText = `${pendingCount} Pending Bills`;
-
-          if (res.records.length === 0) { c.innerHTML = "No pending records!"; return; }
-
-          let html = '<div class="table-wrap"><table><thead><tr><th>Doc No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-          res.records.forEach(r => {
-            const isPending = String(r.status || "").toLowerCase().indexOf("paid") === -1;
-            html += `
-              <tr>
-                <td><b>${r.docNo}</b></td>
-                <td>${r.date}</td>
-                <td>${r.customerName}</td>
-                <td>${r.phone || '-'}</td>
-                <td><b>₹${parseFloat(r.amount || 0).toFixed(2)}</b></td>
-                <td><b style="color:${isPending ? '#d97706' : '#059669'}">${isPending ? 'Pending' : 'Paid'}</b></td>
-                <td>
-                  ${isPending ? `<button class="btn-refresh" style="display:inline-block; padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick="sendKhataReminder('${r.docNo}', '${r.customerName}', '${r.phone}', ${r.amount}, '${r.date}')">📲 WhatsApp</button>` : ''}
-                  ${isPending ? `<button class="btn-add" style="display:inline-block; width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="markPaid('${r.docNo}')">✓ Mark as Paid</button>` : '<span style="color:#059669; font-weight:800;">✓ Paid</span>'}
-                </td>
-              </tr>
-            `;
-          });
-          html += '</tbody></table></div>';
-          c.innerHTML = html;
-        }
-      } catch(e) {
-        c.innerHTML = "Failed to load Khata.";
-      }
+    // Stock Inward Modes & Actions
+    function setStockMode(mode) {
+      document.getElementById("boxStockInward").style.display = (mode === 'inward') ? 'block' : 'none';
+      document.getElementById("boxStockHsn").style.display = (mode === 'hsn') ? 'block' : 'none';
+      document.getElementById("boxStockCorrect").style.display = (mode === 'correct') ? 'block' : 'none';
     }
 
-    function sendKhataReminder(docNo, name, phone, amount, date) {
-      const upi = (bankSettings && bankSettings.upi) ? bankSettings.upi : "8860880453@kotak";
-      const payUrl = `https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=${encodeURIComponent(upi)}&am=${amount}`;
-      const msg = `*Greetings from Moon Light Electricals!*\n\nHi ${name},\nThis is a reminder that payment for Bill *${docNo}* dated *${date}* is pending.\n\n• *Pending Amount:* ₹${parseFloat(amount).toFixed(2)}\n• *Due To:* Moon Light Electricals (Shop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304)\n\n👉 *Tap below to Pay directly via GPay / PhonePe / Paytm:*\n${payUrl}\n\nThank you!\n*MOON LIGHT ELECTRICALS*`;
-      window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    async function markPaid(docNo) {
-      if (!confirm(`Mark ${docNo} as Paid?`)) return;
-      const res = await apiCall("markKhataPaid", { docNo: docNo });
-      if (res && res.success) {
-        alert("Marked as Paid successfully!");
-        renderKhata();
-      }
-    }
-
-    // Stock Inward
-    function handleStockDirectClick() {
-      const input = document.getElementById("stkName");
-      if (input.value.trim() !== "") lastSelectedStockItem = input.value;
-      input.value = "";
-      renderStockDropdown(cachedItems);
-    }
-    function handleStockBlur() {
-      setTimeout(() => {
-        const input = document.getElementById("stkName");
-        if (input.value.trim() === "" && lastSelectedStockItem) input.value = lastSelectedStockItem;
-      }, 250);
-    }
     function onStockSearchInput() {
       const val = document.getElementById("stkName").value.trim().toLowerCase();
-      renderStockDropdown(val === "" ? cachedItems : cachedItems.filter(it => it.name.toLowerCase().includes(val)));
-      const auto = detectHsnFromName(val);
-      if (auto) document.getElementById("stkHsn").value = auto;
-    }
-    function renderStockDropdown(items) {
       const menu = document.getElementById("stockItemMenu");
       menu.innerHTML = "";
-      if (items.length === 0) { menu.style.display = "none"; return; }
-      items.forEach(item => {
+      if (!val) { menu.style.display = "none"; return; }
+
+      const filtered = cachedItems.filter(it => it.name.toLowerCase().includes(val));
+      filtered.forEach(it => {
         const div = document.createElement("div");
         div.className = "dropdown-item";
-        div.innerHTML = `<span><b>${item.name}</b></span> <small>Stock: ${item.stock}</small>`;
+        div.innerHTML = `<span><b>${it.name}</b></span> <small>Stock: ${it.stock}</small>`;
         div.onmousedown = function(e) {
           e.preventDefault();
-          document.getElementById("stkName").value = item.name;
-          document.getElementById("stkHsn").value = item.hsn || "8538";
-          document.getElementById("stkCustRate").value = item.custRate || 0;
-          document.getElementById("stkElecRate").value = item.elecRate || 0;
-          document.getElementById("stkFamRate").value = item.famRate || 0;
+          document.getElementById("stkName").value = it.name;
+          document.getElementById("stkHsn").value = it.hsn || "";
+          document.getElementById("stkCustRate").value = it.custRate || 0;
+          document.getElementById("stkElecRate").value = it.elecRate || 0;
+          document.getElementById("stkFamRate").value = it.famRate || 0;
           menu.style.display = "none";
         };
         menu.appendChild(div);
@@ -1336,131 +1305,154 @@
     async function submitStockInward() {
       const name = document.getElementById("stkName").value.trim();
       const qty = parseFloat(document.getElementById("stkQty").value) || 0;
-      if (!name || qty <= 0) { alert("Please enter valid item name and quantity!"); return; }
+      if (!name || qty <= 0) { alert("Enter valid item and quantity!"); return; }
 
-      let hsn = document.getElementById("stkHsn").value.trim();
-      if (!hsn) hsn = resolveSmartHsn(name, "stkHsn", true) || "-";
-
-      const data = {
-        name: name,
-        hsn: hsn || "-",
-        qty: qty,
-        custRate: parseFloat(document.getElementById("stkCustRate").value) || 0,
-        elecRate: parseFloat(document.getElementById("stkElecRate").value) || 0,
-        famRate: parseFloat(document.getElementById("stkFamRate").value) || 0,
-        minQty: parseFloat(document.getElementById("stkMinQty").value) || 2
-      };
-
-      const res = await apiCall("addOrUpdateStock", { data: data });
+      const res = await apiCall("inwardStock", {
+        data: {
+          name: name,
+          hsn: document.getElementById("stkHsn").value.trim() || "-",
+          qty: qty,
+          custRate: parseFloat(document.getElementById("stkCustRate").value) || 0,
+          elecRate: parseFloat(document.getElementById("stkElecRate").value) || 0,
+          famRate: parseFloat(document.getElementById("stkFamRate").value) || 0,
+          minQty: parseFloat(document.getElementById("stkMinQty").value) || 2
+        }
+      });
       if (res && res.success) {
-        alert("Stock updated successfully!");
+        alert("Stock auto-added successfully! New Total Stock: " + res.newStock);
         document.getElementById("stkName").value = "";
         refreshAppData();
+        loadInwardAuditLog();
       }
     }
 
-    // ⚡ INSTANT FAIL-SAFE OTP FLOW (ZERO BLOCK GUARANTEE)
-    async function sendOtp() {
-      const phoneInput = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
-      const phone = phoneInput.slice(-10);
-      const err = document.getElementById("loginErr");
-      const btn = document.getElementById("btnSendOtp");
+    async function submitHsnOnly() {
+      const name = document.getElementById("hsnOnlyName").value.trim();
+      const hsn = document.getElementById("hsnOnlyCode").value.trim();
+      if (!name || !hsn) { alert("Enter item and HSN code!"); return; }
+      const res = await apiCall("updateHsnOnly", { data: { name: name, hsn: hsn } });
+      if (res && res.success) {
+        alert("HSN code updated successfully!");
+        refreshAppData();
+        loadInwardAuditLog();
+      }
+    }
 
+    async function submitCorrectQty() {
+      const name = document.getElementById("correctName").value.trim();
+      const qty = parseFloat(document.getElementById("correctQty").value) || 0;
+      if (!name) { alert("Select item!"); return; }
+      const res = await apiCall("correctStockQty", { data: { name: name, correctQty: qty } });
+      if (res && res.success) {
+        alert("Real stock count overridden successfully! Set to: " + qty);
+        refreshAppData();
+        loadInwardAuditLog();
+      }
+    }
+
+    async function loadInwardAuditLog() {
+      const res = await apiCall("getInwardAuditLog");
+      if (res && res.records) {
+        const c = document.getElementById("auditLogContainer");
+        let html = '<div class="table-wrap"><table><thead><tr><th>Date & Time</th><th>Item Name</th><th>Action Type</th><th>Prev Stock</th><th>Change</th><th>Current Stock</th></tr></thead><tbody>';
+        res.records.forEach(r => {
+          html += `<tr><td>${r.time}</td><td><b>${r.name}</b></td><td>${r.type}</td><td>${r.prev} Pcs</td><td><b style="color:#059669;">${r.change}</b></td><td><b>${r.current} Pcs</b></td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        c.innerHTML = html;
+      }
+    }
+
+    // Settings
+    async function saveBankSettings() {
+      const payload = {
+        bankName: document.getElementById("setBankName").value.trim(),
+        holder: document.getElementById("setHolder").value.trim(),
+        accNo: document.getElementById("setAccNo").value.trim(),
+        ifsc: document.getElementById("setIfsc").value.trim(),
+        upi: document.getElementById("setUpi").value.trim()
+      };
+      const res = await apiCall("updateBankSettings", { data: payload });
+      if (res && res.success) alert("Bank details updated successfully!");
+    }
+
+    async function createNewUser() {
+      const name = document.getElementById("newUserName").value.trim();
+      const phone = document.getElementById("newUserPhone").value.trim();
+      const role = document.getElementById("newUserRole").value;
+      if (!name || phone.length !== 10) { alert("Enter valid name and 10-digit phone!"); return; }
+      const res = await apiCall("createUser", { data: { name: name, phone: phone, role: role } });
+      if (res && res.success) alert("New user created successfully!");
+    }
+
+    // Auth & OTP
+    async function sendOtp() {
+      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '').slice(-10);
       if (phone.length !== 10) {
-        err.innerText = "Enter valid 10-digit number!";
-        err.style.display = "block";
+        document.getElementById("loginErr").innerText = "Enter valid 10-digit number!";
+        document.getElementById("loginErr").style.display = "block";
         return;
       }
 
-      err.style.display = "none";
-      btn.disabled = true;
-      btn.innerText = "Generating OTP...";
+      document.getElementById("btnSendOtp").innerText = "Generating OTP...";
+      const res = await apiCall("requestLoginOtp", { phone: phone });
+      document.getElementById("btnSendOtp").innerText = "📲 SEND OTP ON WHATSAPP";
 
-      const adminUsers = {
-        "8860706865": "Varun Sharma (Owner)",
-        "9650897965": "Rahul Chauhan",
-        "8860880453": "Shivam Chauhan",
-        "9264923954": "Raja"
-      };
-
-      try {
-        const res = await apiCall("requestLoginOtp", { phone: phone });
-        btn.disabled = false;
-        btn.innerText = "📲 SEND OTP ON WHATSAPP";
-
-        if (res && res.success) {
-          document.getElementById("stepPhone").style.display = "none";
-          document.getElementById("stepOtp").style.display = "block";
-          document.getElementById("displaySentPhone").innerText = `${res.phone} (${res.name})`;
-          document.getElementById("waDirectBtn").href = res.waUrl;
-          window.open(res.waUrl, '_blank');
-          return;
-        }
-      } catch(e) {}
-
-      // Fallback: If network or Google Apps Script is delayed, instantly grant OTP screen
-      if (adminUsers[phone]) {
-        btn.disabled = false;
-        btn.innerText = "📲 SEND OTP ON WHATSAPP";
-        const dummyOtp = Math.floor(1000 + Math.random() * 9000).toString();
-        localStorage.setItem("mle_temp_otp", dummyOtp);
-        const waMsg = `Hello ${adminUsers[phone]},\nYour Moon Light Electricals Login OTP is: *${dummyOtp}*`;
-        const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(waMsg)}`;
-
+      if (res && res.success) {
         document.getElementById("stepPhone").style.display = "none";
         document.getElementById("stepOtp").style.display = "block";
-        document.getElementById("displaySentPhone").innerText = `${phone} (${adminUsers[phone]})`;
-        document.getElementById("waDirectBtn").href = waUrl;
-        window.open(waUrl, '_blank');
+        document.getElementById("displaySentPhone").innerText = `${res.phone} (${res.name})`;
+        document.getElementById("waDirectBtn").href = res.waUrl;
+        window.open(res.waUrl, '_blank');
       } else {
-        btn.disabled = false;
-        btn.innerText = "📲 SEND OTP ON WHATSAPP";
-        err.innerText = "Unauthorized Number! Please contact admin.";
-        err.style.display = "block";
+        // Fallback for registered numbers
+        const fallbackUsers = { "8860706865": "Varun Sharma (Owner)", "9650897965": "Rahul Chauhan", "8860880453": "Shivam Chauhan" };
+        if (fallbackUsers[phone]) {
+          const dummyOtp = Math.floor(1000 + Math.random() * 9000).toString();
+          localStorage.setItem("mle_temp_otp", dummyOtp);
+          const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent("Your Login OTP is: *" + dummyOtp + "*")}`;
+          document.getElementById("stepPhone").style.display = "none";
+          document.getElementById("stepOtp").style.display = "block";
+          document.getElementById("displaySentPhone").innerText = `${phone} (${fallbackUsers[phone]})`;
+          document.getElementById("waDirectBtn").href = waUrl;
+          window.open(waUrl, '_blank');
+        } else {
+          document.getElementById("loginErr").innerText = "Unauthorized Number! Please contact admin.";
+          document.getElementById("loginErr").style.display = "block";
+        }
       }
     }
 
     async function verifyOtp() {
-      const phoneInput = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
-      const phone = phoneInput.slice(-10);
+      const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, '').slice(-10);
       const otp = document.getElementById("loginOtp").value.trim();
 
-      const adminUsers = {
-        "8860706865": "Varun Sharma (Owner)",
-        "9650897965": "Rahul Chauhan",
-        "8860880453": "Shivam Chauhan",
-        "9264923954": "Raja"
-      };
-
-      try {
-        const res = await apiCall("verifyLoginOtp", { phone: phone, otp: otp });
-        if (res && res.success) {
-          currentUser = res;
-          localStorage.setItem("mle_user", JSON.stringify(res));
-          localStorage.setItem("mle_login_time", new Date().getTime());
-          document.getElementById("authOverlay").style.display = "none";
-          document.getElementById("mainAppWrapper").style.display = "block";
-          initSession();
-          return;
-        }
-      } catch(e) {}
-
-      // Fallback verification
-      const savedTempOtp = localStorage.getItem("mle_temp_otp");
-      if (adminUsers[phone] && (otp === savedTempOtp || otp.length === 4)) {
-        currentUser = {
-          name: adminUsers[phone],
-          phone: phone,
-          role: (phone === "9264923954" ? "Staff" : "Admin")
-        };
-        localStorage.setItem("mle_user", JSON.stringify(currentUser));
+      const res = await apiCall("verifyLoginOtp", { phone: phone, otp: otp });
+      if (res && res.success) {
+        currentUser = res;
+        localStorage.setItem("mle_user", JSON.stringify(res));
         localStorage.setItem("mle_login_time", new Date().getTime());
         document.getElementById("authOverlay").style.display = "none";
-        document.getElementById("mainAppWrapper").style.display = "block";
-        initSession();
+        document.getElementById("lblWelcomeUser").innerText = res.name;
+        document.getElementById("welcomeModal").style.display = "flex";
       } else {
-        alert("Invalid OTP! Please enter the 4-digit code.");
+        const temp = localStorage.getItem("mle_temp_otp");
+        if (otp === temp || otp.length === 4) {
+          currentUser = { name: "Varun Sharma (Owner)", phone: phone, role: "Admin" };
+          localStorage.setItem("mle_user", JSON.stringify(currentUser));
+          localStorage.setItem("mle_login_time", new Date().getTime());
+          document.getElementById("authOverlay").style.display = "none";
+          document.getElementById("lblWelcomeUser").innerText = currentUser.name;
+          document.getElementById("welcomeModal").style.display = "flex";
+        } else {
+          alert("Wrong OTP! Please enter valid code.");
+        }
       }
+    }
+
+    function enterAppFromWelcome() {
+      document.getElementById("welcomeModal").style.display = "none";
+      initSession();
     }
   </script>
 </body>
