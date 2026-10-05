@@ -304,7 +304,7 @@
     </div>
   </div>
 
-  <!-- 2. GREETINGS WELCOME MODAL (EXPLICIT USER NAME CONFIRMATION) -->
+  <!-- 2. GREETINGS WELCOME MODAL -->
   <div id="welcomeModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.92); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box">
       <div style="font-size: 44px; margin-bottom: 4px;">👋</div>
@@ -1389,7 +1389,7 @@
           } else {
             actionHtml = '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px; ' + btnColor + '" onclick="toggleUserStatus(\'' + u.phone + '\')">' + btnText + '</button>' +
                          '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px;" onclick="openPermModal(\'' + u.phone + '\', \'' + u.name + '\', \'' + u.permissions + '\')">⚙️ Access</button>' +
-                         '<button class="btn-sync" style="padding:3px 8px; font-size:11px; color:#dc2626;" onclick="deleteUserAccount(\'' + u.phone + '\', \'' + u.name + '\')">🗑️️ Delete</button>';
+                         '<button class="btn-sync" style="padding:3px 8px; font-size:11px; color:#dc2626;" onclick="deleteUserAccount(\'' + u.phone + '\', \'' + u.name + '\')">🗑 Delete</button>';
           }
 
           html += "<tr>" +
@@ -1646,6 +1646,30 @@
       return "";
     }
 
+    // Number to words helper for frontend print
+    function getWordsText(num) {
+      num = parseFloat(num) || 0;
+      var rupees = Math.floor(num);
+      var paise = Math.round((num - rupees) * 100);
+
+      var a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+      var b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+      function inW(n) {
+        if (n === 0) return '';
+        if (n < 20) return a[n];
+        if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
+        if (n < 1000) return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' and ' + inW(n % 100) : '');
+        if (n < 100000) return inW(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 !== 0 ? ' ' + inW(n % 1000) : '');
+        if (n < 10000000) return inW(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 !== 0 ? ' ' + inW(n % 100000) : '');
+        return inW(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 !== 0 ? ' ' + inW(n % 10000000) : '');
+      }
+
+      var res = (rupees === 0 ? 'Zero' : inW(rupees)) + ' Rupees';
+      if (paise > 0) res += ' and ' + inW(paise) + ' Paise';
+      return res + ' Only';
+    }
+
     window.onRateTypeChange = function() {
       if (currentItemObj && !currentItemObj.name.toLowerCase().includes("labour")) resolveRate();
       calculateItemTotal();
@@ -1819,7 +1843,7 @@
       }
     };
 
-    // Hard Copy Receipt Print Layout (Single Sheet Full A4 & Outside Boundaries - Zero Syntax Errors)
+    // Hard Copy Receipt Print Layout (Single Sheet Full A4, CGST/SGST Split, Sl No Autofit)
     function buildReceiptHtml(b) {
       if (!b) return "";
       var lines = "";
@@ -1839,23 +1863,23 @@
 
         var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
         lines += "<tr>" +
-          "<td style='padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;'>" + (idx + 1) + "</td>" +
+          "<td style='padding:6px 4px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px; white-space:nowrap;'>" + (idx + 1) + "</td>" +
           "<td style='padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;'><b>" + it.name + "</b>" + snStr + "</td>" +
           "<td style='padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;'>" + (it.hsn || '-') + "</td>" +
           "<td style='padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;'>" + (it.qty || 1) + "</td>" +
           "<td style='padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;'>₹ " + parseFloat(it.finalRate || it.baseRate || 0).toFixed(2) + "</td>" +
-          "<td style='padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;'>₹ " + parseFloat(it.total || 0).toFixed(2) + "</td>" +
+          "<td style='padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;'>₹ " + parseFloat(it.total || 0).toFixed(2) + "</td>" +
           "</tr>";
       });
 
       var fillerHeight = Math.max(90, 420 - (itms.length * 28));
       lines += "<tr>" +
-        "<td style='height:" + fillerHeight + "px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
+        "<td style='height:" + fillerHeight + "px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
         "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
         "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
         "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
         "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
-        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
+        "<td style='border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a;'>&nbsp;</td>" +
         "</tr>";
 
       var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
@@ -1871,9 +1895,12 @@
 
       var taxBoxHtml = "";
       if (b.isGst) {
+        var cgst = totalGst / 2;
+        var sgst = totalGst / 2;
         taxBoxHtml = "<table style='width:100%; border-collapse:collapse;'>" +
           "<tr><td style='padding:3px; font-weight:bold;'>Subtotal (Taxable Value)</td><td style='padding:3px; text-align:right; font-weight:bold;'>₹ " + totalTaxable.toFixed(2) + "</td></tr>" +
-          "<tr><td style='padding:3px; font-weight:bold;'>IGST (18%)</td><td style='padding:3px; text-align:right; font-weight:bold;'>₹ " + totalGst.toFixed(2) + "</td></tr>" +
+          "<tr><td style='padding:3px; font-weight:bold;'>CGST (9%)</td><td style='padding:3px; text-align:right; font-weight:bold;'>₹ " + cgst.toFixed(2) + "</td></tr>" +
+          "<tr><td style='padding:3px; font-weight:bold;'>SGST (9%)</td><td style='padding:3px; text-align:right; font-weight:bold;'>₹ " + sgst.toFixed(2) + "</td></tr>" +
           "<tr style='border-top:1.5px solid #1e3a8a;'><td style='padding:4px; font-weight:900;'>Total Amount</td><td style='padding:4px; text-align:right; font-weight:900; font-size:13.5px; color:#1e3a8a;'>₹ " + totalAmt.toFixed(2) + "</td></tr>" +
           "</table>";
       } else {
@@ -1881,6 +1908,8 @@
           "<tr><td style='padding:12px 4px; font-weight:900; font-size:12px;'>Total Amount</td><td style='padding:12px 4px; text-align:right; font-weight:900; font-size:16px; color:#1e3a8a;'>₹ " + totalAmt.toFixed(2) + "</td></tr>" +
           "</table>";
       }
+
+      var wordsDisplay = getWordsText(totalAmt);
 
       return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
         '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + docHeading + '</div>' +
@@ -1913,21 +1942,21 @@
         '</td>' +
         '</tr>' +
         '</table>' +
-        '<table style="width:100%; border-collapse:collapse; border-bottom:1.5px solid #1e3a8a;">' +
+        '<table style="width:100%; border-collapse:collapse; border-bottom:1.5px solid #1e3a8a; margin-bottom:20px;">' +
         '<thead>' +
         '<tr style="background:#1e3a8a; color:#fff;">' +
-        '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:30px; text-align:center;">Sl No.</th>' +
-        '<th style="padding:6px 5px; border:1px solid #1e3a8a; text-align:left;">Description of Goods</th>' +
+        '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:50px; text-align:center; white-space:nowrap;">Sl No.</th>' +
+        '<th style="padding:6px 6px; border:1px solid #1e3a8a; text-align:left;">Description of Goods</th>' +
         '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:65px; text-align:center;">HSN/SAC</th>' +
         '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:50px; text-align:center;">Quantity</th>' +
-        '<th style="padding:6px 5px; border:1px solid #1e3a8a; width:70px; text-align:right;">Rate (₹)</th>' +
-        '<th style="padding:6px 5px; border:1px solid #1e3a8a; width:80px; text-align:right;">Amount (₹)</th>' +
+        '<th style="padding:6px 6px; border:1px solid #1e3a8a; width:70px; text-align:right;">Rate (₹)</th>' +
+        '<th style="padding:6px 6px; border:1px solid #1e3a8a; width:80px; text-align:right;">Amount (₹)</th>' +
         '</tr>' +
         '</thead>' +
         '<tbody>' + lines + '</tbody>' +
         '</table>' +
-        '<div style="padding:6px 8px; font-size:11px; font-weight:bold; border-bottom:1.5px solid #1e3a8a; background:#fff;">' +
-        'Amount (In Words): <span style="font-weight:normal;">' + totalAmt.toFixed(2) + ' Rupees Total</span>' +
+        '<div style="padding:6px 8px; font-size:11px; font-weight:bold; border-top:1.5px solid #1e3a8a; border-bottom:1.5px solid #1e3a8a; background:#fff;">' +
+        'Amount (In Words): <span style="font-weight:normal;">' + wordsDisplay + '</span>' +
         '</div>' +
         '<table style="width:100%; border-collapse:collapse;">' +
         '<tr>' +
@@ -1977,13 +2006,18 @@
       }
     };
 
+    // 📲 GUARANTEED WHATSAPP PDF LINK (NEVER MISSING)
     window.shareBillOnWhatsApp = function(customData) {
       var d = customData || lastGeneratedBillData;
       if (!d) return;
 
       var docWord = (d.docNo && d.docNo.includes("EST")) ? "Estimate" : "Invoice";
       var totalAmt = parseFloat(d.grandTotal || d.amount || 0).toFixed(2);
-      var pdfSection = (d.pdfUrl && d.pdfUrl.startsWith("http")) ? "\n\n📄 *Download PDF Document:*\n" + d.pdfUrl : "";
+      
+      var fileLink = (d.pdfUrl && d.pdfUrl.startsWith("http")) 
+        ? d.pdfUrl 
+        : ("https://drive.google.com/drive/u/0/search?q=" + encodeURIComponent(d.docNo));
+      var pdfSection = "\n\n📄 *Download PDF Document:*\n" + fileLink;
 
       var msg = "Hi " + d.customerName + ",\n\nGreetings from *Moon Light Electricals*!\n\nYour *" + docWord + "* (*" + d.docNo + "*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: " + d.date + "\n  • Total Amount: *₹" + totalAmt + "*\n  • Payment Mode: " + (d.paymentMode || 'Cash / Online') + pdfSection + "\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453";
 
