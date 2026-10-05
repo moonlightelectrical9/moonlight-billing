@@ -19,12 +19,27 @@
       --sidebar-bg: #0f172a;
       --sidebar-hover: #1e293b;
       --accent: #d97706;
+      --accent-active: #b45309;
       --green: #059669;
       --danger: #dc2626;
       --danger-bg: #fee2e2;
     }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
     body { background: #090d16; color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Button Tactile Click / Active Micro-Press Effect */
+    button {
+      transition: all 0.12s ease-in-out;
+      user-select: none;
+    }
+    button:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+    button:active {
+      transform: scale(0.97) translateY(1px) !important;
+      filter: brightness(0.92) !important;
+    }
 
     /* Top Bar */
     .top-header {
@@ -49,7 +64,7 @@
     .user-pill { background: #e2e8f0; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: #334155; cursor: pointer; }
     .btn-logout { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 800; cursor: pointer; }
 
-    /* Layout Structure (Hidden completely until login) */
+    /* Main Container (Hidden until login) */
     #mainAppWrapper { display: none; flex-direction: column; flex: 1; width: 100%; background: var(--bg); }
     .main-wrapper { display: flex; flex: 1; min-height: calc(100vh - 65px); }
 
@@ -68,7 +83,6 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      transition: all 0.2s;
     }
     .nav-btn:hover { background: var(--sidebar-hover); color: #ffffff; }
     .nav-btn.active { background: var(--accent); color: #000000; font-weight: 900; }
@@ -249,7 +263,30 @@
     </div>
   </div>
 
-  <!-- 3. CHECKOUT SUCCESS MODAL -->
+  <!-- 3. PERMISSIONS CHECKBOX MODAL -->
+  <div id="permModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
+    <div class="modal-box" style="text-align:left; max-width:400px;">
+      <h3 style="font-size:16px; margin-bottom:10px; color:#0f172a;">⚙️ Assign Access Permissions</h3>
+      <div style="font-size:12px; color:#64748b; margin-bottom:12px;">User: <b id="permUserName"></b> (<span id="permUserPhone"></span>)</div>
+      
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px; font-size:13px; font-weight:700;">
+        <label><input type="checkbox" id="chkPermGen"> 🧾 Generate Bill (Counter POS)</label>
+        <label><input type="checkbox" id="chkPermRepeat"> 👥 Repeat Customers Directory</label>
+        <label><input type="checkbox" id="chkPermDash"> 📊 Dashboard Analytics (Sales/Profit)</label>
+        <label><input type="checkbox" id="chkPermKhata"> 📒 Credit Ledger (Udhar Khata)</label>
+        <label><input type="checkbox" id="chkPermSearch"> 🔍 Search Bill & Reprint</label>
+        <label><input type="checkbox" id="chkPermStock"> 📦 Stock Inward & Item Purchases</label>
+        <label><input type="checkbox" id="chkPermSet"> ⚙️ Settings & User Management</label>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button class="btn-checkout" style="background:#0284c7; color:#fff;" onclick="saveUserPermsFromModal()">💾 Save Permissions</button>
+        <button class="btn-checkout" style="background:#e2e8f0; color:#0f172a;" onclick="closePermModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. CHECKOUT SUCCESS MODAL -->
   <div id="checkoutSuccessModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box">
       <div style="font-size: 42px;">✅</div>
@@ -264,7 +301,7 @@
     </div>
   </div>
 
-  <!-- 4. MAIN APPLICATION WRAPPER -->
+  <!-- 5. MAIN APPLICATION WRAPPER -->
   <div id="mainAppWrapper">
     <header class="top-header">
       <div>
@@ -287,6 +324,7 @@
         <button class="nav-btn" id="btnNavBill" onclick="toggleBillingSub()">🧾 Billing ▾</button>
         <div class="sub-menu" id="billingSubMenu">
           <button class="sub-nav-btn active" id="btnSubGen" onclick="switchBillingView('gen')">• Generate Bill</button>
+          <button class="sub-nav-btn" id="btnSubRepeat" onclick="switchBillingView('repeat')">• Repeat Customers</button>
           <button class="sub-nav-btn" id="btnSubKhata" onclick="switchBillingView('khata')">• Credit Ledger</button>
           <button class="sub-nav-btn" id="btnSubSearch" onclick="switchBillingView('search')">• Search Bill</button>
           <button class="sub-nav-btn" id="btnSubStock" onclick="switchBillingView('stock')">• Stock Inward</button>
@@ -370,14 +408,16 @@
         <!-- VIEW 2: BILLING -> GENERATE BILL -->
         <div id="viewGenBill" style="display: none;">
           <div class="card" id="cardBillForm">
+            <!-- Form Grid with Blank Defaults & Editable Bill Date -->
             <div class="grid-row row-5">
               <div class="form-col">
-                <label>BILL DATE</label>
+                <label>BILL DATE <span>*</span></label>
                 <input type="date" id="billDate">
               </div>
               <div class="form-col">
                 <label>MODE <span>*</span></label>
-                <select id="billMode">
+                <select id="billMode" onchange="checkFormState()">
+                  <option value="">-- Select Mode --</option>
                   <option value="Final Bill (Tax_Invoices)">Final Bill (Tax_Invoices)</option>
                   <option value="Estimate (Estimates)">Estimate (Estimates)</option>
                 </select>
@@ -385,6 +425,7 @@
               <div class="form-col">
                 <label>RATE TYPE <span>*</span></label>
                 <select id="rateType" onchange="onRateTypeChange()">
+                  <option value="">-- Select Rate Type --</option>
                   <option value="Customer Rate">Customer Rate</option>
                   <option value="Electrician Rate">Electrician Rate</option>
                   <option value="Wholesale Rate">Wholesale Rate</option>
@@ -393,13 +434,15 @@
               <div class="form-col">
                 <label>GST BILL? <span>*</span></label>
                 <select id="isGstBill" onchange="onGstToggleChange()">
+                  <option value="">-- Select GST Mode --</option>
                   <option value="No (Regular Bill)">No (Regular Bill)</option>
                   <option value="Yes (GST Invoice)">Yes (GST Invoice)</option>
                 </select>
               </div>
               <div class="form-col">
                 <label>PAYMENT <span>*</span></label>
-                <select id="paymentMode">
+                <select id="paymentMode" onchange="checkFormState()">
+                  <option value="">-- Select Payment --</option>
                   <option value="Cash">Cash</option>
                   <option value="UPI / Online">UPI / Online</option>
                   <option value="Credit / Udhar">Credit / Udhar</option>
@@ -410,11 +453,11 @@
             <div class="grid-row row-2">
               <div class="form-col">
                 <label>CUSTOMER NAME <span>*</span></label>
-                <input type="text" id="custName" placeholder="Customer Name">
+                <input type="text" id="custName" placeholder="Customer Name" oninput="checkFormState()">
               </div>
               <div class="form-col">
                 <label>WHATSAPP NUMBER <span>*</span></label>
-                <input type="tel" id="custPhone" placeholder="10-digit number">
+                <input type="tel" id="custPhone" placeholder="10-digit number" oninput="checkFormState()">
               </div>
             </div>
 
@@ -435,7 +478,7 @@
             <div class="grid-row row-item-top">
               <div class="form-col">
                 <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
-                <input type="text" id="itemSearch" placeholder="Type to search from 450+ items..." autocomplete="off" onfocus="handleItemSearchFocus()" oninput="onItemSearchInput()">
+                <input type="text" id="itemSearch" placeholder="Click to search items..." autocomplete="off" onfocus="handleItemSearchFocus()" oninput="onItemSearchInput()">
                 <div class="dropdown-menu" id="billingItemMenu"></div>
               </div>
               <div class="form-col">
@@ -507,11 +550,13 @@
               ⚡ Checkout / Save Bill & Generate PDF
             </button>
           </div>
+        </div>
 
-          <!-- REPEAT CUSTOMERS DIRECTORY -->
-          <div class="card" style="margin-top:16px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <h4 style="font-weight:900; color:#0f172a;">👥 Repeat Customers Directory (Click ➕ to Auto-Fill Bill)</h4>
+        <!-- VIEW 2.5: REPEAT CUSTOMERS DIRECTORY -->
+        <div id="viewRepeatCustomers" style="display: none;">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 style="font-weight:900; color:#0f172a;">👥 Repeat Customers Directory (Click ➕ to Auto-Fill Bill)</h3>
               <button class="btn-sync" onclick="loadRepeatCustomers()">🔄 Refresh</button>
             </div>
             <div id="repeatCustTableContainer"></div>
@@ -661,7 +706,7 @@
               <button class="btn-checkout" onclick="submitCorrectQty()" style="background:#dc2626; color:#fff; width:auto; padding:8px 20px; margin-top:6px;">Override & Set Correct Qty</button>
             </div>
 
-            <!-- Mode 5: Purchase Bill Entry (Sheet 7) with Dropdown & Custom Item -->
+            <!-- Mode 5: Purchase Bill Entry with Dropdown & Custom Item -->
             <div id="boxStockPurchase" style="display:none; background:#fef3c7; border:1px solid #fde68a; padding:14px; border-radius:8px;">
               <div style="font-size:12px; font-weight:800; color:#b45309; margin-bottom:8px;">🛍️ ITEM PURCHASE BILL ENTRY (HUB / WHOLESALE MANDI)</div>
               <div class="grid-row row-5">
@@ -690,7 +735,7 @@
           </div>
         </div>
 
-        <!-- VIEW 6: SETTINGS & PERMISSIONS -->
+        <!-- VIEW 6: SETTINGS, USERS & PERMISSIONS -->
         <div id="viewSettings" style="display: none;">
           <div class="card">
             <h3 style="font-weight:900; margin-bottom:14px;">ERP Settings & Configurations</h3>
@@ -698,7 +743,7 @@
             <!-- User Permissions & Active/Inactive Management (Admin Only) -->
             <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:16px; margin-bottom:18px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h4 style="font-weight:800; color:#0284c7;">👥 User Accounts, Role & Access Permissions</h4>
+                <h4 style="font-weight:800; color:#0284c7;">👥 User Accounts, Role & Access Permissions (5 Users)</h4>
                 <button class="btn-sync" onclick="loadUsersList()">🔄 Refresh Users</button>
               </div>
               <div id="usersListContainer"></div>
@@ -739,7 +784,8 @@
       "8860706865": { name: "Varun Sharma (Owner)", role: "Admin", pin: "1234", permissions: "all" },
       "9650897965": { name: "Rahul Chauhan", role: "Admin", pin: "1234", permissions: "all" },
       "8860880453": { name: "Shivam Chauhan", role: "Admin", pin: "1234", permissions: "all" },
-      "9264923954": { name: "Raja", role: "Staff", pin: "1234", permissions: "gen,stock" }
+      "9264923954": { name: "Raja", role: "Staff", pin: "1234", permissions: "gen,repeat,stock" },
+      "9876543210": { name: "Staff 2 (Counter)", role: "Staff", pin: "1234", permissions: "gen,repeat" }
     };
 
     var currentUser = null;
@@ -751,6 +797,23 @@
     var bankSettings = null;
     var sessionTimerInterval = null;
     var deferredPrompt = null;
+    var selectedPermUserPhone = "";
+
+    // Close Dropdown on Outside Click
+    document.addEventListener("click", function(e) {
+      var itemInput = document.getElementById("itemSearch");
+      var itemMenu = document.getElementById("billingItemMenu");
+      if (itemMenu && e.target !== itemInput && !itemMenu.contains(e.target)) {
+        itemMenu.style.display = "none";
+      }
+
+      ["stockItemMenu", "hsnOnlyMenu", "rateOnlyMenu", "correctMenu", "purItemMenu"].forEach(function(mId) {
+        var m = document.getElementById(mId);
+        if (m && !m.contains(e.target) && e.target.id !== mId.replace("Menu", "Name") && e.target.id !== "stkName") {
+          m.style.display = "none";
+        }
+      });
+    });
 
     // Login Action
     window.doPasswordLogin = function() {
@@ -830,12 +893,13 @@
       }
     }
 
-    // Role-based Access Restriction
     function applyUserPermissions() {
       var perms = currentUser.permissions || "all";
       var isStaff = (currentUser.role !== "Admin");
       if (isStaff && perms !== "all") {
         if (!perms.includes("dash")) document.getElementById("btnNavDash").style.display = "none";
+        if (!perms.includes("gen")) document.getElementById("btnSubGen").style.display = "none";
+        if (!perms.includes("repeat")) document.getElementById("btnSubRepeat").style.display = "none";
         if (!perms.includes("khata")) document.getElementById("btnSubKhata").style.display = "none";
         if (!perms.includes("search")) document.getElementById("btnSubSearch").style.display = "none";
         if (!perms.includes("stock")) document.getElementById("btnSubStock").style.display = "none";
@@ -843,7 +907,6 @@
       }
     }
 
-    // Password Change Modal
     window.openPwdModal = function() {
       document.getElementById("chgPwdPhone").value = currentUser.phone;
       document.getElementById("chgPwdNew").value = "";
@@ -871,7 +934,7 @@
       }
     }
 
-    // Auto-Clear Search on Click/Focus
+    // Auto-Clear on click/focus
     window.handleItemSearchFocus = function() {
       var field = document.getElementById("itemSearch");
       field.value = "";
@@ -926,12 +989,13 @@
         document.getElementById("custGstin").value = "";
       }
       calculateItemTotal();
+      checkFormState();
     };
 
     // Repeat Customers Directory
     async function loadRepeatCustomers() {
       var c = document.getElementById("repeatCustTableContainer");
-      c.innerHTML = "Loading regular customers...";
+      c.innerHTML = "Loading regular customers directory...";
       var res = await apiCall("getRepeatCustomers");
       if (res && res.customers) {
         var html = '<div class="table-wrap"><table><thead><tr><th>Customer Name</th><th>Address</th><th>Mobile</th><th>Repeat Bills</th><th>GSTIN</th><th>Action</th></tr></thead><tbody>';
@@ -951,6 +1015,7 @@
     }
 
     window.useRepeatCustomer = function(name, phone, address, gstin) {
+      switchBillingView('gen');
       document.getElementById("custName").value = name;
       document.getElementById("custPhone").value = phone;
       document.getElementById("custAddress").value = address;
@@ -966,7 +1031,7 @@
       document.getElementById("cardBillForm").scrollIntoView({ behavior: 'smooth' });
     };
 
-    // Stock Inward Unified Dropdown Function (Working for All Modes)
+    // Dropdowns for Stock Inward
     window.onStockSearchInput = function(inputId, menuId) {
       var val = document.getElementById(inputId).value.trim().toLowerCase();
       var menu = document.getElementById(menuId);
@@ -1062,17 +1127,20 @@
       }
     };
 
-    // User Accounts Management
+    // User Accounts Management (5 Users + Checkbox Modal + Delete Action)
     async function loadUsersList() {
       var c = document.getElementById("usersListContainer");
-      c.innerHTML = "Loading users...";
+      c.innerHTML = "Loading 5 users list...";
       var res = await apiCall("getUsersList");
       if (res && res.users) {
         var html = '<div class="table-wrap"><table><thead><tr><th>User Name</th><th>Mobile</th><th>Role</th><th>Status</th><th>Permissions</th><th>Actions</th></tr></thead><tbody>';
         res.users.forEach(function(u) {
           var isAct = (u.status === "Active");
+          var isOwner = (u.phone === "8860706865");
           var btnColor = isAct ? "color:#dc2626;" : "color:#059669;";
           var btnText = isAct ? "🔴 Deactivate" : "🟢 Activate";
+          var delBtn = isOwner ? '<span style="color:#94a3b8; font-size:11px;">[Owner]</span>' : '<button class="btn-sync" style="padding:3px 8px; font-size:11px; color:#dc2626;" onclick="deleteUserAccount(\'' + u.phone + '\', \'' + u.name + '\')">🗑️ Delete</button>';
+
           html += "<tr>" +
             "<td><b>" + u.name + "</b></td>" +
             "<td>" + u.phone + "</td>" +
@@ -1081,7 +1149,8 @@
             "<td><small>" + u.permissions + "</small></td>" +
             "<td>" +
             "<button class='btn-sync' style='padding:3px 8px; font-size:11px; margin-right:4px; " + btnColor + "' onclick='toggleUserStatus(\"" + u.phone + "\")'>" + btnText + "</button>" +
-            "<button class='btn-sync' style='padding:3px 8px; font-size:11px;' onclick='editUserPerms(\"" + u.phone + "\", \"" + u.permissions + "\")'>⚙️ Access</button>" +
+            "<button class='btn-sync' style='padding:3px 8px; font-size:11px; margin-right:4px;' onclick='openPermModal(\"" + u.phone + "\", \"" + u.name + "\", \"" + u.permissions + "\")'>⚙️ Access</button>" +
+            delBtn +
             "</td>" +
             "</tr>";
         });
@@ -1095,11 +1164,56 @@
       if (res && res.success) loadUsersList();
     };
 
-    window.editUserPerms = async function(phone, currentPerms) {
-      var p = prompt("Enter comma-separated modules for user access (e.g. gen,stock,khata,dash,set,all):", currentPerms);
-      if (p !== null) {
-        var res = await apiCall("updateUserPermissions", { phone: phone, permissions: p });
-        if (res && res.success) loadUsersList();
+    window.openPermModal = function(phone, name, currentPerms) {
+      selectedPermUserPhone = phone;
+      document.getElementById("permUserName").innerText = name;
+      document.getElementById("permUserPhone").innerText = phone;
+      
+      var isAll = (currentPerms === "all");
+      document.getElementById("chkPermGen").checked = isAll || currentPerms.includes("gen");
+      document.getElementById("chkPermRepeat").checked = isAll || currentPerms.includes("repeat");
+      document.getElementById("chkPermDash").checked = isAll || currentPerms.includes("dash");
+      document.getElementById("chkPermKhata").checked = isAll || currentPerms.includes("khata");
+      document.getElementById("chkPermSearch").checked = isAll || currentPerms.includes("search");
+      document.getElementById("chkPermStock").checked = isAll || currentPerms.includes("stock");
+      document.getElementById("chkPermSet").checked = isAll || currentPerms.includes("set");
+
+      document.getElementById("permModal").style.display = "flex";
+    };
+
+    window.closePermModal = function() {
+      document.getElementById("permModal").style.display = "none";
+    };
+
+    window.saveUserPermsFromModal = async function() {
+      var list = [];
+      if (document.getElementById("chkPermGen").checked) list.push("gen");
+      if (document.getElementById("chkPermRepeat").checked) list.push("repeat");
+      if (document.getElementById("chkPermDash").checked) list.push("dash");
+      if (document.getElementById("chkPermKhata").checked) list.push("khata");
+      if (document.getElementById("chkPermSearch").checked) list.push("search");
+      if (document.getElementById("chkPermStock").checked) list.push("stock");
+      if (document.getElementById("chkPermSet").checked) list.push("set");
+
+      var pStr = list.join(",");
+      if (list.length === 7) pStr = "all";
+
+      var res = await apiCall("updateUserPermissions", { phone: selectedPermUserPhone, permissions: pStr });
+      if (res && res.success) {
+        closePermModal();
+        loadUsersList();
+      }
+    };
+
+    window.deleteUserAccount = async function(phone, name) {
+      if (confirm("Are you sure you want to permanently delete user " + name + " (" + phone + ")? This action cannot be undone.")) {
+        var res = await apiCall("deleteUser", { phone: phone });
+        if (res && res.success) {
+          alert("User deleted successfully!");
+          loadUsersList();
+        } else {
+          alert(res.message || "Cannot delete user!");
+        }
       }
     };
 
@@ -1110,14 +1224,14 @@
       var role = document.getElementById("newUserRole").value;
       if (!name || phone.length !== 10) { alert("Enter valid name and 10-digit mobile!"); return; }
 
-      var res = await apiCall("createUser", { data: { name: name, phone: phone, pin: pin, role: role, permissions: role === "Admin" ? "all" : "gen" } });
+      var res = await apiCall("createUser", { data: { name: name, phone: phone, pin: pin, role: role, permissions: role === "Admin" ? "all" : "gen,repeat" } });
       if (res && res.success) {
         alert("New user created successfully!");
         loadUsersList();
       }
     };
 
-    // Standard Dashboard Filter Badge Update
+    // Dashboard Filter Badge
     window.filterDash = function(period) {
       if (!window.dashData) return;
       document.querySelectorAll(".filter-btn-active").forEach(function(b) { b.classList.remove("filter-btn-active"); });
@@ -1208,6 +1322,7 @@
       document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
       document.getElementById("viewDashboard").style.display = (nav === 'dash') ? 'block' : 'none';
       document.getElementById("viewGenBill").style.display = 'none';
+      document.getElementById("viewRepeatCustomers").style.display = 'none';
       document.getElementById("viewCreditLedger").style.display = 'none';
       document.getElementById("viewSearchBills").style.display = 'none';
       document.getElementById("viewStockInward").style.display = 'none';
@@ -1237,12 +1352,14 @@
       document.getElementById("viewDashboard").style.display = 'none';
       document.getElementById("viewSettings").style.display = 'none';
       document.getElementById("viewGenBill").style.display = (subView === 'gen') ? 'block' : 'none';
+      document.getElementById("viewRepeatCustomers").style.display = (subView === 'repeat') ? 'block' : 'none';
       document.getElementById("viewCreditLedger").style.display = (subView === 'khata') ? 'block' : 'none';
       document.getElementById("viewSearchBills").style.display = (subView === 'search') ? 'block' : 'none';
       document.getElementById("viewStockInward").style.display = (subView === 'stock') ? 'block' : 'none';
 
-      if (subView === 'gen') {
-        document.getElementById("btnSubGen").classList.add("active");
+      if (subView === 'gen') document.getElementById("btnSubGen").classList.add("active");
+      if (subView === 'repeat') {
+        document.getElementById("btnSubRepeat").classList.add("active");
         loadRepeatCustomers();
       }
       if (subView === 'khata') {
@@ -1285,6 +1402,7 @@
     window.onRateTypeChange = function() {
       if (currentItemObj && !currentItemObj.name.toLowerCase().includes("labour")) resolveRate();
       calculateItemTotal();
+      checkFormState();
     };
 
     function resolveRate() {
@@ -1317,6 +1435,15 @@
     window.addItemToBill = function() {
       var name = document.getElementById("itemSearch").value.trim();
       if (!name) return;
+
+      var bMode = document.getElementById("billMode").value;
+      var rType = document.getElementById("rateType").value;
+      var gstMode = document.getElementById("isGstBill").value;
+      var pMode = document.getElementById("paymentMode").value;
+      if (!bMode || !rType || !gstMode || !pMode) {
+        alert("Please select Mode, Rate Type, GST Bill?, and Payment mode before adding items!");
+        return;
+      }
 
       var found = cachedItems.some(function(x) { return x.name.toLowerCase() === name.toLowerCase(); });
       if (!found) { alert("Item not found in inventory! Please inward stock first."); return; }
@@ -1385,9 +1512,15 @@
     };
 
     function checkFormState() {
-      var ok = document.getElementById("custName").value.trim() && 
-                 document.getElementById("custPhone").value.trim().length >= 10 && 
-                 billItems.length > 0;
+      var bMode = document.getElementById("billMode").value;
+      var rType = document.getElementById("rateType").value;
+      var gstMode = document.getElementById("isGstBill").value;
+      var pMode = document.getElementById("paymentMode").value;
+
+      var ok = bMode && rType && gstMode && pMode &&
+               document.getElementById("custName").value.trim() && 
+               document.getElementById("custPhone").value.trim().length >= 10 && 
+               billItems.length > 0;
       document.getElementById("btnSubmitBill").disabled = !ok;
     }
 
@@ -1439,7 +1572,7 @@
       }
     };
 
-    // Receipt Print
+    // Hard Copy Receipt Print (Matching image_c0f047.png exactly)
     function buildReceiptHtml(b) {
       if (!b) return "";
       var lines = "";
@@ -1471,12 +1604,25 @@
       var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
       var shopGstLine = (b.isGst) ? "<div style='font-weight:bold; margin-top:3px;'>GSTIN/UIN: 07DBOPG3647H1ZF | State: Delhi, Code: 07</div>" : "";
       var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? "<div>GSTIN/UIN: " + b.gstin + " | State: Delhi, Code: 07</div>" : "";
-      var docHeading = (b.docNo && b.docNo.includes('INV')) ? 'TAX INVOICE' : 'TAX / ESTIMATE INVOICE';
 
-      var subtotalHtml = "";
+      var docHeading = "INVOICE";
+      if (b.docNo && b.docNo.includes('EST')) {
+        docHeading = "ESTIMATE INVOICE";
+      } else if (b.isGst) {
+        docHeading = "TAX INVOICE";
+      }
+
+      var taxBoxHtml = "";
       if (b.isGst) {
-        subtotalHtml = "<tr><td colspan='5' style='padding:6px; text-align:right; border:1px solid #1e3a8a; font-weight:bold;'>Subtotal (Taxable Value)</td><td style='padding:6px; text-align:right; border:1px solid #1e3a8a; font-weight:bold;'>" + totalTaxable.toFixed(2) + "</td></tr>" +
-                       "<tr><td colspan='5' style='padding:6px; text-align:right; border:1px solid #1e3a8a; font-weight:bold;'>IGST / GST (18%)</td><td style='padding:6px; text-align:right; border:1px solid #1e3a8a; font-weight:bold;'>" + totalGst.toFixed(2) + "</td></tr>";
+        taxBoxHtml = "<table style='width:100%; border-collapse:collapse;'>" +
+          "<tr><td style='padding:3px; font-weight:bold;'>Subtotal (Taxable Value)</td><td style='padding:3px; text-align:right; font-weight:bold;'>" + totalTaxable.toFixed(2) + "</td></tr>" +
+          "<tr><td style='padding:3px; font-weight:bold;'>IGST (18%)</td><td style='padding:3px; text-align:right; font-weight:bold;'>" + totalGst.toFixed(2) + "</td></tr>" +
+          "<tr style='border-top:1.5px solid #1e3a8a;'><td style='padding:4px; font-weight:900;'>Total Amount</td><td style='padding:4px; text-align:right; font-weight:900; font-size:13px; color:#1e3a8a;'>₹ " + totalAmt.toFixed(2) + "</td></tr>" +
+          "</table>";
+      } else {
+        taxBoxHtml = "<table style='width:100%; border-collapse:collapse; height:100%;'>" +
+          "<tr><td style='padding:10px 4px; font-weight:900; font-size:12px;'>Total Amount</td><td style='padding:10px 4px; text-align:right; font-weight:900; font-size:15px; color:#1e3a8a;'>₹ " + totalAmt.toFixed(2) + "</td></tr>" +
+          "</table>";
       }
 
       return '<div style="max-width:550px; margin:0 auto; padding:15px; font-family:Helvetica, Arial, sans-serif; font-size:11px; color:#000; line-height:1.35; background:#fff; min-height:240mm; position:relative;">' +
@@ -1520,19 +1666,26 @@
         '<th style="padding:6px; border:1px solid #1e3a8a; width:80px; text-align:right;">Amount (₹)</th>' +
         '</tr>' +
         '</thead>' +
-        '<tbody>' + lines + subtotalHtml +
-        '<tr><td colspan="5" style="padding:6px; text-align:right; border:1.5px solid #1e3a8a; font-weight:900; font-size:12px;">Total Invoice Amount</td><td style="padding:6px; text-align:right; border:1.5px solid #1e3a8a; font-weight:900; font-size:13px; color:#1e3a8a;">₹ ' + totalAmt.toFixed(2) + '</td></tr>' +
-        '</tbody>' +
+        '<tbody>' + lines + '</tbody>' +
         '</table>' +
         '<div style="position:absolute; bottom:15px; left:15px; right:15px;">' +
-        '<div style="margin-bottom:6px; font-size:11px; font-weight:bold;">Amount Chargeable (in words): <span style="font-weight:normal;">' + totalAmt.toFixed(2) + ' Rupees Total</span></div>' +
-        '<table style="width:100%; border-collapse:collapse; border:1.5px solid #1e3a8a; margin-bottom:8px;">' +
-        '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:4px 8px; border:none;">Bank Details</td></tr>' +
-        '<tr><td style="width:30%; padding:3px 8px; border:1px solid #cbd5e1;"><b>A/c Holder\'s Name:</b></td><td style="padding:3px 8px; border:1px solid #cbd5e1;">SHIVAM CHAUHAN</td></tr>' +
-        '<tr><td style="padding:3px 8px; border:1px solid #cbd5e1;"><b>Bank Name:</b></td><td style="padding:3px 8px; border:1px solid #cbd5e1;">Kotak Mahindra Bank</td></tr>' +
-        '<tr><td style="padding:3px 8px; border:1px solid #cbd5e1;"><b>A/c No.:</b></td><td style="padding:3px 8px; border:1px solid #cbd5e1;">6413488039</td></tr>' +
-        '<tr><td style="padding:3px 8px; border:1px solid #cbd5e1;"><b>Branch & IFS Code:</b></td><td style="padding:3px 8px; border:1px solid #cbd5e1;">Sector 18, Noida & KKBK0000181</td></tr>' +
-        '<tr><td style="padding:3px 8px; border:1px solid #cbd5e1;"><b>UPI ID:</b></td><td style="padding:3px 8px; border:1px solid #cbd5e1;">8860880453@kotak</td></tr>' +
+        '<div style="margin-bottom:6px; font-size:11px; font-weight:bold;">Amount (In Words): <span style="font-weight:normal;">' + totalAmt.toFixed(2) + ' Rupees Total</span></div>' +
+        '<table style="width:100%; border-collapse:collapse; border:1.5px solid #1e3a8a; margin-bottom:6px;">' +
+        '<tr>' +
+        '<td style="width:60%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:4px;">' +
+        '<table style="width:100%; border-collapse:collapse;">' +
+        '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:3px 6px;">Bank Details</td></tr>' +
+        '<tr><td style="width:35%; padding:2px 6px; border:1px solid #cbd5e1;"><b>A/c Holder\'s Name:</b></td><td style="padding:2px 6px; border:1px solid #cbd5e1;">SHIVAM CHAUHAN</td></tr>' +
+        '<tr><td style="padding:2px 6px; border:1px solid #cbd5e1;"><b>Bank Name:</b></td><td style="padding:2px 6px; border:1px solid #cbd5e1;">Kotak Mahindra Bank</td></tr>' +
+        '<tr><td style="padding:2px 6px; border:1px solid #cbd5e1;"><b>A/c No.:</b></td><td style="padding:2px 6px; border:1px solid #cbd5e1;">6413488039</td></tr>' +
+        '<tr><td style="padding:2px 6px; border:1px solid #cbd5e1;"><b>Branch & IFS Code:</b></td><td style="padding:2px 6px; border:1px solid #cbd5e1;">Sector 18, Noida & KKBK0000181</td></tr>' +
+        '<tr><td style="padding:2px 6px; border:1px solid #cbd5e1;"><b>UPI ID:</b></td><td style="padding:2px 6px; border:1px solid #cbd5e1;">8860880453@kotak</td></tr>' +
+        '</table>' +
+        '</td>' +
+        '<td style="width:40%; vertical-align:middle; padding:6px; background:#fafafa;">' +
+        taxBoxHtml +
+        '</td>' +
+        '</tr>' +
         '</table>' +
         '<div style="text-align:center; font-size:9.5px; border-top:1px solid #1e3a8a; padding-top:4px;">' +
         'Thank you for choosing Moon Light Electricals!<br>' +
@@ -1585,6 +1738,10 @@
       document.getElementById("custName").value = "";
       document.getElementById("custPhone").value = "";
       document.getElementById("custGstin").value = "";
+      document.getElementById("billMode").value = "";
+      document.getElementById("rateType").value = "";
+      document.getElementById("isGstBill").value = "";
+      document.getElementById("paymentMode").value = "";
       checkFormState();
     };
 
