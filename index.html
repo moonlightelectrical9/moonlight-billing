@@ -289,7 +289,17 @@
     </div>
   </div>
 
-  <!-- 2. CHANGE PASSWORD MODAL -->
+  <!-- 2. GREETINGS WELCOME MODAL -->
+  <div id="welcomeModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.92); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
+    <div class="modal-box">
+      <div style="font-size: 44px; margin-bottom: 4px;">👋</div>
+      <h2 style="font-size: 20px; color:#0f172a; margin-bottom: 6px;">Greetings!</h2>
+      <p style="font-size: 14.5px; color:#475569; margin-bottom: 22px;">Welcome to Moonlight Electricals, <b id="lblWelcomeUser">User</b>!</p>
+      <button class="btn-checkout" onclick="enterAppFromWelcome()">Thank You / Enter Dashboard ➔</button>
+    </div>
+  </div>
+
+  <!-- 3. CHANGE PASSWORD MODAL -->
   <div id="changePwdModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box">
       <h3 style="font-size:17px; margin-bottom:12px; color:#0f172a;">🔒 Change Login Password</h3>
@@ -308,10 +318,10 @@
     </div>
   </div>
 
-  <!-- 3. PERMISSIONS CHECKBOX MODAL -->
+  <!-- 4. PERMISSIONS CHECKBOX MODAL -->
   <div id="permModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box" style="text-align:left; max-width:400px;">
-      <h3 style="font-size:16px; margin-bottom:10px; color:#0f172a;">⚙️️ Assign Access Permissions</h3>
+      <h3 style="font-size:16px; margin-bottom:10px; color:#0f172a;">⚙ Assign Access Permissions</h3>
       <div style="font-size:12px; color:#64748b; margin-bottom:12px;">User: <b id="permUserName"></b> (<span id="permUserPhone"></span>)</div>
       
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px; font-size:13px; font-weight:700;">
@@ -331,7 +341,7 @@
     </div>
   </div>
 
-  <!-- 4. CHECKOUT SUCCESS MODAL -->
+  <!-- 5. CHECKOUT SUCCESS MODAL -->
   <div id="checkoutSuccessModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box">
       <div style="font-size: 42px;">✅</div>
@@ -346,7 +356,7 @@
     </div>
   </div>
 
-  <!-- 5. MAIN APPLICATION WRAPPER -->
+  <!-- 6. MAIN APPLICATION WRAPPER -->
   <div id="mainAppWrapper">
     <header class="top-header">
       <div>
@@ -651,7 +661,7 @@
               </div>
             </div>
 
-            <!-- Mode 1: Regular Inward (Default Qty: 0) -->
+            <!-- Mode 1: Regular Inward -->
             <div id="boxStockInward">
               <div class="grid-row row-2">
                 <div class="form-col">
@@ -748,7 +758,7 @@
               <button class="btn-checkout" onclick="submitCorrectQty()" style="background:#dc2626; color:#fff; width:auto; padding:8px 20px; margin-top:6px;">Override & Set Correct Qty</button>
             </div>
 
-            <!-- Mode 5: Purchase Bill Entry with Dropdown & Custom Item -->
+            <!-- Mode 5: Purchase Bill Entry -->
             <div id="boxStockPurchase" style="display:none; background:#fef3c7; border:1px solid #fde68a; padding:14px; border-radius:8px;">
               <div style="font-size:12px; font-weight:800; color:#b45309; margin-bottom:8px;">🛍️ ITEM PURCHASE BILL ENTRY (HUB / WHOLESALE MANDI)</div>
               <div class="grid-row row-5">
@@ -830,7 +840,7 @@
     var deferredPrompt = null;
     var selectedPermUserPhone = "";
 
-    // PWA Service Worker Registration (Enables Chrome App Install Banner)
+    // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         var swCode = "self.addEventListener('install', function(e) { self.skipWaiting(); }); self.addEventListener('fetch', function(e) {});";
@@ -860,7 +870,7 @@
       }
     };
 
-    // Safe Outside-Click Handler
+    // Outside-Click Dismissal for Dropdowns
     document.addEventListener("click", function(e) {
       var itemInput = document.getElementById("itemSearch");
       var itemMenu = document.getElementById("billingItemMenu");
@@ -878,7 +888,7 @@
       });
     });
 
-    // 🔐 LIVE DYNAMIC PASSWORD LOGIN (VERIFIES NEW UPDATED PASSWORD)
+    // 🔐 PASSWORD LOGIN (WITH GREETINGS WELCOME MODAL)
     window.doPasswordLogin = async function() {
       var phoneInput = document.getElementById("pwdLoginPhone").value.trim().replace(/\D/g, '');
       var phone = phoneInput.slice(-10);
@@ -914,11 +924,7 @@
           permissions: cachedUser.permissions || "all",
           pin: savedCustomPin
         };
-        localStorage.setItem("mle_user", JSON.stringify(currentUser));
-        localStorage.setItem("mle_login_time", new Date().getTime());
-        document.getElementById("authOverlay").style.display = "none";
-        document.getElementById("mainAppWrapper").style.display = "flex";
-        initSession();
+        showGreetingsWelcome();
         return;
       }
 
@@ -930,14 +936,9 @@
       if (res && res.success) {
         currentUser = { name: res.name, phone: res.phone, role: res.role, permissions: res.permissions || "all", pin: res.pin };
         try {
-          localStorage.setItem("mle_user", JSON.stringify(currentUser));
           localStorage.setItem("mle_pwd_" + phone, res.pin);
-          localStorage.setItem("mle_login_time", new Date().getTime());
         } catch(e) {}
-
-        document.getElementById("authOverlay").style.display = "none";
-        document.getElementById("mainAppWrapper").style.display = "flex";
-        initSession();
+        showGreetingsWelcome();
       } else {
         err.innerText = (res && res.message) ? res.message : "Invalid Password or Unauthorized Mobile Number!";
         err.style.display = "block";
@@ -1004,16 +1005,29 @@
         var res = await apiCall("verifyLoginOtp", { phone: phone, otp: enteredOtp });
         if (res && res.success) {
           currentUser = { name: res.name, phone: res.phone, role: res.role, permissions: res.permissions || "all", pin: res.pin };
-          localStorage.setItem("mle_user", JSON.stringify(currentUser));
-          localStorage.setItem("mle_login_time", new Date().getTime());
-
-          document.getElementById("authOverlay").style.display = "none";
-          document.getElementById("mainAppWrapper").style.display = "flex";
-          initSession();
+          showGreetingsWelcome();
           return;
         }
       }
       alert("Wrong OTP! Please enter valid 4-digit code.");
+    };
+
+    // Show Greetings Welcome Modal First
+    function showGreetingsWelcome() {
+      document.getElementById("authOverlay").style.display = "none";
+      document.getElementById("lblWelcomeUser").innerText = currentUser.name;
+      document.getElementById("welcomeModal").style.display = "flex";
+    }
+
+    // Enter Application when user clicks "Thank You / Enter Dashboard ➔"
+    window.enterAppFromWelcome = function() {
+      document.getElementById("welcomeModal").style.display = "none";
+      document.getElementById("mainAppWrapper").style.display = "flex";
+      try {
+        localStorage.setItem("mle_user", JSON.stringify(currentUser));
+        localStorage.setItem("mle_login_time", new Date().getTime());
+      } catch(e) {}
+      initSession();
     };
 
     window.onload = function() {
@@ -1083,12 +1097,10 @@
       var newPin = document.getElementById("chgPwdNew").value.trim();
       if (!newPin || newPin.length < 4) { alert("Enter at least 4-digit password!"); return; }
 
-      // Update in local cache
       localStorage.setItem("mle_pwd_" + currentUser.phone, newPin);
       currentUser.pin = newPin;
       localStorage.setItem("mle_user", JSON.stringify(currentUser));
 
-      // Save to Google Sheet
       var res = await apiCall("changeUserPassword", { phone: currentUser.phone, newPin: newPin, changedBy: currentUser.role });
       alert("Password updated successfully! From now on, only this new password will work.");
       closePwdModal();
@@ -1775,7 +1787,7 @@
       }
     };
 
-    // Hard Copy Receipt Print (Matching image_c0f047.png with vertical grid lines)
+    // Hard Copy Receipt Print (Matching image_c0f047.png with continuous vertical columns)
     function buildReceiptHtml(b) {
       if (!b) return "";
       var lines = "";
@@ -1795,27 +1807,24 @@
 
         var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
         lines += "<tr>" +
-          "<td style='padding:6px; border:1px solid #1e3a8a; text-align:center;'>" + (idx + 1) + "</td>" +
-          "<td style='padding:6px; border:1px solid #1e3a8a;'><b>" + it.name + "</b>" + snStr + "</td>" +
-          "<td style='padding:6px; border:1px solid #1e3a8a; text-align:center;'>" + (it.hsn || '-') + "</td>" +
-          "<td style='padding:6px; border:1px solid #1e3a8a; text-align:center;'>" + (it.qty || 1) + "</td>" +
-          "<td style='padding:6px; border:1px solid #1e3a8a; text-align:right;'>₹ " + parseFloat(it.finalRate || it.baseRate || 0).toFixed(2) + "</td>" +
-          "<td style='padding:6px; border:1px solid #1e3a8a; text-align:right; font-weight:bold;'>₹ " + parseFloat(it.total || 0).toFixed(2) + "</td>" +
+          "<td style='padding:5px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none; text-align:center;'>" + (idx + 1) + "</td>" +
+          "<td style='padding:5px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none;'><b>" + it.name + "</b>" + snStr + "</td>" +
+          "<td style='padding:5px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none; text-align:center;'>" + (it.hsn || '-') + "</td>" +
+          "<td style='padding:5px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none; text-align:center;'>" + (it.qty || 1) + "</td>" +
+          "<td style='padding:5px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none; text-align:right;'>₹ " + parseFloat(it.finalRate || it.baseRate || 0).toFixed(2) + "</td>" +
+          "<td style='padding:5px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none; text-align:right; font-weight:bold;'>₹ " + parseFloat(it.total || 0).toFixed(2) + "</td>" +
           "</tr>";
       });
 
-      // Fill remaining rows so column lines continue straight to bottom
-      var remainingRows = Math.max(0, 8 - itms.length);
-      for (var r = 0; r < remainingRows; r++) {
-        lines += "<tr>" +
-          "<td style='padding:12px 6px; border:1px solid #1e3a8a;'>&nbsp;</td>" +
-          "<td style='border:1px solid #1e3a8a;'>&nbsp;</td>" +
-          "<td style='border:1px solid #1e3a8a;'>&nbsp;</td>" +
-          "<td style='border:1px solid #1e3a8a;'>&nbsp;</td>" +
-          "<td style='border:1px solid #1e3a8a;'>&nbsp;</td>" +
-          "<td style='border:1px solid #1e3a8a;'>&nbsp;</td>" +
-          "</tr>";
-      }
+      // Filler row that extends vertical column lines without horizontal divisions
+      lines += "<tr>" +
+        "<td style='height:160px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none;'>&nbsp;</td>" +
+        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none;'>&nbsp;</td>" +
+        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none;'>&nbsp;</td>" +
+        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none;'>&nbsp;</td>" +
+        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none;'>&nbsp;</td>" +
+        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; border-top:none; border-bottom:none;'>&nbsp;</td>" +
+        "</tr>";
 
       var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
       var shopGstLine = (b.isGst) ? "<div style='font-weight:bold; margin-top:3px;'>GSTIN/UIN: 07DBOPG3647H1ZF | State: Delhi, Code: 07</div>" : "";
@@ -1837,7 +1846,7 @@
           "</table>";
       } else {
         taxBoxHtml = "<table style='width:100%; border-collapse:collapse; height:100%;'>" +
-          "<tr><td style='padding:10px 4px; font-weight:900; font-size:12px;'>Total Amount</td><td style='padding:10px 4px; text-align:right; font-weight:900; font-size:15px; color:#1e3a8a;'>₹ " + totalAmt.toFixed(2) + "</td></tr>" +
+          "<tr><td style='padding:12px 4px; font-weight:900; font-size:12px;'>Total Amount</td><td style='padding:12px 4px; text-align:right; font-weight:900; font-size:15px; color:#1e3a8a;'>₹ " + totalAmt.toFixed(2) + "</td></tr>" +
           "</table>";
       }
 
@@ -1871,7 +1880,7 @@
         '</td>' +
         '</tr>' +
         '</table>' +
-        '<table style="width:100%; border-collapse:collapse; border:1.5px solid #1e3a8a; margin-bottom:8px;">' +
+        '<table style="width:100%; border-collapse:collapse; border-top:1.5px solid #1e3a8a; border-left:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; border-bottom:1.5px solid #1e3a8a; margin-bottom:8px;">' +
         '<thead>' +
         '<tr style="background:#1e3a8a; color:#fff;">' +
         '<th style="padding:6px; border:1px solid #1e3a8a; width:30px; text-align:center;">Sl No.</th>' +
