@@ -27,7 +27,7 @@
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
     body { background: #090d16; color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
 
-    /* Button Tactile Click / Active Micro-Press Effect */
+    /* Button Micro-Press Animation */
     button {
       transition: all 0.12s ease-in-out;
       user-select: none;
@@ -154,8 +154,8 @@
       border-radius: 6px;
       max-height: 260px;
       overflow-y: auto;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-      z-index: 1000;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+      z-index: 10000;
       display: none;
       margin-top: 4px;
     }
@@ -200,6 +200,18 @@
     .auth-box { background: #ffffff; border-radius: 14px; padding: 30px 24px; width: 100%; max-width: 390px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
     .modal-box { background: #fff; border-radius: 14px; padding: 24px; width: 100%; max-width: 440px; text-align: center; }
 
+    .login-toggle-btn {
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 12px;
+      display: inline-block;
+    }
+
     /* Fixed Print Layout */
     @media print {
       body * { visibility: hidden; }
@@ -222,12 +234,13 @@
   <!-- Hidden Container for Exact Invoice Print -->
   <div id="printableInvoice" style="display:none;"></div>
 
-  <!-- 1. AUTH OVERLAY (SOLID OPAQUE) -->
+  <!-- 1. AUTH OVERLAY (DUAL MODE: PASSWORD & WHATSAPP OTP) -->
   <div id="authOverlay" style="display: flex;">
     <div class="auth-box">
       <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
       <div class="brand-tagline" style="margin-bottom: 22px;">Brightening Lives, Powering Trust</div>
 
+      <!-- Mode A: Password Login -->
       <div id="stepPasswordMode">
         <div class="form-col" style="text-align: left; margin-bottom: 10px;">
           <label>AUTHORIZED MOBILE NUMBER</label>
@@ -235,11 +248,43 @@
         </div>
         <div class="form-col" style="text-align: left; margin-bottom: 12px;">
           <label>PASSWORD / SECURITY PIN</label>
-          <input type="password" id="loginPassword" placeholder="Enter password (default: 1234)" value="1234">
+          <input type="password" id="loginPassword" placeholder="Enter password (default: 1234)">
         </div>
         <div id="pwdErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
         
         <button type="button" class="btn-checkout" id="btnLoginWithPwd" onclick="doPasswordLogin()" style="background:#0284c7; color:#fff;">🔐 LOGIN WITH PASSWORD</button>
+        
+        <div style="margin-top: 12px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+          <button type="button" class="login-toggle-btn" onclick="showOtpScreen()">Or Login with WhatsApp OTP ➔</button>
+        </div>
+      </div>
+
+      <!-- Mode B: Request WhatsApp OTP -->
+      <div id="stepPhoneMode" style="display: none;">
+        <div class="form-col" style="text-align: left; margin-bottom: 12px;">
+          <label>AUTHORIZED MOBILE NUMBER</label>
+          <input type="tel" id="loginPhone" placeholder="Enter 10-digit number" value="8860706865">
+        </div>
+        <div id="loginErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
+        
+        <button type="button" class="btn-checkout" id="btnSendOtp" onclick="doSendOtp()">📲 SEND OTP ON WHATSAPP</button>
+        
+        <div style="margin-top: 12px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+          <button type="button" class="login-toggle-btn" onclick="showPasswordScreen()">Back to Login with Password ➔</button>
+        </div>
+      </div>
+
+      <!-- Mode C: Verify OTP -->
+      <div id="stepOtp" style="display: none;">
+        <div style="font-size: 12px; color: #475569; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone"></b></div>
+        <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;">
+        <button type="button" class="btn-checkout" onclick="doVerifyOtp()" style="background:#10b981; color:#fff;">VERIFY & LOGIN</button>
+        <div style="margin-top: 14px;">
+          <a id="waDirectBtn" href="#" target="_blank" style="font-size: 12px; color: #2563eb; font-weight: bold; text-decoration: underline;">Open WhatsApp chat for OTP ➔</a>
+        </div>
+        <div style="margin-top: 10px;">
+          <button type="button" class="login-toggle-btn" onclick="showPasswordScreen()">Cancel & Login with Password</button>
+        </div>
       </div>
     </div>
   </div>
@@ -266,7 +311,7 @@
   <!-- 3. PERMISSIONS CHECKBOX MODAL -->
   <div id="permModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box" style="text-align:left; max-width:400px;">
-      <h3 style="font-size:16px; margin-bottom:10px; color:#0f172a;">⚙️ Assign Access Permissions</h3>
+      <h3 style="font-size:16px; margin-bottom:10px; color:#0f172a;">⚙️️ Assign Access Permissions</h3>
       <div style="font-size:12px; color:#64748b; margin-bottom:12px;">User: <b id="permUserName"></b> (<span id="permUserPhone"></span>)</div>
       
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px; font-size:13px; font-weight:700;">
@@ -334,7 +379,6 @@
       </aside>
 
       <main class="content-area">
-        <!-- Notification Banners -->
         <div class="notify-banner" id="adminSecurityAlertBox"></div>
         <div class="alert-banner" id="lowStockAlertBox">
           <b>⚠️ LOW INVENTORY ALERT:</b>
@@ -348,7 +392,7 @@
               <div>
                 <h3 style="font-weight:900;">Business Analytics & Overview</h3>
                 <div style="display:inline-block; background:#fef3c7; border:1px solid #fde68a; color:#b45309; padding:4px 10px; border-radius:20px; font-size:11.5px; font-weight:800; margin-top:4px;" id="lblActiveFilterBadge">
-                  📅 Viewing Report For: TODAY (05-Oct-2026)
+                  📅 Viewing Report For: TODAY
                 </div>
               </div>
               <div style="display:flex; gap:6px;">
@@ -408,7 +452,6 @@
         <!-- VIEW 2: BILLING -> GENERATE BILL -->
         <div id="viewGenBill" style="display: none;">
           <div class="card" id="cardBillForm">
-            <!-- Form Grid with Blank Defaults & Editable Bill Date -->
             <div class="grid-row row-5">
               <div class="form-col">
                 <label>BILL DATE <span>*</span></label>
@@ -474,11 +517,10 @@
 
             <div style="border-bottom: 1px dashed var(--border); margin: 14px 0;"></div>
 
-            <!-- Item Entry with Auto-Clear on click/focus -->
             <div class="grid-row row-item-top">
               <div class="form-col">
                 <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
-                <input type="text" id="itemSearch" placeholder="Click to search items..." autocomplete="off" onfocus="handleItemSearchFocus()" oninput="onItemSearchInput()">
+                <input type="text" id="itemSearch" placeholder="Click to search items..." autocomplete="off" onclick="handleItemSearchFocus(event)" oninput="onItemSearchInput()">
                 <div class="dropdown-menu" id="billingItemMenu"></div>
               </div>
               <div class="form-col">
@@ -585,7 +627,7 @@
             <div class="grid-row row-2">
               <div class="form-col">
                 <label>Search by Customer Mobile, Name, or Invoice No</label>
-                <input type="text" id="historySearchInput" placeholder="Enter mobile (e.g. 7503767810), name or bill no..." oninput="filterBillHistory()">
+                <input type="text" id="historySearchInput" placeholder="Enter mobile, name or bill no..." oninput="filterBillHistory()">
               </div>
               <div class="form-col" style="justify-content: flex-end;">
                 <button class="btn-sync" style="height: 40px; justify-content:center;" onclick="loadBillHistory()">🔄 Refresh List</button>
@@ -605,7 +647,7 @@
                 <button class="btn-sync" onclick="setStockMode('hsn')">✏️ Quick HSN</button>
                 <button class="btn-sync" onclick="setStockMode('rate')">💲 Quick Rates</button>
                 <button class="btn-sync" onclick="setStockMode('correct')">🛠️ Correct Qty</button>
-                <button class="btn-sync" style="background:#fef3c7; color:#b45309;" onclick="setStockMode('purchase')">🛍️ Purchase Bill Entry</button>
+                <button class="btn-sync" style="background:#fef3c7; color:#b45309;" onclick="setStockMode('purchase')">🛍 Purchase Bill Entry</button>
               </div>
             </div>
 
@@ -614,7 +656,7 @@
               <div class="grid-row row-2">
                 <div class="form-col">
                   <label>Item Name <span>*</span></label>
-                  <input type="text" id="stkName" placeholder="Search from inventory..." autocomplete="off" oninput="onStockSearchInput('stkName', 'stockItemMenu')">
+                  <input type="text" id="stkName" placeholder="Search from inventory..." autocomplete="off" onclick="handleStockClick(event, 'stkName', 'stockItemMenu')" oninput="onStockSearchInput('stkName', 'stockItemMenu')">
                   <div class="dropdown-menu" id="stockItemMenu"></div>
                 </div>
                 <div class="form-col">
@@ -647,13 +689,13 @@
               <button class="btn-add" onclick="submitStockInward()" style="width:auto; padding:10px 24px; margin-top:10px;">+ Inward Stock (Auto-Add)</button>
             </div>
 
-            <!-- Mode 2: Quick HSN Only (Fixed Dropdown) -->
+            <!-- Mode 2: Quick HSN Only -->
             <div id="boxStockHsn" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px;">
               <div style="font-size:12px; font-weight:800; color:#b45309; margin-bottom:8px;">⚡ QUICK HSN CODE UPDATE ONLY</div>
               <div class="grid-row row-2">
                 <div class="form-col">
                   <label>Item Name</label>
-                  <input type="text" id="hsnOnlyName" placeholder="Type to search..." autocomplete="off" oninput="onStockSearchInput('hsnOnlyName', 'hsnOnlyMenu')">
+                  <input type="text" id="hsnOnlyName" placeholder="Type to search..." autocomplete="off" onclick="handleStockClick(event, 'hsnOnlyName', 'hsnOnlyMenu')" oninput="onStockSearchInput('hsnOnlyName', 'hsnOnlyMenu')">
                   <div class="dropdown-menu" id="hsnOnlyMenu"></div>
                 </div>
                 <div class="form-col">
@@ -669,7 +711,7 @@
               <div style="font-size:12px; font-weight:800; color:#0284c7; margin-bottom:8px;">💲 QUICK RATES UPDATE ONLY</div>
               <div class="form-col" style="margin-bottom:10px;">
                 <label>Item Name</label>
-                <input type="text" id="rateOnlyName" placeholder="Type to search..." autocomplete="off" oninput="onStockSearchInput('rateOnlyName', 'rateOnlyMenu')">
+                <input type="text" id="rateOnlyName" placeholder="Type to search..." autocomplete="off" onclick="handleStockClick(event, 'rateOnlyName', 'rateOnlyMenu')" oninput="onStockSearchInput('rateOnlyName', 'rateOnlyMenu')">
                 <div class="dropdown-menu" id="rateOnlyMenu"></div>
               </div>
               <div class="grid-row row-5">
@@ -689,13 +731,13 @@
               <button class="btn-add" onclick="submitRateOnly()" style="width:auto; padding:8px 20px; margin-top:6px;">Update Rates</button>
             </div>
 
-            <!-- Mode 4: Correct Stock Qty Override (Fixed Dropdown) -->
+            <!-- Mode 4: Correct Stock Qty Override -->
             <div id="boxStockCorrect" style="display:none; background:#fee2e2; border:1px solid #fca5a5; padding:14px; border-radius:8px;">
               <div style="font-size:12px; font-weight:800; color:#dc2626; margin-bottom:8px;">🛠️ CORRECT / OVERRIDE REAL STOCK QUANTITY</div>
               <div class="grid-row row-2">
                 <div class="form-col">
                   <label>Item Name</label>
-                  <input type="text" id="correctName" placeholder="Type to search..." autocomplete="off" oninput="onStockSearchInput('correctName', 'correctMenu')">
+                  <input type="text" id="correctName" placeholder="Type to search..." autocomplete="off" onclick="handleStockClick(event, 'correctName', 'correctMenu')" oninput="onStockSearchInput('correctName', 'correctMenu')">
                   <div class="dropdown-menu" id="correctMenu"></div>
                 </div>
                 <div class="form-col">
@@ -713,7 +755,7 @@
                 <div class="form-col"><label>Date of Purchase</label><input type="date" id="purDate"></div>
                 <div class="form-col" style="grid-column: span 2;">
                   <label>Item Name (Search or Type New)</label>
-                  <input type="text" id="purItemName" placeholder="Search from stock or type new item..." autocomplete="off" oninput="onStockSearchInput('purItemName', 'purItemMenu')">
+                  <input type="text" id="purItemName" placeholder="Search from stock or type new item..." autocomplete="off" onclick="handleStockClick(event, 'purItemName', 'purItemMenu')" oninput="onStockSearchInput('purItemName', 'purItemMenu')">
                   <div class="dropdown-menu" id="purItemMenu"></div>
                 </div>
                 <div class="form-col"><label>Quantity</label><input type="number" id="purQty" value="1" min="1" oninput="calcPurTotal()"></div>
@@ -740,7 +782,6 @@
           <div class="card">
             <h3 style="font-weight:900; margin-bottom:14px;">ERP Settings & Configurations</h3>
             
-            <!-- User Permissions & Active/Inactive Management (Admin Only) -->
             <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:16px; margin-bottom:18px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h4 style="font-weight:800; color:#0284c7;">👥 User Accounts, Role & Access Permissions (5 Users)</h4>
@@ -748,7 +789,6 @@
               </div>
               <div id="usersListContainer"></div>
 
-              <!-- Add User Form -->
               <div style="margin-top:14px; border-top:1px dashed #cbd5e1; padding-top:12px;">
                 <h5 style="font-weight:800; color:#475569; margin-bottom:8px;">+ Add New Staff / User</h5>
                 <div class="grid-row row-5">
@@ -761,7 +801,6 @@
               </div>
             </div>
 
-            <!-- Bank Update Form -->
             <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px; max-width:600px;">
               <h4 style="font-weight:800; color:#b45309; margin-bottom:10px;">🏦 Update Bank & UPI Details</h4>
               <div class="form-col" style="margin-bottom:8px;"><label>Bank Name</label><input type="text" id="setBankName" value="Kotak Mahindra Bank"></div>
@@ -780,16 +819,8 @@
   <script>
     var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHcrqIvOrJicUMpbFpfh1sDxPHTecb-_gp04eVbFKSwb7BCMy5Sts3UoUE4zw_rFpFuA/exec";
 
-    var KNOWN_USERS = {
-      "8860706865": { name: "Varun Sharma (Owner)", role: "Admin", pin: "1234", permissions: "all" },
-      "9650897965": { name: "Rahul Chauhan", role: "Admin", pin: "1234", permissions: "all" },
-      "8860880453": { name: "Shivam Chauhan", role: "Admin", pin: "1234", permissions: "all" },
-      "9264923954": { name: "Raja", role: "Staff", pin: "1234", permissions: "gen,repeat,stock" },
-      "9876543210": { name: "Staff 2 (Counter)", role: "Staff", pin: "1234", permissions: "gen,repeat" }
-    };
-
     var currentUser = null;
-    var cachedItems = [];
+    var cachedItems = JSON.parse(localStorage.getItem("mle_items") || "[]");
     var billItems = [];
     var currentItemObj = null;
     var lastGeneratedBillData = null;
@@ -799,24 +830,56 @@
     var deferredPrompt = null;
     var selectedPermUserPhone = "";
 
-    // Close Dropdown on Outside Click
+    // PWA Service Worker Registration (Enables Chrome App Install Banner)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        var swCode = "self.addEventListener('install', function(e) { self.skipWaiting(); }); self.addEventListener('fetch', function(e) {});";
+        var blob = new Blob([swCode], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(function() {});
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      var btn = document.getElementById("btnChromeInstall");
+      if (btn) btn.style.display = "inline-flex";
+    });
+
+    window.triggerChromeInstall = function() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(choice) {
+          if (choice.outcome === 'accepted') {
+            document.getElementById("btnChromeInstall").style.display = "none";
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert("To install in Google Chrome: Click the 3 dots (⋮) in the top-right corner -> Click 'Cast, save, and share' -> Click 'Install Moon Light Electricals'!");
+      }
+    };
+
+    // Safe Outside-Click Handler
     document.addEventListener("click", function(e) {
       var itemInput = document.getElementById("itemSearch");
       var itemMenu = document.getElementById("billingItemMenu");
-      if (itemMenu && e.target !== itemInput && !itemMenu.contains(e.target)) {
+      if (itemMenu && itemInput && e.target !== itemInput && !itemMenu.contains(e.target)) {
         itemMenu.style.display = "none";
       }
 
       ["stockItemMenu", "hsnOnlyMenu", "rateOnlyMenu", "correctMenu", "purItemMenu"].forEach(function(mId) {
         var m = document.getElementById(mId);
-        if (m && !m.contains(e.target) && e.target.id !== mId.replace("Menu", "Name") && e.target.id !== "stkName") {
+        var inId = mId.replace("Menu", "Name");
+        var inputEl = document.getElementById(inId) || document.getElementById("stkName");
+        if (m && e.target !== inputEl && !m.contains(e.target)) {
           m.style.display = "none";
         }
       });
     });
 
-    // Login Action
-    window.doPasswordLogin = function() {
+    // 🔐 LIVE DYNAMIC PASSWORD LOGIN (VERIFIES NEW UPDATED PASSWORD)
+    window.doPasswordLogin = async function() {
       var phoneInput = document.getElementById("pwdLoginPhone").value.trim().replace(/\D/g, '');
       var phone = phoneInput.slice(-10);
       var pwd = document.getElementById("loginPassword").value.trim();
@@ -834,12 +897,41 @@
       }
 
       err.style.display = "none";
-      var user = KNOWN_USERS[phone] || { name: "Varun Sharma (Owner)", role: "Admin", pin: "1234", permissions: "all" };
+      var btn = document.getElementById("btnLoginWithPwd");
+      btn.innerText = "Verifying...";
+      btn.disabled = true;
 
-      if (pwd === user.pin || pwd === "1234" || pwd === "8860") {
-        currentUser = { name: user.name, phone: phone, role: user.role, permissions: user.permissions || "all" };
+      // 1. Check local session PIN cache first
+      var savedCustomPin = localStorage.getItem("mle_pwd_" + phone);
+      if (savedCustomPin && pwd === savedCustomPin) {
+        btn.innerText = "🔐 LOGIN WITH PASSWORD";
+        btn.disabled = false;
+        var cachedUser = JSON.parse(localStorage.getItem("mle_user") || "{}");
+        currentUser = {
+          name: cachedUser.name || "Authorized User",
+          phone: phone,
+          role: cachedUser.role || "Admin",
+          permissions: cachedUser.permissions || "all",
+          pin: savedCustomPin
+        };
+        localStorage.setItem("mle_user", JSON.stringify(currentUser));
+        localStorage.setItem("mle_login_time", new Date().getTime());
+        document.getElementById("authOverlay").style.display = "none";
+        document.getElementById("mainAppWrapper").style.display = "flex";
+        initSession();
+        return;
+      }
+
+      // 2. Real-time verification from Google Sheet
+      var res = await apiCall("verifyPasswordLogin", { phone: phone, password: pwd });
+      btn.innerText = "🔐 LOGIN WITH PASSWORD";
+      btn.disabled = false;
+
+      if (res && res.success) {
+        currentUser = { name: res.name, phone: res.phone, role: res.role, permissions: res.permissions || "all", pin: res.pin };
         try {
           localStorage.setItem("mle_user", JSON.stringify(currentUser));
+          localStorage.setItem("mle_pwd_" + phone, res.pin);
           localStorage.setItem("mle_login_time", new Date().getTime());
         } catch(e) {}
 
@@ -847,9 +939,81 @@
         document.getElementById("mainAppWrapper").style.display = "flex";
         initSession();
       } else {
-        err.innerText = "Invalid Password! (Default PIN is: 1234)";
+        err.innerText = (res && res.message) ? res.message : "Invalid Password or Unauthorized Mobile Number!";
         err.style.display = "block";
       }
+    };
+
+    // 📲 WHATSAPP OTP LOGIN HANDLERS
+    window.showOtpScreen = function() {
+      document.getElementById("stepPasswordMode").style.display = "none";
+      document.getElementById("stepPhoneMode").style.display = "block";
+      document.getElementById("stepOtp").style.display = "none";
+    };
+
+    window.showPasswordScreen = function() {
+      document.getElementById("stepPasswordMode").style.display = "block";
+      document.getElementById("stepPhoneMode").style.display = "none";
+      document.getElementById("stepOtp").style.display = "none";
+    };
+
+    window.doSendOtp = async function() {
+      var phoneInput = document.getElementById("loginPhone").value.trim().replace(/\D/g, '');
+      var phone = phoneInput.slice(-10);
+      var err = document.getElementById("loginErr");
+
+      if (phone.length !== 10) {
+        err.innerText = "Enter valid 10-digit number!";
+        err.style.display = "block";
+        return;
+      }
+
+      err.style.display = "none";
+      var btn = document.getElementById("btnSendOtp");
+      btn.innerText = "Sending OTP...";
+      btn.disabled = true;
+
+      var res = await apiCall("requestLoginOtp", { phone: phone });
+      btn.innerText = "📲 SEND OTP ON WHATSAPP";
+      btn.disabled = false;
+
+      if (res && res.success) {
+        localStorage.setItem("mle_active_otp", res.otp);
+        localStorage.setItem("mle_active_phone", phone);
+        localStorage.setItem("mle_active_name", res.name);
+        localStorage.setItem("mle_active_role", res.role);
+
+        document.getElementById("stepPhoneMode").style.display = "none";
+        document.getElementById("stepOtp").style.display = "block";
+        document.getElementById("displaySentPhone").innerText = phone + " (" + res.name + ")";
+        document.getElementById("waDirectBtn").href = res.waUrl;
+
+        try { window.open(res.waUrl, '_blank'); } catch(e) {}
+      } else {
+        err.innerText = (res && res.message) ? res.message : "Error sending OTP!";
+        err.style.display = "block";
+      }
+    };
+
+    window.doVerifyOtp = async function() {
+      var enteredOtp = document.getElementById("loginOtp").value.trim();
+      var phone = localStorage.getItem("mle_active_phone") || "8860706865";
+      var savedOtp = localStorage.getItem("mle_active_otp");
+
+      if (enteredOtp === savedOtp || enteredOtp.length === 4) {
+        var res = await apiCall("verifyLoginOtp", { phone: phone, otp: enteredOtp });
+        if (res && res.success) {
+          currentUser = { name: res.name, phone: res.phone, role: res.role, permissions: res.permissions || "all", pin: res.pin };
+          localStorage.setItem("mle_user", JSON.stringify(currentUser));
+          localStorage.setItem("mle_login_time", new Date().getTime());
+
+          document.getElementById("authOverlay").style.display = "none";
+          document.getElementById("mainAppWrapper").style.display = "flex";
+          initSession();
+          return;
+        }
+      }
+      alert("Wrong OTP! Please enter valid 4-digit code.");
     };
 
     window.onload = function() {
@@ -919,9 +1083,14 @@
       var newPin = document.getElementById("chgPwdNew").value.trim();
       if (!newPin || newPin.length < 4) { alert("Enter at least 4-digit password!"); return; }
 
-      if (KNOWN_USERS[currentUser.phone]) KNOWN_USERS[currentUser.phone].pin = newPin;
+      // Update in local cache
+      localStorage.setItem("mle_pwd_" + currentUser.phone, newPin);
+      currentUser.pin = newPin;
+      localStorage.setItem("mle_user", JSON.stringify(currentUser));
+
+      // Save to Google Sheet
       var res = await apiCall("changeUserPassword", { phone: currentUser.phone, newPin: newPin, changedBy: currentUser.role });
-      alert("Password updated successfully!");
+      alert("Password updated successfully! From now on, only this new password will work.");
       closePwdModal();
     };
 
@@ -934,33 +1103,52 @@
       }
     }
 
-    // Auto-Clear on click/focus
-    window.handleItemSearchFocus = function() {
+    // Auto-Clear Search Focus
+    window.handleItemSearchFocus = function(e) {
+      if (e) e.stopPropagation();
       var field = document.getElementById("itemSearch");
       field.value = "";
-      onItemSearchInput();
+      renderItemDropdown("");
     };
 
     window.onItemSearchInput = function() {
       var val = document.getElementById("itemSearch").value.trim().toLowerCase();
+      renderItemDropdown(val);
+    };
+
+    function renderItemDropdown(val) {
       var menu = document.getElementById("billingItemMenu");
       menu.innerHTML = "";
 
-      var filtered = !val ? cachedItems.slice(0, 30) : cachedItems.filter(function(it) { return it.name.toLowerCase().includes(val); });
-      if (filtered.length === 0) { menu.style.display = "none"; return; }
+      var itemsToUse = cachedItems.length > 0 ? cachedItems : [
+        { name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, stock: "∞" },
+        { name: "Fan 1200mm", hsn: "8414", custRate: 1550, elecRate: 1450, famRate: 1400, stock: 12 },
+        { name: "Jugnu 1W White", hsn: "8539", custRate: 410, elecRate: 380, famRate: 350, stock: 50 },
+        { name: "1.5 Sqmm Wire (90m)", hsn: "8544", custRate: 1250, elecRate: 1150, famRate: 1100, stock: 25 },
+        { name: "Modular Switch 6A", hsn: "8536", custRate: 35, elecRate: 28, famRate: 25, stock: 200 }
+      ];
+
+      var filtered = !val ? itemsToUse.slice(0, 40) : itemsToUse.filter(function(it) {
+        return it.name.toLowerCase().includes(val);
+      });
+
+      if (filtered.length === 0) {
+        menu.style.display = "none";
+        return;
+      }
 
       filtered.forEach(function(it) {
         var div = document.createElement("div");
         div.className = "dropdown-item";
         div.innerHTML = "<span><b>" + it.name + "</b></span> <small>Stock: " + it.stock + " | ₹" + it.custRate + "</small>";
-        div.onmousedown = function(e) {
-          e.preventDefault();
+        div.onmousedown = function(ev) {
+          ev.preventDefault();
           selectBillingItem(it);
         };
         menu.appendChild(div);
       });
       menu.style.display = "block";
-    };
+    }
 
     function selectBillingItem(item) {
       document.getElementById("itemSearch").value = item.name;
@@ -982,7 +1170,6 @@
       calculateItemTotal();
     }
 
-    // Flexible GST Toggle Change
     window.onGstToggleChange = function() {
       var isGst = document.getElementById("isGstBill").value.includes("Yes");
       if (!isGst) {
@@ -1031,13 +1218,26 @@
       document.getElementById("cardBillForm").scrollIntoView({ behavior: 'smooth' });
     };
 
-    // Dropdowns for Stock Inward
+    window.handleStockClick = function(e, inputId, menuId) {
+      if (e) e.stopPropagation();
+      var field = document.getElementById(inputId);
+      field.value = "";
+      onStockSearchInput(inputId, menuId);
+    };
+
     window.onStockSearchInput = function(inputId, menuId) {
       var val = document.getElementById(inputId).value.trim().toLowerCase();
       var menu = document.getElementById(menuId);
       menu.innerHTML = "";
 
-      var filtered = !val ? cachedItems.slice(0, 30) : cachedItems.filter(function(it) { return it.name.toLowerCase().includes(val); });
+      var itemsToUse = cachedItems.length > 0 ? cachedItems : [
+        { name: "Fan 1200mm", hsn: "8414", custRate: 1550, elecRate: 1450, famRate: 1400, stock: 12 },
+        { name: "Jugnu 1W White", hsn: "8539", custRate: 410, elecRate: 380, famRate: 350, stock: 50 },
+        { name: "1.5 Sqmm Wire (90m)", hsn: "8544", custRate: 1250, elecRate: 1150, famRate: 1100, stock: 25 },
+        { name: "Modular Switch 6A", hsn: "8536", custRate: 35, elecRate: 28, famRate: 25, stock: 200 }
+      ];
+
+      var filtered = !val ? itemsToUse.slice(0, 40) : itemsToUse.filter(function(it) { return it.name.toLowerCase().includes(val); });
       if (filtered.length === 0) { menu.style.display = "none"; return; }
 
       filtered.forEach(function(it) {
@@ -1127,7 +1327,7 @@
       }
     };
 
-    // User Accounts Management (5 Users + Checkbox Modal + Delete Action)
+    // Users Management
     async function loadUsersList() {
       var c = document.getElementById("usersListContainer");
       c.innerHTML = "Loading 5 users list...";
@@ -1357,7 +1557,10 @@
       document.getElementById("viewSearchBills").style.display = (subView === 'search') ? 'block' : 'none';
       document.getElementById("viewStockInward").style.display = (subView === 'stock') ? 'block' : 'none';
 
-      if (subView === 'gen') document.getElementById("btnSubGen").classList.add("active");
+      if (subView === 'gen') {
+        document.getElementById("btnSubGen").classList.add("active");
+        loadRepeatCustomers();
+      }
       if (subView === 'repeat') {
         document.getElementById("btnSubRepeat").classList.add("active");
         loadRepeatCustomers();
@@ -1572,7 +1775,7 @@
       }
     };
 
-    // Hard Copy Receipt Print (Matching image_c0f047.png exactly)
+    // Hard Copy Receipt Print (Matching image_c0f047.png with vertical grid lines)
     function buildReceiptHtml(b) {
       if (!b) return "";
       var lines = "";
@@ -1596,10 +1799,23 @@
           "<td style='padding:6px; border:1px solid #1e3a8a;'><b>" + it.name + "</b>" + snStr + "</td>" +
           "<td style='padding:6px; border:1px solid #1e3a8a; text-align:center;'>" + (it.hsn || '-') + "</td>" +
           "<td style='padding:6px; border:1px solid #1e3a8a; text-align:center;'>" + (it.qty || 1) + "</td>" +
-          "<td style='padding:6px; border:1px solid #1e3a8a; text-align:right;'>" + parseFloat(it.finalRate || it.baseRate || 0).toFixed(2) + "</td>" +
-          "<td style='padding:6px; border:1px solid #1e3a8a; text-align:right; font-weight:bold;'>" + parseFloat(it.total || 0).toFixed(2) + "</td>" +
+          "<td style='padding:6px; border:1px solid #1e3a8a; text-align:right;'>₹ " + parseFloat(it.finalRate || it.baseRate || 0).toFixed(2) + "</td>" +
+          "<td style='padding:6px; border:1px solid #1e3a8a; text-align:right; font-weight:bold;'>₹ " + parseFloat(it.total || 0).toFixed(2) + "</td>" +
           "</tr>";
       });
+
+      // Fill remaining rows so column lines continue straight to bottom
+      var remainingRows = Math.max(0, 8 - itms.length);
+      for (var r = 0; r < remainingRows; r++) {
+        lines += "<tr>" +
+          "<td style='padding:12px 6px; border:1px solid #1e3a8a;'>&nbsp;</td>" +
+          "<td style='border:1px solid #1e3a8a;'>&nbsp;</td>" +
+          "<td style='border:1px solid #1e3a8a;'>&nbsp;</td>" +
+          "<td style='border:1px solid #1e3a8a;'>&nbsp;</td>" +
+          "<td style='border:1px solid #1e3a8a;'>&nbsp;</td>" +
+          "<td style='border:1px solid #1e3a8a;'>&nbsp;</td>" +
+          "</tr>";
+      }
 
       var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
       var shopGstLine = (b.isGst) ? "<div style='font-weight:bold; margin-top:3px;'>GSTIN/UIN: 07DBOPG3647H1ZF | State: Delhi, Code: 07</div>" : "";
