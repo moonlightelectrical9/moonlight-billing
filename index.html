@@ -27,21 +27,10 @@
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
     body { background: #090d16; color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
 
-    /* Button Micro-Press Animation */
-    button {
-      transition: all 0.12s ease-in-out;
-      user-select: none;
-    }
-    button:hover {
-      filter: brightness(1.05);
-      transform: translateY(-1px);
-    }
-    button:active {
-      transform: scale(0.97) translateY(1px) !important;
-      filter: brightness(0.92) !important;
-    }
+    button { transition: all 0.12s ease-in-out; user-select: none; }
+    button:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    button:active { transform: scale(0.97) translateY(1px) !important; filter: brightness(0.92) !important; }
 
-    /* Top Bar */
     .top-header {
       background: #ffffff;
       border-bottom: 2px solid var(--border);
@@ -64,11 +53,9 @@
     .user-pill { background: #e2e8f0; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 700; color: #334155; cursor: pointer; }
     .btn-logout { background: var(--danger-bg); color: var(--danger); border: 1px solid #fca5a5; padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 800; cursor: pointer; }
 
-    /* Main Container */
     #mainAppWrapper { display: none; flex-direction: column; flex: 1; width: 100%; background: var(--bg); }
     .main-wrapper { display: flex; flex: 1; min-height: calc(100vh - 65px); }
 
-    /* Left Sidebar */
     .sidebar { width: 220px; background: var(--sidebar-bg); padding: 16px 10px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
     .nav-btn {
       background: transparent;
@@ -102,7 +89,6 @@
     .sub-nav-btn:hover { color: #ffffff; }
     .sub-nav-btn.active { color: #fbbf24; font-weight: 900; }
 
-    /* Content Area */
     .content-area { flex: 1; padding: 14px 18px; overflow-y: auto; max-width: 1400px; margin: 0 auto; width: 100%; }
 
     @media (max-width: 900px) {
@@ -111,7 +97,6 @@
       .sub-menu { padding-left: 0; flex-direction: row; flex-wrap: wrap; }
     }
 
-    /* Cards & Components */
     .card { background: #ffffff; border: 1.5px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 14px; }
     .alert-banner { background: var(--danger-bg); border: 1.5px solid #fca5a5; border-radius: 8px; padding: 10px 14px; color: var(--danger); font-size: 12.5px; margin-bottom: 14px; display: none; }
     .notify-banner { background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 8px; padding: 10px 14px; color: #1e40af; font-size: 12.5px; margin-bottom: 14px; }
@@ -183,10 +168,8 @@
     .btn-checkout { background: var(--accent); color: #000; border: none; padding: 13px; border-radius: 6px; font-size: 14.5px; font-weight: 900; width: 100%; cursor: pointer; }
     .btn-checkout:disabled { background: #e2e8f0 !important; color: #94a3b8 !important; cursor: not-allowed; }
 
-    /* Active Highlight Class */
     .filter-btn-active { background: #d97706 !important; color: #ffffff !important; border-color: #b45309 !important; font-weight: 900 !important; }
 
-    /* SOLID DARK BACKGROUND FOR LOGIN */
     #authOverlay {
       position: fixed;
       inset: 0;
@@ -212,50 +195,28 @@
       display: inline-block;
     }
 
-    /* Strict 1-Page Full A4 Print Style */
     @media print {
-      @page {
-        size: A4 portrait;
-        margin: 8mm !important;
-      }
-      html, body {
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #fff !important;
-        overflow: visible !important;
-      }
+      @page { size: A4 portrait; margin: 8mm !important; }
+      html, body { width: 100% !important; margin: 0 !important; padding: 0 !important; background: #fff !important; overflow: visible !important; }
       body * { visibility: hidden !important; }
       #printableInvoice, #printableInvoice * { visibility: visible !important; }
       #printableInvoice {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        display: block !important;
-        background: #fff !important;
-        color: #000 !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
-        page-break-inside: avoid !important;
-        page-break-after: avoid !important;
+        position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important;
+        display: block !important; background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; box-sizing: border-box !important; page-break-inside: avoid !important; page-break-after: avoid !important;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Hidden Container for Exact Invoice Print -->
   <div id="printableInvoice" style="display:none;"></div>
 
-  <!-- 1. AUTH OVERLAY (100% BLANK PROMPT - NO HARDCODED VALUES) -->
+  <!-- 1. AUTH OVERLAY (100% BLANK DEFAULT) -->
   <div id="authOverlay" style="display: flex;">
     <div class="auth-box">
       <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
       <div class="brand-tagline" style="margin-bottom: 22px;">Brightening Lives, Powering Trust</div>
 
-      <!-- Mode A: Password Login -->
       <div id="stepPasswordMode">
         <div class="form-col" style="text-align: left; margin-bottom: 10px;">
           <label>AUTHORIZED MOBILE NUMBER</label>
@@ -274,7 +235,6 @@
         </div>
       </div>
 
-      <!-- Mode B: Request WhatsApp OTP -->
       <div id="stepPhoneMode" style="display: none;">
         <div class="form-col" style="text-align: left; margin-bottom: 12px;">
           <label>AUTHORIZED MOBILE NUMBER</label>
@@ -289,7 +249,6 @@
         </div>
       </div>
 
-      <!-- Mode C: Verify OTP -->
       <div id="stepOtp" style="display: none;">
         <div style="font-size: 12px; color: #475569; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone"></b></div>
         <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;">
@@ -404,7 +363,6 @@
       </aside>
 
       <main class="content-area">
-        <!-- Security Alert Banner with Dismiss Button -->
         <div class="notify-banner" id="adminSecurityAlertBox" style="display:none; justify-content:space-between; align-items:center;">
           <div id="adminSecurityAlertText"></div>
           <button class="btn-sync" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:4px 8px; font-size:11px;" onclick="dismissAdminAlert()">✕ Clear Alert</button>
@@ -415,7 +373,7 @@
           <div id="lowStockItemsList" style="margin-top: 4px;"></div>
         </div>
 
-        <!-- VIEW 1: DASHBOARD (HISTORICAL & CUSTOM DATE FILTERS) -->
+        <!-- VIEW 1: DASHBOARD -->
         <div id="viewDashboard">
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
@@ -434,25 +392,22 @@
               </div>
             </div>
 
-            <!-- Dynamic Selectors (Month View / Year View / Custom Date Picker) -->
+            <!-- Dynamic Dropdown Bar (Starts strictly from Sept-2026) -->
             <div id="dashSelectorBar" style="display:none; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; margin-bottom:14px; align-items:center; gap:10px; flex-wrap:wrap;">
-              <!-- Month Selector -->
               <div id="selectorMonthGroup" style="display:none; gap:10px; align-items:center; flex-wrap:wrap;">
                 <label style="font-size:12px; font-weight:800; color:#334155;">SELECT YEAR & MONTH:</label>
-                <select id="selDashYear" style="width:110px; padding:6px 10px;" onchange="onDashDropdownChange()"></select>
-                <select id="selDashMonth" style="width:130px; padding:6px 10px;" onchange="onDashDropdownChange()"></select>
+                <select id="selDashYear" style="width:110px; padding:6px 10px;" onchange="onYearSelectionChange()"></select>
+                <select id="selDashMonth" style="width:140px; padding:6px 10px;" onchange="onDashDropdownChange()"></select>
               </div>
 
-              <!-- Year Only Selector -->
               <div id="selectorYearGroup" style="display:none; gap:10px; align-items:center; flex-wrap:wrap;">
                 <label style="font-size:12px; font-weight:800; color:#334155;">SELECT FINANCIAL YEAR:</label>
                 <select id="selDashYearOnly" style="width:120px; padding:6px 10px;" onchange="onDashDropdownChange()"></select>
               </div>
 
-              <!-- Specific Single Date Selector -->
               <div id="selectorCustomGroup" style="display:none; gap:10px; align-items:center; flex-wrap:wrap;">
-                <label style="font-size:12px; font-weight:800; color:#334155;">PICK SPECIFIC DATE (ANY DAY/YEAR):</label>
-                <input type="date" id="selDashCustomDate" style="width:160px; padding:6px 10px;" onchange="onDashDropdownChange()">
+                <label style="font-size:12px; font-weight:800; color:#334155;">PICK SPECIFIC DATE:</label>
+                <input type="date" id="selDashCustomDate" min="2026-09-01" style="width:160px; padding:6px 10px;" onchange="onDashDropdownChange()">
               </div>
             </div>
 
@@ -499,7 +454,7 @@
               <div style="font-size:12px; font-weight:800; color:#047857; text-transform:uppercase;">TAB C: REAL BUSINESS OVERVIEW (PROFIT ON SALES & SHOP ASSET)</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:10px; margin-top:8px;">
                 <div style="background:#fff; border:1px solid #6ee7b7; padding:12px; border-radius:6px;">
-                  <small style="color:#047857; font-weight:800;">📈 REAL GROSS PROFIT (ON SOLD ITEMS)</small>
+                  <small style="color:#047857; font-weight:800;">📈 REAL GROSS PROFIT (FIFO ON SOLD ITEMS)</small>
                   <div style="font-size:22px; font-weight:900; color:#059669;" id="dashProfitTotal">₹0.00</div>
                 </div>
                 <div style="background:#fff; border:1px solid #6ee7b7; padding:12px; border-radius:6px;">
@@ -588,7 +543,7 @@
             <div class="grid-row row-item-top">
               <div class="form-col">
                 <label>ITEM / SERVICE NAME (TYPE TO SEARCH)</label>
-                <input type="text" id="itemSearch" placeholder="Click to search items..." autocomplete="off" onclick="handleItemSearchFocus(event)" oninput="onItemSearchInput()">
+                <input type="text" id="itemSearch" placeholder="Click to search items..." autocomplete="off" onfocus="handleItemSearchFocus(event)" onclick="handleItemSearchFocus(event)" oninput="onItemSearchInput()">
                 <div class="dropdown-menu" id="billingItemMenu"></div>
               </div>
               <div class="form-col">
@@ -724,7 +679,7 @@
               <div class="grid-row row-2">
                 <div class="form-col">
                   <label>Item Name <span>*</span></label>
-                  <input type="text" id="stkName" placeholder="Search from inventory..." autocomplete="off" onclick="handleStockClick(event, 'stkName', 'stockItemMenu')" oninput="onStockSearchInput('stkName', 'stockItemMenu')">
+                  <input type="text" id="stkName" placeholder="Search from inventory..." autocomplete="off" onfocus="handleStockClick(event, 'stkName', 'stockItemMenu')" onclick="handleStockClick(event, 'stkName', 'stockItemMenu')" oninput="onStockSearchInput('stkName', 'stockItemMenu')">
                   <div class="dropdown-menu" id="stockItemMenu"></div>
                 </div>
                 <div class="form-col">
@@ -763,7 +718,7 @@
               <div class="grid-row row-2">
                 <div class="form-col">
                   <label>Item Name</label>
-                  <input type="text" id="hsnOnlyName" placeholder="Type to search..." autocomplete="off" onclick="handleStockClick(event, 'hsnOnlyName', 'hsnOnlyMenu')" oninput="onStockSearchInput('hsnOnlyName', 'hsnOnlyMenu')">
+                  <input type="text" id="hsnOnlyName" placeholder="Type to search..." autocomplete="off" onfocus="handleStockClick(event, 'hsnOnlyName', 'hsnOnlyMenu')" onclick="handleStockClick(event, 'hsnOnlyName', 'hsnOnlyMenu')" oninput="onStockSearchInput('hsnOnlyName', 'hsnOnlyMenu')">
                   <div class="dropdown-menu" id="hsnOnlyMenu"></div>
                 </div>
                 <div class="form-col">
@@ -779,7 +734,7 @@
               <div style="font-size:12px; font-weight:800; color:#0284c7; margin-bottom:8px;">💲 QUICK RATES UPDATE ONLY</div>
               <div class="form-col" style="margin-bottom:10px;">
                 <label>Item Name</label>
-                <input type="text" id="rateOnlyName" placeholder="Type to search..." autocomplete="off" onclick="handleStockClick(event, 'rateOnlyName', 'rateOnlyMenu')" oninput="onStockSearchInput('rateOnlyName', 'rateOnlyMenu')">
+                <input type="text" id="rateOnlyName" placeholder="Type to search..." autocomplete="off" onfocus="handleStockClick(event, 'rateOnlyName', 'rateOnlyMenu')" onclick="handleStockClick(event, 'rateOnlyName', 'rateOnlyMenu')" oninput="onStockSearchInput('rateOnlyName', 'rateOnlyMenu')">
                 <div class="dropdown-menu" id="rateOnlyMenu"></div>
               </div>
               <div class="grid-row row-5">
@@ -805,7 +760,7 @@
               <div class="grid-row row-2">
                 <div class="form-col">
                   <label>Item Name</label>
-                  <input type="text" id="correctName" placeholder="Type to search..." autocomplete="off" onclick="handleStockClick(event, 'correctName', 'correctMenu')" oninput="onStockSearchInput('correctName', 'correctMenu')">
+                  <input type="text" id="correctName" placeholder="Type to search..." autocomplete="off" onfocus="handleStockClick(event, 'correctName', 'correctMenu')" onclick="handleStockClick(event, 'correctName', 'correctMenu')" oninput="onStockSearchInput('correctName', 'correctMenu')">
                   <div class="dropdown-menu" id="correctMenu"></div>
                 </div>
                 <div class="form-col">
@@ -823,7 +778,7 @@
                 <div class="form-col"><label>Date of Purchase</label><input type="date" id="purDate"></div>
                 <div class="form-col" style="grid-column: span 2;">
                   <label>Item Name (Search or Type New)</label>
-                  <input type="text" id="purItemName" placeholder="Search from stock or type new item..." autocomplete="off" onclick="handleStockClick(event, 'purItemName', 'purItemMenu')" oninput="onStockSearchInput('purItemName', 'purItemMenu')">
+                  <input type="text" id="purItemName" placeholder="Search from stock or type new item..." autocomplete="off" onfocus="handleStockClick(event, 'purItemName', 'purItemMenu')" onclick="handleStockClick(event, 'purItemName', 'purItemMenu')" oninput="onStockSearchInput('purItemName', 'purItemMenu')">
                   <div class="dropdown-menu" id="purItemMenu"></div>
                 </div>
                 <div class="form-col"><label>Quantity</label><input type="number" id="purQty" value="1" min="1" oninput="calcPurTotal()"></div>
@@ -911,7 +866,7 @@
     var selectedPermUserPhone = "";
 
     var activeDashMode = "today";
-    var mNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var allMonthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
@@ -942,6 +897,7 @@
       }
     };
 
+    // Outside-Click Dismissal for Dropdowns (without blocking input clicks)
     document.addEventListener("click", function(e) {
       var itemInput = document.getElementById("itemSearch");
       var itemMenu = document.getElementById("billingItemMenu");
@@ -949,14 +905,11 @@
         itemMenu.style.display = "none";
       }
 
-      ["stockItemMenu", "hsnOnlyMenu", "rateOnlyMenu", "correctMenu", "purItemMenu"].forEach(function(mId) {
-        var m = document.getElementById(mId);
-        var inId = mId.replace("Menu", "Name");
-        var inputEl = document.getElementById(inId) || document.getElementById("stkName");
-        if (m && e.target !== inputEl && !m.contains(e.target)) {
-          m.style.display = "none";
-        }
-      });
+      var stkInput = document.getElementById("stkName");
+      var stkMenu = document.getElementById("stockItemMenu");
+      if (stkMenu && stkInput && e.target !== stkInput && !stkMenu.contains(e.target)) {
+        stkMenu.style.display = "none";
+      }
     });
 
     // 🔐 STRICT LIVE SHEET PASSWORD LOGIN
@@ -1189,36 +1142,48 @@
     };
 
     window.openMasterDriveFolder = function() {
-      var url = masterDriveFolderLink || "https://drive.google.com/drive/search?q=Moon%20Light%20Electricals%20Bills";
+      var url = masterDriveFolderLink || "https://drive.google.com/drive/search?q=" + encodeURIComponent("Moon Light Electricals Bills");
       window.open(url, "_blank");
     };
 
-    // DASHBOARD HISTORICAL DROPDOWNS & FILTER LOGIC
+    // 🗓️ DATE DROPDOWNS: STARTS STRICTLY FROM SEPT-2026 (NO PRIOR YEARS/MONTHS)
     function populateDashboardDateDropdowns() {
       var now = new Date();
-      var currYear = now.getFullYear();
-      var currMonth = now.getMonth();
+      var currYear = Math.max(2026, now.getFullYear());
 
       var ySel = document.getElementById("selDashYear");
       var yoSel = document.getElementById("selDashYearOnly");
-      var mSel = document.getElementById("selDashMonth");
 
       ySel.innerHTML = "";
       yoSel.innerHTML = "";
-      for (var y = currYear + 1; y >= currYear - 3; y--) {
+      // Years strictly from 2026 up to current/next year
+      for (var y = currYear + 1; y >= 2026; y--) {
         ySel.innerHTML += "<option value='" + y + "'" + (y === currYear ? " selected" : "") + ">" + y + "</option>";
         yoSel.innerHTML += "<option value='" + y + "'" + (y === currYear ? " selected" : "") + ">" + y + "</option>";
       }
 
-      mSel.innerHTML = "";
-      mNames.forEach(function(mn, idx) {
-        mSel.innerHTML += "<option value='" + idx + "'" + (idx === currMonth ? " selected" : "") + ">" + mn + "</option>";
-      });
+      onYearSelectionChange();
 
-      var mStr = String(currMonth + 1).padStart(2, '0');
+      var mStr = String(now.getMonth() + 1).padStart(2, '0');
       var dStr = String(now.getDate()).padStart(2, '0');
       document.getElementById("selDashCustomDate").value = currYear + "-" + mStr + "-" + dStr;
     }
+
+    window.onYearSelectionChange = function() {
+      var selY = parseInt(document.getElementById("selDashYear").value, 10);
+      var mSel = document.getElementById("selDashMonth");
+      var now = new Date();
+      var currMonth = now.getMonth();
+
+      mSel.innerHTML = "";
+      // If 2026, show strictly September (8) onwards! No Jan-Aug!
+      var startM = (selY === 2026) ? 8 : 0;
+      for (var m = startM; m < 12; m++) {
+        var isSel = (m === currMonth || (selY === 2026 && m === 9 && currMonth === 9)) ? " selected" : "";
+        mSel.innerHTML += "<option value='" + m + "'" + isSel + ">" + allMonthNames[m] + "</option>";
+      }
+      onDashDropdownChange();
+    };
 
     window.applyDashMode = function(mode) {
       activeDashMode = mode;
@@ -1275,7 +1240,7 @@
 
       if (activeDashMode === "today") {
         var tKey = now.getFullYear() + "-" + ("0" + (now.getMonth() + 1)).slice(-2) + "-" + ("0" + now.getDate()).slice(-2);
-        badgeLabel = "📅 Viewing Report For: TODAY (" + now.getDate() + "-Oct-" + now.getFullYear() + ")";
+        badgeLabel = "📅 Viewing Report For: TODAY (" + now.getDate() + "-" + allMonthNames[now.getMonth()].slice(0,3) + "-" + now.getFullYear() + ")";
         if (daysMap[tKey]) {
           var t = daysMap[tKey];
           cashSale = t.cash; onlineSale = t.online; totalSale = t.total; profitSale = t.profit;
@@ -1296,7 +1261,7 @@
       } else if (activeDashMode === "month") {
         var selY = parseInt(document.getElementById("selDashYear").value, 10);
         var selM = parseInt(document.getElementById("selDashMonth").value, 10);
-        badgeLabel = "📅 Viewing Report For: " + mNames[selM] + " " + selY + " (Full Month Day-Wise)";
+        badgeLabel = "📅 Viewing Report For: " + allMonthNames[selM] + " " + selY + " (Full Month Day-Wise)";
         for (var k in daysMap) {
           if (daysMap[k].year === selY && daysMap[k].month === selM) {
             var itm = daysMap[k];
@@ -1309,12 +1274,14 @@
         var selYr = parseInt(document.getElementById("selDashYearOnly").value, 10);
         badgeLabel = "📅 Viewing Report For: FINANCIAL YEAR " + selYr + " (Month-Wise Summary)";
 
-        // Month-wise aggregation for this year
         var monthlyMap = {};
-        mNames.forEach(function(mn, idx) { monthlyMap[idx] = { monthName: mn, cash:0, online:0, total:0, profit:0 }; });
+        var startMonthIdx = (selYr === 2026) ? 8 : 0;
+        for (var mi = startMonthIdx; mi < 12; mi++) {
+          monthlyMap[mi] = { monthName: allMonthNames[mi], cash:0, online:0, total:0, profit:0 };
+        }
 
         for (var k in daysMap) {
-          if (daysMap[k].year === selYr) {
+          if (daysMap[k].year === selYr && monthlyMap[daysMap[k].month]) {
             var itm = daysMap[k];
             cashSale += itm.cash; onlineSale += itm.online; totalSale += itm.total; profitSale += itm.profit;
             cashPur += itm.purCash; onlinePur += itm.purOnline; totalPur += itm.purTotal;
@@ -1349,28 +1316,27 @@
       document.getElementById("dashProfitTotal").innerText = "₹" + profitSale.toFixed(2);
       document.getElementById("dashStockAsset").innerText = "₹" + (window.dashData.closingStockAsset || 0).toFixed(2);
 
-      // Render Day-Wise or Month-Wise Tables
       var dayBox = document.getElementById("boxDayWiseContainer");
       if (activeDashMode === "year") {
         document.getElementById("lblDayWiseTitle").innerText = "📅 " + selYr + ": Month-Wise Business Ledger";
-        var html = '<div class="table-wrap"><table><thead><tr><th>Month</th><th>Cash Sales</th><th>Online / UPI</th><th>Total Sales</th><th>Gross Profit</th></tr></thead><tbody>';
-        mNames.forEach(function(mn, idx) {
-          var mData = monthlyMap[idx];
+        var html = '<div class="table-wrap"><table><thead><tr><th>Month</th><th>Cash Sales</th><th>Online / UPI</th><th>Total Sales</th><th>Gross Profit (FIFO)</th></tr></thead><tbody>';
+        for (var mi in monthlyMap) {
+          var mData = monthlyMap[mi];
           html += "<tr>" +
-            "<td><b>" + mn + "</b></td>" +
+            "<td><b>" + mData.monthName + "</b></td>" +
             "<td>₹" + mData.cash.toFixed(2) + "</td>" +
             "<td>₹" + mData.online.toFixed(2) + "</td>" +
             "<td><b style='color:#b45309;'>₹" + mData.total.toFixed(2) + "</b></td>" +
             "<td><b style='color:#059669;'>₹" + mData.profit.toFixed(2) + "</b></td>" +
             "</tr>";
-        });
+        }
         html += '</tbody></table></div>';
         document.getElementById("dayWiseTableWrap").innerHTML = html;
         dayBox.style.display = "block";
       } else if ((activeDashMode === "week" || activeDashMode === "month" || activeDashMode === "custom") && dayRows.length > 0) {
         dayRows.sort(function(a, b) { return new Date(b.dateKey).getTime() - new Date(a.dateKey).getTime(); });
         document.getElementById("lblDayWiseTitle").innerText = "📅 Day-Wise Sales & Profit Breakdown";
-        var html = '<div class="table-wrap"><table><thead><tr><th>Date & Day</th><th>Cash Sales</th><th>Online / UPI</th><th>Total Sales</th><th>Gross Profit</th></tr></thead><tbody>';
+        var html = '<div class="table-wrap"><table><thead><tr><th>Date & Day</th><th>Cash Sales</th><th>Online / UPI</th><th>Total Sales</th><th>Gross Profit (FIFO)</th></tr></thead><tbody>';
         dayRows.forEach(function(d) {
           html += "<tr>" +
             "<td><b>" + d.label + "</b></td>" +
@@ -1387,6 +1353,347 @@
         dayBox.style.display = "none";
       }
     }
+
+    // 🔍 ITEM SEARCH DROPDOWN & AUTO-CLEAN (INSTANT & FAIL-PROOF)
+    window.handleItemSearchFocus = function(e) {
+      if (e) e.stopPropagation();
+      var field = document.getElementById("itemSearch");
+      field.value = "";
+      renderItemDropdown("");
+    };
+
+    window.onItemSearchInput = function() {
+      var val = document.getElementById("itemSearch").value.trim().toLowerCase();
+      renderItemDropdown(val);
+    };
+
+    function renderItemDropdown(val) {
+      var menu = document.getElementById("billingItemMenu");
+      menu.innerHTML = "";
+
+      var itemsToUse = (cachedItems && cachedItems.length > 0) ? cachedItems : [
+        { name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, stock: "∞" },
+        { name: "Fan 1200mm", hsn: "8414", custRate: 1550, elecRate: 1450, famRate: 1400, stock: 12 },
+        { name: "Jugnu 1W White", hsn: "8539", custRate: 410, elecRate: 380, famRate: 350, stock: 50 },
+        { name: "1.5 Sqmm Wire (90m)", hsn: "8544", custRate: 1250, elecRate: 1150, famRate: 1100, stock: 25 },
+        { name: "Modular Switch 6A", hsn: "8536", custRate: 35, elecRate: 28, famRate: 25, stock: 200 }
+      ];
+
+      var filtered = !val ? itemsToUse.slice(0, 40) : itemsToUse.filter(function(it) {
+        return it.name.toLowerCase().includes(val);
+      });
+
+      if (filtered.length === 0) {
+        menu.style.display = "none";
+        return;
+      }
+
+      filtered.forEach(function(it) {
+        var div = document.createElement("div");
+        div.className = "dropdown-item";
+        div.innerHTML = "<span><b>" + it.name + "</b></span> <small>Stock: " + it.stock + " | ₹" + it.custRate + "</small>";
+        div.onmousedown = function(ev) {
+          ev.preventDefault();
+          selectBillingItem(it);
+        };
+        menu.appendChild(div);
+      });
+      menu.style.display = "block";
+    }
+
+    function selectBillingItem(item) {
+      document.getElementById("itemSearch").value = item.name;
+      document.getElementById("billingItemMenu").style.display = "none";
+      currentItemObj = item;
+      document.getElementById("itemHsn").value = resolveSmartHsn(item.name);
+
+      var isLabour = item.name.toLowerCase().includes("labour");
+      var rateField = document.getElementById("itemRate");
+      if (isLabour) {
+        rateField.readOnly = false;
+        rateField.placeholder = "Enter Amount";
+        rateField.value = "";
+        rateField.focus();
+      } else {
+        rateField.readOnly = true;
+        resolveRate();
+      }
+      calculateItemTotal();
+    }
+
+    // 📦 STOCK INWARD SEARCH & AUTO-CLEAN
+    window.handleStockClick = function(e, inputId, menuId) {
+      if (e) e.stopPropagation();
+      var field = document.getElementById(inputId);
+      field.value = "";
+      onStockSearchInput(inputId, menuId);
+    };
+
+    window.onStockSearchInput = function(inputId, menuId) {
+      var val = document.getElementById(inputId).value.trim().toLowerCase();
+      var menu = document.getElementById(menuId);
+      menu.innerHTML = "";
+
+      var itemsToUse = (cachedItems && cachedItems.length > 0) ? cachedItems : [
+        { name: "Fan 1200mm", hsn: "8414", custRate: 1550, elecRate: 1450, famRate: 1400, stock: 12 },
+        { name: "Jugnu 1W White", hsn: "8539", custRate: 410, elecRate: 380, famRate: 350, stock: 50 },
+        { name: "1.5 Sqmm Wire (90m)", hsn: "8544", custRate: 1250, elecRate: 1150, famRate: 1100, stock: 25 },
+        { name: "Modular Switch 6A", hsn: "8536", custRate: 35, elecRate: 28, famRate: 25, stock: 200 }
+      ];
+
+      var filtered = !val ? itemsToUse.slice(0, 40) : itemsToUse.filter(function(it) { return it.name.toLowerCase().includes(val); });
+      if (filtered.length === 0) { menu.style.display = "none"; return; }
+
+      filtered.forEach(function(it) {
+        var div = document.createElement("div");
+        div.className = "dropdown-item";
+        div.innerHTML = "<span><b>" + it.name + "</b></span> <small>Stock: " + it.stock + "</small>";
+        div.onmousedown = function(e) {
+          e.preventDefault();
+          document.getElementById(inputId).value = it.name;
+          if (inputId === "stkName") {
+            document.getElementById("stkHsn").value = it.hsn || "";
+            document.getElementById("stkCustRate").value = it.custRate || 0;
+            document.getElementById("stkElecRate").value = it.elecRate || 0;
+            document.getElementById("stkFamRate").value = it.famRate || 0;
+          } else if (inputId === "hsnOnlyName") {
+            document.getElementById("hsnOnlyCode").value = it.hsn || "";
+          } else if (inputId === "rateOnlyName") {
+            document.getElementById("rateOnlyCust").value = it.custRate || 0;
+            document.getElementById("rateOnlyElec").value = it.elecRate || 0;
+            document.getElementById("rateOnlyFam").value = it.famRate || 0;
+          } else if (inputId === "correctName") {
+            document.getElementById("correctQty").value = it.stock || 0;
+          } else if (inputId === "purItemName") {
+            document.getElementById("purPrice").value = it.famRate || it.custRate || 0;
+            calcPurTotal();
+          }
+          menu.style.display = "none";
+        };
+        menu.appendChild(div);
+      });
+      menu.style.display = "block";
+    };
+
+    // 👥 REPEAT CUSTOMERS (GUARANTEED RENDERING)
+    async function loadRepeatCustomers() {
+      var c = document.getElementById("repeatCustTableContainer");
+      if (!c) return;
+      c.innerHTML = "<div style='padding:12px; font-weight:800; color:#0284c7;'>Loading regular customers directory...</div>";
+      var res = await apiCall("getRepeatCustomers");
+      if (res && res.customers && res.customers.length > 0) {
+        var html = '<div class="table-wrap"><table><thead><tr><th>Customer Name</th><th>Address</th><th>Mobile</th><th>Repeat Bills</th><th>GSTIN</th><th>Action</th></tr></thead><tbody>';
+        res.customers.forEach(function(cust) {
+          html += "<tr>" +
+            "<td><b>" + cust.name + "</b></td>" +
+            "<td>" + cust.address + "</td>" +
+            "<td>" + cust.phone + "</td>" +
+            "<td><span style='background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:12px; font-weight:800; font-size:11px;'>⭐ " + cust.count + " Bills</span></td>" +
+            "<td>" + (cust.gstin || "-") + "</td>" +
+            "<td><button class='btn-sync' style='padding:4px 10px; font-weight:900;' onclick='useRepeatCustomer(\"" + cust.name + "\", \"" + cust.phone + "\", \"" + cust.address + "\", \"" + (cust.gstin || "") + "\")'>➕ Use</button></td>" +
+            "</tr>";
+        });
+        html += '</tbody></table></div>';
+        c.innerHTML = html;
+      } else {
+        c.innerHTML = "<div style='padding:16px; color:#64748b; font-weight:bold;'>No repeat customers found yet. Bills generated will automatically list repeat buyers here!</div>";
+      }
+    }
+
+    window.useRepeatCustomer = function(name, phone, address, gstin) {
+      switchBillingView('gen');
+      document.getElementById("custName").value = name;
+      document.getElementById("custPhone").value = phone;
+      document.getElementById("custAddress").value = address;
+      if (gstin && gstin !== "-" && gstin !== "") {
+        document.getElementById("custGstin").value = gstin;
+        document.getElementById("isGstBill").value = "Yes (GST Invoice)";
+      } else {
+        document.getElementById("custGstin").value = "";
+        document.getElementById("isGstBill").value = "No (Regular Bill)";
+      }
+      calculateItemTotal();
+      checkFormState();
+      document.getElementById("cardBillForm").scrollIntoView({ behavior: 'smooth' });
+    };
+
+    // 👥 USERS LIST (GUARANTEED RENDERING)
+    async function loadUsersList() {
+      var c = document.getElementById("usersListContainer");
+      if (!c) return;
+      c.innerHTML = "<div style='padding:12px; font-weight:800; color:#0284c7;'>Loading users list...</div>";
+      var res = await apiCall("getUsersList");
+      if (res && res.users && res.users.length > 0) {
+        var html = '<div class="table-wrap"><table><thead><tr><th>User Name</th><th>Mobile</th><th>Role</th><th>Status</th><th>Permissions</th><th>Actions</th></tr></thead><tbody>';
+        res.users.forEach(function(u) {
+          var isOwner = (u.phone === "8860706865" || u.isOwner === true);
+          var isAct = (u.status === "Active");
+          var btnColor = isAct ? "color:#dc2626;" : "color:#059669;";
+          var btnText = isAct ? "🔴 Deactivate" : "🟢 Activate";
+
+          var actionHtml = "";
+          if (isOwner) {
+            actionHtml = '<span style="color:#d97706; font-weight:900; font-size:12px; background:#fef3c7; padding:4px 10px; border-radius:12px; border:1px solid #fde68a;">Owner</span>';
+          } else {
+            actionHtml = '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px; ' + btnColor + '" onclick="toggleUserStatus(\'' + u.phone + '\')">' + btnText + '</button>' +
+                         '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px;" onclick="openPermModal(\'' + u.phone + '\', \'' + u.name + '\', \'' + u.permissions + '\')">⚙️ Access</button>' +
+                         '<button class="btn-sync" style="padding:3px 8px; font-size:11px; color:#dc2626;" onclick="deleteUserAccount(\'' + u.phone + '\', \'' + u.name + '\')">🗑 Delete</button>';
+          }
+
+          html += "<tr>" +
+            "<td><b>" + u.name + "</b></td>" +
+            "<td>" + u.phone + "</td>" +
+            "<td>" + u.role + "</td>" +
+            "<td><b style='color:" + (isAct ? "#059669" : "#dc2626") + "'>" + u.status + "</b></td>" +
+            "<td><small>" + u.permissions + "</small></td>" +
+            "<td>" + actionHtml + "</td>" +
+            "</tr>";
+        });
+        html += '</tbody></table></div>';
+        c.innerHTML = html;
+      } else {
+        c.innerHTML = "<div style='padding:16px; color:#dc2626;'>Unable to load users. Please click 'Refresh Users' above.</div>";
+      }
+    }
+
+    window.toggleUserStatus = async function(phone) {
+      var res = await apiCall("toggleUserStatus", { phone: phone });
+      if (res && res.success) loadUsersList();
+    };
+
+    window.openPermModal = function(phone, name, currentPerms) {
+      selectedPermUserPhone = phone;
+      document.getElementById("permUserName").innerText = name;
+      document.getElementById("permUserPhone").innerText = phone;
+      
+      var isAll = (currentPerms === "all");
+      document.getElementById("chkPermGen").checked = isAll || currentPerms.includes("gen");
+      document.getElementById("chkPermRepeat").checked = isAll || currentPerms.includes("repeat");
+      document.getElementById("chkPermDash").checked = isAll || currentPerms.includes("dash");
+      document.getElementById("chkPermKhata").checked = isAll || currentPerms.includes("khata");
+      document.getElementById("chkPermSearch").checked = isAll || currentPerms.includes("search");
+      document.getElementById("chkPermStock").checked = isAll || currentPerms.includes("stock");
+      document.getElementById("chkPermSet").checked = isAll || currentPerms.includes("set");
+
+      document.getElementById("permModal").style.display = "flex";
+    };
+
+    window.closePermModal = function() {
+      document.getElementById("permModal").style.display = "none";
+    };
+
+    window.saveUserPermsFromModal = async function() {
+      var list = [];
+      if (document.getElementById("chkPermGen").checked) list.push("gen");
+      if (document.getElementById("chkPermRepeat").checked) list.push("repeat");
+      if (document.getElementById("chkPermDash").checked) list.push("dash");
+      if (document.getElementById("chkPermKhata").checked) list.push("khata");
+      if (document.getElementById("chkPermSearch").checked) list.push("search");
+      if (document.getElementById("chkPermStock").checked) list.push("stock");
+      if (document.getElementById("chkPermSet").checked) list.push("set");
+
+      var pStr = list.join(",");
+      if (list.length === 7) pStr = "all";
+
+      var res = await apiCall("updateUserPermissions", { phone: selectedPermUserPhone, permissions: pStr });
+      if (res && res.success) {
+        closePermModal();
+        loadUsersList();
+      }
+    };
+
+    window.deleteUserAccount = async function(phone, name) {
+      if (confirm("Are you sure you want to permanently delete user " + name + " (" + phone + ")? This action cannot be undone.")) {
+        var res = await apiCall("deleteUser", { phone: phone });
+        if (res && res.success) {
+          alert("User deleted successfully!");
+          loadUsersList();
+        } else {
+          alert(res.message || "Cannot delete user!");
+        }
+      }
+    };
+
+    window.createNewUser = async function() {
+      var name = document.getElementById("newUserName").value.trim();
+      var phone = document.getElementById("newUserPhone").value.trim();
+      var pin = document.getElementById("newUserPin").value.trim() || "1234";
+      var role = document.getElementById("newUserRole").value;
+      if (!name || phone.length !== 10) { alert("Enter valid name and 10-digit mobile!"); return; }
+
+      var res = await apiCall("createUser", { data: { name: name, phone: phone, pin: pin, role: role, permissions: role === "Admin" ? "all" : "gen,repeat" } });
+      if (res && res.success) {
+        alert("New user created successfully!");
+        loadUsersList();
+      }
+    };
+
+    // ACTIVE ORANGE BUTTON TOGGLE FOR STOCK INWARD
+    window.setStockMode = function(mode) {
+      ["Inward", "Hsn", "Rate", "Correct", "Purchase"].forEach(function(t) {
+        var b = document.getElementById("btnStkTab" + t);
+        if (b) b.classList.remove("filter-btn-active");
+      });
+
+      var mapBtn = { inward: "btnStkTabInward", hsn: "btnStkTabHsn", rate: "btnStkTabRate", correct: "btnStkTabCorrect", purchase: "btnStkTabPurchase" };
+      if (mapBtn[mode] && document.getElementById(mapBtn[mode])) {
+        document.getElementById(mapBtn[mode]).classList.add("filter-btn-active");
+      }
+
+      document.getElementById("boxStockInward").style.display = (mode === 'inward') ? 'block' : 'none';
+      document.getElementById("boxStockHsn").style.display = (mode === 'hsn') ? 'block' : 'none';
+      document.getElementById("boxStockRate").style.display = (mode === 'rate') ? 'block' : 'none';
+      document.getElementById("boxStockCorrect").style.display = (mode === 'correct') ? 'block' : 'none';
+      document.getElementById("boxStockPurchase").style.display = (mode === 'purchase') ? 'block' : 'none';
+    };
+
+    window.calcPurTotal = function() {
+      var q = parseFloat(document.getElementById("purQty").value) || 0;
+      var p = parseFloat(document.getElementById("purPrice").value) || 0;
+      document.getElementById("purTotal").value = (q * p).toFixed(2);
+    };
+
+    window.submitPurchaseEntry = async function() {
+      var name = document.getElementById("purItemName").value.trim();
+      var qty = parseFloat(document.getElementById("purQty").value) || 0;
+      var price = parseFloat(document.getElementById("purPrice").value) || 0;
+      if (!name || qty <= 0) { alert("Enter valid item and quantity!"); return; }
+
+      var res = await apiCall("savePurchaseEntry", {
+        data: {
+          date: document.getElementById("purDate").value,
+          name: name,
+          qty: qty,
+          price: price,
+          total: qty * price,
+          vendor: document.getElementById("purVendor").value,
+          paymentMode: document.getElementById("purPayMode").value
+        }
+      });
+      if (res && res.success) {
+        alert("Purchase entry saved and stock auto-incremented!");
+        document.getElementById("purItemName").value = "";
+        refreshAppData();
+        loadDashboardAnalytics();
+      }
+    };
+
+    window.submitRateOnly = async function() {
+      var name = document.getElementById("rateOnlyName").value.trim();
+      if (!name) { alert("Select item!"); return; }
+      var res = await apiCall("updateRateOnly", {
+        data: {
+          name: name,
+          custRate: document.getElementById("rateOnlyCust").value,
+          elecRate: document.getElementById("rateOnlyElec").value,
+          famRate: document.getElementById("rateOnlyFam").value
+        }
+      });
+      if (res && res.success) {
+        alert("Rates updated successfully!");
+        refreshAppData();
+      }
+    };
 
     function startSessionTimer() {
       if (sessionTimerInterval) clearInterval(sessionTimerInterval);
@@ -1463,7 +1770,7 @@
       }
       if (nav === 'settings') {
         document.getElementById("btnNavSet").classList.add("active");
-        if (currentUser.role === "Admin") loadUsersList();
+        loadUsersList();
       }
     };
 
@@ -1822,7 +2129,7 @@
         '</td>' +
         '</tr>' +
         '</table>' +
-        '<table style="width:100%; border-collapse:collapse; border-bottom:1.5px solid #1e3a8a; margin-bottom:20px;">' +
+        '<table style="width:100%; border-collapse:collapse; border-bottom:1.5px solid #1e3a8a;">' +
         '<thead>' +
         '<tr style="background:#1e3a8a; color:#fff;">' +
         '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:50px; text-align:center; white-space:nowrap;">Sl No.</th>' +
