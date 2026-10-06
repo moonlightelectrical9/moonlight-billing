@@ -392,22 +392,22 @@
               </div>
             </div>
 
-            <!-- Dynamic Dropdown Bar (Starts strictly from Sept-2026) -->
+            <!-- Dynamic Dropdown Bar (Auto-Bound to Transactions) -->
             <div id="dashSelectorBar" style="display:none; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; margin-bottom:14px; align-items:center; gap:10px; flex-wrap:wrap;">
               <div id="selectorMonthGroup" style="display:none; gap:10px; align-items:center; flex-wrap:wrap;">
-                <label style="font-size:12px; font-weight:800; color:#334155;">SELECT YEAR & MONTH:</label>
+                <label style="font-size:12px; font-weight:800; color:#334155;">SELECT TRANSACTION YEAR & MONTH:</label>
                 <select id="selDashYear" style="width:110px; padding:6px 10px;" onchange="onYearSelectionChange()"></select>
                 <select id="selDashMonth" style="width:140px; padding:6px 10px;" onchange="onDashDropdownChange()"></select>
               </div>
 
               <div id="selectorYearGroup" style="display:none; gap:10px; align-items:center; flex-wrap:wrap;">
-                <label style="font-size:12px; font-weight:800; color:#334155;">SELECT FINANCIAL YEAR:</label>
+                <label style="font-size:12px; font-weight:800; color:#334155;">SELECT TRANSACTION YEAR:</label>
                 <select id="selDashYearOnly" style="width:120px; padding:6px 10px;" onchange="onDashDropdownChange()"></select>
               </div>
 
               <div id="selectorCustomGroup" style="display:none; gap:10px; align-items:center; flex-wrap:wrap;">
                 <label style="font-size:12px; font-weight:800; color:#334155;">PICK SPECIFIC DATE:</label>
-                <input type="date" id="selDashCustomDate" min="2026-09-01" style="width:160px; padding:6px 10px;" onchange="onDashDropdownChange()">
+                <input type="date" id="selDashCustomDate" style="width:160px; padding:6px 10px;" onchange="onDashDropdownChange()">
               </div>
             </div>
 
@@ -449,7 +449,7 @@
               </div>
             </div>
 
-            <!-- Tab C: Real Profit & Closing Stock Value -->
+            <!-- Tab C: Pure FIFO Profit & Stock Asset -->
             <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:14px; margin-bottom:14px;">
               <div style="font-size:12px; font-weight:800; color:#047857; text-transform:uppercase;">TAB C: REAL BUSINESS OVERVIEW (PROFIT ON SALES & SHOP ASSET)</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:10px; margin-top:8px;">
@@ -458,7 +458,7 @@
                   <div style="font-size:22px; font-weight:900; color:#059669;" id="dashProfitTotal">₹0.00</div>
                 </div>
                 <div style="background:#fff; border:1px solid #6ee7b7; padding:12px; border-radius:6px;">
-                  <small style="color:#047857; font-weight:800;">🏪 CLOSING STOCK ASSET VALUE (IN SHOP)</small>
+                  <small style="color:#047857; font-weight:800;">🏪 CLOSING STOCK ASSET VALUE (PURE FIFO COST VALUE)</small>
                   <div style="font-size:22px; font-weight:900; color:#065f46;" id="dashStockAsset">₹0.00</div>
                 </div>
               </div>
@@ -805,7 +805,6 @@
           <div class="card">
             <h3 style="font-weight:900; margin-bottom:14px;">ERP Settings & Configurations</h3>
             
-            <!-- Direct Drive Master Folder Access Button -->
             <div style="background:#fffbeb; border:2px solid #fde68a; border-radius:8px; padding:16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <div>
                 <h4 style="font-weight:900; color:#b45309; font-size:15px;">📁 Master Google Drive Bills Repository</h4>
@@ -867,6 +866,7 @@
 
     var activeDashMode = "today";
     var allMonthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var transactionBounds = null;
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
@@ -897,7 +897,7 @@
       }
     };
 
-    // Outside-Click Dismissal for Dropdowns (without blocking input clicks)
+    // Outside-Click Dismissal for Dropdowns
     document.addEventListener("click", function(e) {
       var itemInput = document.getElementById("itemSearch");
       var itemMenu = document.getElementById("billingItemMenu");
@@ -1059,8 +1059,6 @@
       var pField = document.getElementById("purDate");
       if (pField) pField.value = todayFormatted;
 
-      populateDashboardDateDropdowns();
-
       try {
         var stored = localStorage.getItem("mle_user");
         if (stored && stored.startsWith("{")) currentUser = JSON.parse(stored);
@@ -1146,42 +1144,52 @@
       window.open(url, "_blank");
     };
 
-    // 🗓️ DATE DROPDOWNS: STARTS STRICTLY FROM SEPT-2026 (NO PRIOR YEARS/MONTHS)
-    function populateDashboardDateDropdowns() {
-      var now = new Date();
-      var currYear = Math.max(2026, now.getFullYear());
-
+    // 🗓️ AUTO-DETECT BOUNDED DROPDOWNS (STRICTLY VALID TRANSACTION DATES ONLY)
+    function setupDynamicDateBounds(minB, maxB) {
+      transactionBounds = { minB: minB, maxB: maxB };
       var ySel = document.getElementById("selDashYear");
       var yoSel = document.getElementById("selDashYearOnly");
 
       ySel.innerHTML = "";
       yoSel.innerHTML = "";
-      // Years strictly from 2026 up to current/next year
-      for (var y = currYear + 1; y >= 2026; y--) {
-        ySel.innerHTML += "<option value='" + y + "'" + (y === currYear ? " selected" : "") + ">" + y + "</option>";
-        yoSel.innerHTML += "<option value='" + y + "'" + (y === currYear ? " selected" : "") + ">" + y + "</option>";
+
+      var startY = minB ? minB.year : 2026;
+      var endY = maxB ? Math.max(maxB.year, 2026) : 2026;
+
+      for (var y = endY; y >= startY; y--) {
+        ySel.innerHTML += "<option value='" + y + "'>" + y + "</option>";
+        yoSel.innerHTML += "<option value='" + y + "'>" + y + "</option>";
+      }
+
+      var customDateInput = document.getElementById("selDashCustomDate");
+      if (minB && minB.dateStr) customDateInput.min = minB.dateStr;
+      if (maxB && maxB.dateStr) {
+        customDateInput.max = maxB.dateStr;
+        customDateInput.value = maxB.dateStr;
       }
 
       onYearSelectionChange();
-
-      var mStr = String(now.getMonth() + 1).padStart(2, '0');
-      var dStr = String(now.getDate()).padStart(2, '0');
-      document.getElementById("selDashCustomDate").value = currYear + "-" + mStr + "-" + dStr;
     }
 
     window.onYearSelectionChange = function() {
       var selY = parseInt(document.getElementById("selDashYear").value, 10);
       var mSel = document.getElementById("selDashMonth");
-      var now = new Date();
-      var currMonth = now.getMonth();
-
       mSel.innerHTML = "";
-      // If 2026, show strictly September (8) onwards! No Jan-Aug!
-      var startM = (selY === 2026) ? 8 : 0;
-      for (var m = startM; m < 12; m++) {
-        var isSel = (m === currMonth || (selY === 2026 && m === 9 && currMonth === 9)) ? " selected" : "";
-        mSel.innerHTML += "<option value='" + m + "'" + isSel + ">" + allMonthNames[m] + "</option>";
+
+      var startM = 0;
+      var endM = 11;
+
+      if (transactionBounds && transactionBounds.minB && selY === transactionBounds.minB.year) {
+        startM = transactionBounds.minB.month;
       }
+      if (transactionBounds && transactionBounds.maxB && selY === transactionBounds.maxB.year) {
+        endM = transactionBounds.maxB.month;
+      }
+
+      for (var m = endM; m >= startM; m--) {
+        mSel.innerHTML += "<option value='" + m + "'>" + allMonthNames[m] + "</option>";
+      }
+
       onDashDropdownChange();
     };
 
@@ -1275,14 +1283,12 @@
         badgeLabel = "📅 Viewing Report For: FINANCIAL YEAR " + selYr + " (Month-Wise Summary)";
 
         var monthlyMap = {};
-        var startMonthIdx = (selYr === 2026) ? 8 : 0;
-        for (var mi = startMonthIdx; mi < 12; mi++) {
-          monthlyMap[mi] = { monthName: allMonthNames[mi], cash:0, online:0, total:0, profit:0 };
-        }
-
         for (var k in daysMap) {
-          if (daysMap[k].year === selYr && monthlyMap[daysMap[k].month]) {
+          if (daysMap[k].year === selYr) {
             var itm = daysMap[k];
+            if (!monthlyMap[itm.month]) {
+              monthlyMap[itm.month] = { monthName: allMonthNames[itm.month], cash:0, online:0, total:0, profit:0 };
+            }
             cashSale += itm.cash; onlineSale += itm.online; totalSale += itm.total; profitSale += itm.profit;
             cashPur += itm.purCash; onlinePur += itm.purOnline; totalPur += itm.purTotal;
             monthlyMap[itm.month].cash += itm.cash;
@@ -1314,6 +1320,7 @@
       document.getElementById("dashPurTotal").innerText = "₹" + totalPur.toFixed(2);
 
       document.getElementById("dashProfitTotal").innerText = "₹" + profitSale.toFixed(2);
+      // PURE FIFO VALUATION DISPLAY
       document.getElementById("dashStockAsset").innerText = "₹" + (window.dashData.closingStockAsset || 0).toFixed(2);
 
       var dayBox = document.getElementById("boxDayWiseContainer");
@@ -2229,6 +2236,7 @@
       if (res && res.daysMap) {
         window.dashData = res;
         if (res.driveFolderUrl) masterDriveFolderLink = res.driveFolderUrl;
+        setupDynamicDateBounds(res.minBound, res.maxBound);
         applyDashMode('today');
       }
     }
