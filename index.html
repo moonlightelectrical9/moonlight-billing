@@ -449,7 +449,7 @@
               </div>
             </div>
 
-            <!-- Tab C: Pure FIFO Profit & Stock Asset -->
+            <!-- Tab C: Pure FIFO Profit & Real Closing Stock Asset -->
             <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:14px; margin-bottom:14px;">
               <div style="font-size:12px; font-weight:800; color:#047857; text-transform:uppercase;">TAB C: REAL BUSINESS OVERVIEW (PROFIT ON SALES & SHOP ASSET)</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:10px; margin-top:8px;">
@@ -897,7 +897,6 @@
       }
     };
 
-    // Outside-Click Dismissal for Dropdowns
     document.addEventListener("click", function(e) {
       var itemInput = document.getElementById("itemSearch");
       var itemMenu = document.getElementById("billingItemMenu");
@@ -1048,6 +1047,7 @@
       initSession();
     };
 
+    // 🚀 FIXED: CRITICAL CRASH IN ONLOAD REMOVED
     window.onload = function() {
       var now = new Date();
       var mStr = String(now.getMonth() + 1).padStart(2, '0');
@@ -1144,7 +1144,7 @@
       window.open(url, "_blank");
     };
 
-    // 🗓️ AUTO-DETECT BOUNDED DROPDOWNS (STRICTLY VALID TRANSACTION DATES ONLY)
+    // 🗓️️ AUTO-DETECT BOUNDED DROPDOWNS (STRICTLY VALID TRANSACTION DATES ONLY)
     function setupDynamicDateBounds(minB, maxB) {
       transactionBounds = { minB: minB, maxB: maxB };
       var ySel = document.getElementById("selDashYear");
@@ -1320,6 +1320,7 @@
       document.getElementById("dashPurTotal").innerText = "₹" + totalPur.toFixed(2);
 
       document.getElementById("dashProfitTotal").innerText = "₹" + profitSale.toFixed(2);
+      // PURE FIFO COST ASSET VALUE
       document.getElementById("dashStockAsset").innerText = "₹" + (window.dashData.closingStockAsset || 0).toFixed(2);
 
       var dayBox = document.getElementById("boxDayWiseContainer");
@@ -1701,7 +1702,342 @@
       }
     };
 
-    // HARD COPY INVOICE PRINT (CONDITIONAL ESTIMATE LINE)
+    function startSessionTimer() {
+      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+      var loginTime = parseInt(localStorage.getItem("mle_login_time") || new Date().getTime());
+      sessionTimerInterval = setInterval(function() {
+        var diff = (loginTime + 24 * 3600 * 1000) - new Date().getTime();
+        if (diff <= 0) { clearInterval(sessionTimerInterval); executeUserLogout(); return; }
+        var h = Math.floor(diff / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        var s = Math.floor((diff % 60000) / 1000);
+        var pad = function(n) { return String(n).padStart(2, '0'); };
+        document.getElementById("sessionTimerBadge").innerText = "⏳ " + pad(h) + ":" + pad(m) + ":" + pad(s);
+      }, 1000);
+    }
+
+    window.confirmUserLogout = function() {
+      if (confirm("Are you sure you want to log out of your session?")) executeUserLogout();
+    };
+
+    function executeUserLogout() {
+      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+      localStorage.removeItem("mle_user");
+      localStorage.removeItem("mle_login_time");
+      location.reload();
+    }
+
+    async function apiCall(action, payload) {
+      if (!payload) payload = {};
+      payload.action = action;
+      try {
+        var res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        return JSON.parse(await res.text());
+      } catch(e) { return null; }
+    }
+
+    window.refreshAppData = async function() {
+      try {
+        var res = await apiCall("getAppData");
+        if (res && res.items) {
+          cachedItems = res.items;
+          var hasLabour = cachedItems.some(function(x) { return x.name.toLowerCase().includes("labour charge"); });
+          if (!hasLabour) cachedItems.unshift({ name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, stock: "∞" });
+          localStorage.setItem("mle_items", JSON.stringify(cachedItems));
+          bankSettings = res.bankInfo;
+          if (res.driveFolderUrl) masterDriveFolderLink = res.driveFolderUrl;
+
+          if (res.alerts && res.alerts.length > 0) {
+            document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(function(a) { return "• " + a; }).join("<br>");
+            document.getElementById("lowStockAlertBox").style.display = "block";
+          } else {
+            document.getElementById("lowStockAlertBox").style.display = "none";
+          }
+        }
+      } catch(e) {}
+    };
+
+    window.switchNav = function(nav) {
+      document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
+      document.getElementById("viewDashboard").style.display = (nav === 'dash') ? 'block' : 'none';
+      document.getElementById("viewGenBill").style.display = 'none';
+      document.getElementById("viewRepeatCustomers").style.display = 'none';
+      document.getElementById("viewCreditLedger").style.display = 'none';
+      document.getElementById("viewSearchBills").style.display = 'none';
+      document.getElementById("viewStockInward").style.display = 'none';
+      document.getElementById("viewSettings").style.display = (nav === 'settings') ? 'block' : 'none';
+
+      if (nav === 'dash') {
+        document.getElementById("btnNavDash").classList.add("active");
+        loadDashboardAnalytics();
+      }
+      if (nav === 'settings') {
+        document.getElementById("btnNavSet").classList.add("active");
+        loadUsersList();
+      }
+    };
+
+    window.toggleBillingSub = function() {
+      var sub = document.getElementById("billingSubMenu");
+      sub.style.display = (sub.style.display === "none") ? "flex" : "none";
+      switchBillingView('gen');
+    };
+
+    window.switchBillingView = function(subView) {
+      document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
+      document.getElementById("btnNavBill").classList.add("active");
+      document.querySelectorAll(".sub-nav-btn").forEach(function(b) { b.classList.remove("active"); });
+
+      document.getElementById("viewDashboard").style.display = 'none';
+      document.getElementById("viewSettings").style.display = 'none';
+      document.getElementById("viewGenBill").style.display = (subView === 'gen') ? 'block' : 'none';
+      document.getElementById("viewRepeatCustomers").style.display = (subView === 'repeat') ? 'block' : 'none';
+      document.getElementById("viewCreditLedger").style.display = (subView === 'khata') ? 'block' : 'none';
+      document.getElementById("viewSearchBills").style.display = (subView === 'search') ? 'block' : 'none';
+      document.getElementById("viewStockInward").style.display = (subView === 'stock') ? 'block' : 'none';
+
+      if (subView === 'gen') document.getElementById("btnSubGen").classList.add("active");
+      if (subView === 'repeat') {
+        document.getElementById("btnSubRepeat").classList.add("active");
+        loadRepeatCustomers();
+      }
+      if (subView === 'khata') {
+        document.getElementById("btnSubKhata").classList.add("active");
+        loadKhataRecords();
+      }
+      if (subView === 'search') {
+        document.getElementById("btnSubSearch").classList.add("active");
+        loadBillHistory();
+      }
+      if (subView === 'stock') {
+        document.getElementById("btnSubStock").classList.add("active");
+        loadInwardAuditLog();
+      }
+    };
+
+    function detectHsnFromName(name) {
+      var n = (name || "").toLowerCase().trim();
+      if (!n) return "";
+      if (n.includes("labour") || n.includes("service") || n.includes("repair")) return "998519";
+      if (n.includes("fan") || n.includes("cooler") || n.includes("exhaust")) return "8414";
+      if (n.includes("wire") || n.includes("cable") || n.includes("cord")) return "8544";
+      if (n.includes("switch") || n.includes("socket") || n.includes("mcb") || n.includes("regulator") || n.includes("holder")) return "8536";
+      if (n.includes("board") || n.includes("gang box") || n.includes("plate") || n.includes("sheet")) return "8538";
+      if (n.includes("led") || n.includes("bulb") || n.includes("tube") || n.includes("batten")) return "8539";
+      if (n.includes("iron") || n.includes("press") || n.includes("geyser") || n.includes("heater")) return "8516";
+      return "";
+    }
+
+    function resolveSmartHsn(itemName) {
+      var clean = (itemName || "").trim();
+      var match = cachedItems.find(function(x) { return x.name.toLowerCase() === clean.toLowerCase(); });
+      if (match && match.hsn && match.hsn !== "-") return match.hsn;
+      var catHsn = detectHsnFromName(clean);
+      if (catHsn) return catHsn;
+      if (confirm('"' + clean + '" is a new item without category.\nAssign default HSN (8538)?')) return "8538";
+      return "";
+    }
+
+    function getWordsText(num) {
+      num = parseFloat(num) || 0;
+      var rupees = Math.floor(num);
+      var paise = Math.round((num - rupees) * 100);
+
+      var a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+      var b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+      function inW(n) {
+        if (n === 0) return '';
+        if (n < 20) return a[n];
+        if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
+        if (n < 1000) return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' and ' + inW(n % 100) : '');
+        if (n < 100000) return inW(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 !== 0 ? ' ' + inW(n % 1000) : '');
+        if (n < 10000000) return inW(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 !== 0 ? ' ' + inW(n % 100000) : '');
+        return inW(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 !== 0 ? ' ' + inW(n % 10000000) : '');
+      }
+
+      var res = (rupees === 0 ? 'Zero' : inW(rupees)) + ' Rupees';
+      if (paise > 0) res += ' and ' + inW(paise) + ' Paise';
+      return res + ' Only';
+    }
+
+    window.onRateTypeChange = function() {
+      if (currentItemObj && !currentItemObj.name.toLowerCase().includes("labour")) resolveRate();
+      calculateItemTotal();
+      checkFormState();
+    };
+
+    function resolveRate() {
+      if (!currentItemObj) return;
+      var type = document.getElementById("rateType").value;
+      var r = currentItemObj.custRate || 0;
+      if (type === "Electrician Rate") r = currentItemObj.elecRate || r;
+      if (type === "Wholesale Rate") r = currentItemObj.famRate || r;
+      document.getElementById("itemRate").value = "₹" + parseFloat(r).toFixed(2);
+    }
+
+    window.calculateItemTotal = function() {
+      var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
+      var baseRate = parseFloat(rVal) || 0;
+      var disc = parseFloat(document.getElementById("itemDisc").value) || 0;
+      var qty = parseFloat(document.getElementById("itemQty").value) || 1;
+      var discountedRate = Math.max(0, baseRate - disc);
+
+      var isGst = document.getElementById("isGstBill").value.includes("Yes");
+      var gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
+      var gstPerPc = isGst ? ((discountedRate * gstPct) / 100) : 0;
+
+      document.getElementById("itemGstAdded").value = "+₹" + gstPerPc.toFixed(2);
+      var finalUnitRate = discountedRate + gstPerPc;
+      var total = finalUnitRate * qty;
+      document.getElementById("itemTotal").value = total.toFixed(2);
+      return { finalUnitRate: finalUnitRate, total: total, gstPerPc: gstPerPc };
+    };
+
+    window.addItemToBill = function() {
+      var name = document.getElementById("itemSearch").value.trim();
+      if (!name) return;
+
+      var bMode = document.getElementById("billMode").value;
+      var rType = document.getElementById("rateType").value;
+      var gstMode = document.getElementById("isGstBill").value;
+      var pMode = document.getElementById("paymentMode").value;
+      if (!bMode || !rType || !gstMode || !pMode) {
+        alert("Please select Mode, Rate Type, GST Bill?, and Payment mode before adding items!");
+        return;
+      }
+
+      var found = cachedItems.some(function(x) { return x.name.toLowerCase() === name.toLowerCase(); });
+      if (!found) { alert("Item not found in inventory! Please inward stock first."); return; }
+
+      var calc = calculateItemTotal();
+      var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
+      var baseRate = parseFloat(rVal) || 0;
+      if (baseRate <= 0) { alert("Please enter valid rate!"); return; }
+
+      billItems.push({
+        name: name,
+        serialNo: document.getElementById("itemSerial").value.trim() || "-",
+        hsn: document.getElementById("itemHsn").value.trim() || "-",
+        baseRate: baseRate,
+        discount: parseFloat(document.getElementById("itemDisc").value) || 0,
+        gstPerPc: calc.gstPerPc,
+        finalRate: calc.finalUnitRate,
+        qty: parseFloat(document.getElementById("itemQty").value) || 1,
+        total: calc.total
+      });
+
+      renderBillTable();
+      document.getElementById("itemSearch").value = "";
+      document.getElementById("itemSerial").value = "";
+      document.getElementById("itemHsn").value = "";
+      document.getElementById("itemRate").value = "Locked";
+      document.getElementById("itemRate").readOnly = true;
+      document.getElementById("itemDisc").value = "0";
+      document.getElementById("itemQty").value = "1";
+      document.getElementById("itemTotal").value = "0.00";
+      currentItemObj = null;
+      checkFormState();
+    };
+
+    function renderBillTable() {
+      var tbody = document.getElementById("billItemsTbody");
+      tbody.innerHTML = "";
+      var grand = 0, totalUnits = 0;
+
+      billItems.forEach(function(it, idx) {
+        grand += it.total;
+        totalUnits += it.qty;
+        var snDisplay = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#d97706;">' + it.serialNo + '</small>' : '';
+        tbody.innerHTML += "<tr>" +
+          "<td>" + (idx + 1) + "</td>" +
+          "<td><b>" + it.name + "</b>" + snDisplay + "</td>" +
+          "<td>" + it.hsn + "</td>" +
+          "<td>₹" + it.baseRate.toFixed(2) + "</td>" +
+          "<td style='color:#059669;'>-₹" + it.discount.toFixed(2) + "</td>" +
+          "<td style='color:#b45309;'>+₹" + it.gstPerPc.toFixed(2) + "</td>" +
+          "<td>" + it.qty + "</td>" +
+          "<td>₹" + it.total.toFixed(2) + "</td>" +
+          "<td><button class='btn-del' onclick='deleteBillItem(" + idx + ")'>✕</button></td>" +
+          "</tr>";
+      });
+
+      document.getElementById("lblTotalItemCount").innerText = billItems.length;
+      document.getElementById("lblTotalUnitsCount").innerText = totalUnits + " Pcs";
+      document.getElementById("lblGrandTotal").innerText = "₹" + grand.toFixed(2);
+    }
+
+    window.deleteBillItem = function(idx) {
+      billItems.splice(idx, 1);
+      renderBillTable();
+      checkFormState();
+    };
+
+    function checkFormState() {
+      var bMode = document.getElementById("billMode").value;
+      var rType = document.getElementById("rateType").value;
+      var gstMode = document.getElementById("isGstBill").value;
+      var pMode = document.getElementById("paymentMode").value;
+
+      var ok = bMode && rType && gstMode && pMode &&
+               document.getElementById("custName").value.trim() && 
+               document.getElementById("custPhone").value.trim().length >= 10 && 
+               billItems.length > 0;
+      document.getElementById("btnSubmitBill").disabled = !ok;
+    }
+
+    window.submitBillToBackend = async function() {
+      var btn = document.getElementById("btnSubmitBill");
+      btn.disabled = true;
+      btn.innerText = "⏳ Generating Bill & Drive PDF...";
+
+      var isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
+      var totalAmt = billItems.reduce(function(acc, c) { return acc + c.total; }, 0);
+
+      var payload = {
+        billMode: document.getElementById("billMode").value.includes("Estimate") ? "Estimate" : "Invoice",
+        billDate: document.getElementById("billDate").value,
+        rateType: document.getElementById("rateType").value,
+        isGst: isGstSelected,
+        paymentMode: document.getElementById("paymentMode").value,
+        customerName: document.getElementById("custName").value.trim(),
+        phone: document.getElementById("custPhone").value.trim(),
+        address: document.getElementById("custAddress").value.trim(),
+        gstin: document.getElementById("custGstin").value.trim(),
+        items: billItems,
+        grandTotal: totalAmt
+      };
+
+      var res = await apiCall("processBillOrEstimate", payload);
+      btn.disabled = false;
+      btn.innerText = "⚡ Checkout / Save Bill & Generate PDF";
+
+      if (res && res.success) {
+        lastGeneratedBillData = {
+          docNo: res.docNo,
+          customerName: payload.customerName,
+          phone: payload.phone,
+          address: payload.address,
+          gstin: payload.gstin,
+          paymentMode: payload.paymentMode,
+          isGst: isGstSelected,
+          grandTotal: totalAmt,
+          amount: totalAmt,
+          date: payload.billDate,
+          items: JSON.parse(JSON.stringify(billItems)),
+          pdfUrl: res.pdfUrl || ""
+        };
+        document.getElementById("lblSuccessDocNo").innerText = "Doc No: " + res.docNo + " | Amount: ₹" + totalAmt.toFixed(2);
+        document.getElementById("checkoutSuccessModal").style.display = "flex";
+      } else {
+        alert("Server error. Please retry!");
+      }
+    };
+
     function buildReceiptHtml(b) {
       if (!b) return "";
       var lines = "";
@@ -1788,9 +2124,9 @@
         '<td style="width:40%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">INVOICE DETAILS</div>' +
         '<table style="width:100%; border:none; font-size:10.5px;">' +
-        '<tr><td style="border:none; padding:2px 0;"><b>Invoice No.:</b></td><td style="border:none; padding:2px 0; text-align:right;"><b>' + b.docNo + '</b></td></tr>' +
-        '<tr><td style="border:none; padding:2px 0;"><b>Dated:</b></td><td style="border:none; padding:2px 0; text-align:right;">' + b.date + '</td></tr>' +
-        '<tr><td style="border:none; padding:2px 0;"><b>Payment Mode:</b></td><td style="border:none; padding:2px 0; text-align:right;">' + (b.paymentMode || 'Cash') + '</td></tr>' +
+        '<tr><td style='border:none; padding:2px 0;'><b>Invoice No.:</b></td><td style='border:none; padding:2px 0; text-align:right;'><b>' + b.docNo + '</b></td></tr>' +
+        '<tr><td style='border:none; padding:2px 0;'><b>Dated:</b></td><td style='border:none; padding:2px 0; text-align:right;'>' + b.date + '</td></tr>' +
+        '<tr><td style='border:none; padding:2px 0;'><b>Payment Mode:</b></td><td style='border:none; padding:2px 0; text-align:right;'>' + (b.paymentMode || 'Cash') + '</td></tr>' +
         estimatePrintValidity +
         '</table>' +
         '</td>' +
