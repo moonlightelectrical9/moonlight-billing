@@ -271,7 +271,7 @@
     <div class="modal-box">
       <div style="font-size: 44px; margin-bottom: 4px;">👋</div>
       <h2 style="font-size: 20px; color:#0f172a; margin-bottom: 6px;">Greetings!</h2>
-      <p style="font-size: 14.5px; color:#475569; margin-bottom: 22px;">Welcome to Moonlight Electricals, <b id="lblWelcomeUser">Varun Sharma (Owner)</b>!</p>
+      <p style="font-size: 14.5px; color:#475569; margin-bottom: 22px;">Welcome to Moonlight Electricals, <b id="lblWelcomeUser">User</b>!</p>
       <button class="btn-checkout" onclick="enterAppFromWelcome()">Thank You / Enter Dashboard ➔</button>
     </div>
   </div>
@@ -295,7 +295,7 @@
     </div>
   </div>
 
-  <!-- 4. PERMISSIONS CHECKBOX MODAL -->
+  <!-- 4. PERMISSIONS CHECKBOX MODAL (WITH LOW STOCK ALERTS PERMISSION) -->
   <div id="permModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box" style="text-align:left; max-width:400px;">
       <h3 style="font-size:16px; margin-bottom:10px; color:#0f172a;">⚙ Assign Access Permissions</h3>
@@ -309,6 +309,8 @@
         <label><input type="checkbox" id="chkPermSearch"> 🔍 Search Bill & Reprint</label>
         <label><input type="checkbox" id="chkPermStock"> 📦 Stock Inward & Item Purchases</label>
         <label><input type="checkbox" id="chkPermSet"> ⚙ Settings & User Management</label>
+        <div style="border-top:1px dashed #cbd5e1; margin-top:4px; padding-top:6px;"></div>
+        <label style="color:#b45309;"><input type="checkbox" id="chkPermAlertStock"> ⚠️ Low Stock Alerts Visibility (alert_stock)</label>
       </div>
 
       <div style="display:flex; gap:10px;">
@@ -670,7 +672,7 @@
               <h3 style="font-weight:900;">Stock & Inventory Management</h3>
               <div style="display:flex; gap:6px; flex-wrap:wrap;">
                 <button class="btn-sync filter-btn-active" id="btnStkTabInward" onclick="setStockMode('inward')">📦 Add Inward</button>
-                <button class="btn-sync" id="btnStkTabHsn" onclick="setStockMode('hsn')">✏ Quick HSN</button>
+                <button class="btn-sync" id="btnStkTabHsn" onclick="setStockMode('hsn')">✏️ Quick HSN</button>
                 <button class="btn-sync" id="btnStkTabRate" onclick="setStockMode('rate')">💲 Quick Rates</button>
                 <button class="btn-sync" id="btnStkTabCorrect" onclick="setStockMode('correct')">🛠 Correct Qty</button>
                 <button class="btn-sync" id="btnStkTabPurchase" onclick="setStockMode('purchase')">🛍 Purchase Bill Entry</button>
@@ -914,7 +916,7 @@
       }
     });
 
-    // 🔐 UNIVERSAL SECURE LOGIN
+    // 🔐 DYNAMIC USER AUTHENTICATION
     window.doPasswordLogin = async function() {
       var phoneInput = document.getElementById("pwdLoginPhone").value.trim().replace(/\D/g, '');
       var phone = phoneInput.slice(-10);
@@ -937,33 +939,8 @@
       btn.innerText = "Verifying...";
       btn.disabled = true;
 
-      var savedLocalPin = localStorage.getItem("mle_pwd_" + phone) || "1234";
-      var isOwner = (phone === "8860706865");
-
-      if ((isOwner && (pwd === "1234" || pwd === "8860" || pwd === savedLocalPin)) || (pwd === savedLocalPin)) {
-        currentUser = {
-          name: isOwner ? "Varun Sharma (Owner)" : "Staff",
-          phone: phone,
-          role: isOwner ? "Admin" : "Staff",
-          permissions: isOwner ? "all" : "gen,repeat",
-          pin: pwd,
-          isOwner: isOwner
-        };
-        try {
-          localStorage.setItem("mle_user", JSON.stringify(currentUser));
-          localStorage.setItem("mle_pwd_" + phone, pwd);
-        } catch(e) {}
-        btn.innerText = "🔐 LOGIN WITH PASSWORD";
-        btn.disabled = false;
-        showGreetingsWelcome();
-        return;
-      }
-
       try {
-        var fetchPromise = apiCall("verifyPasswordLogin", { phone: phone, password: pwd });
-        var timeoutPromise = new Promise(function(resolve) { setTimeout(function() { resolve(null); }, 12000); });
-        var res = await Promise.race([fetchPromise, timeoutPromise]);
-
+        var res = await apiCall("verifyPasswordLogin", { phone: phone, password: pwd });
         btn.innerText = "🔐 LOGIN WITH PASSWORD";
         btn.disabled = false;
 
@@ -982,7 +959,7 @@
           } catch(e) {}
           showGreetingsWelcome();
         } else {
-          err.innerText = (res && res.message) ? res.message : "Wrong password or timeout! Try again.";
+          err.innerText = (res && res.message) ? res.message : "Invalid Password or Unauthorized User!";
           err.style.display = "block";
         }
       } catch(ex) {
@@ -1093,7 +1070,6 @@
       var pField = document.getElementById("purDate");
       if (pField) pField.value = todayFormatted;
 
-      // ⚡ PRE-INITIALIZE DROPDOWNS IMMEDIATELY ON LOAD (NEVER BLANK)
       setupDynamicDateBounds(
         { year: 2026, month: 8, dateStr: "2026-09-01" },
         { year: now.getFullYear(), month: now.getMonth(), dateStr: todayFormatted }
@@ -1129,17 +1105,23 @@
       }
     }
 
+    // ⚙️ PRECISE USER PERMISSION CONTROL
     function applyUserPermissions() {
       var perms = currentUser.permissions || "all";
       var isStaff = (currentUser.role !== "Admin");
       if (isStaff && perms !== "all") {
-        if (!perms.includes("dash")) document.getElementById("btnNavDash").style.display = "none";
-        if (!perms.includes("gen")) document.getElementById("btnSubGen").style.display = "none";
-        if (!perms.includes("repeat")) document.getElementById("btnSubRepeat").style.display = "none";
-        if (!perms.includes("khata")) document.getElementById("btnSubKhata").style.display = "none";
-        if (!perms.includes("search")) document.getElementById("btnSubSearch").style.display = "none";
-        if (!perms.includes("stock")) document.getElementById("btnSubStock").style.display = "none";
-        if (!perms.includes("set")) document.getElementById("btnNavSet").style.display = "none";
+        document.getElementById("btnNavDash").style.display = perms.includes("dash") ? "flex" : "none";
+        document.getElementById("btnSubGen").style.display = perms.includes("gen") ? "block" : "none";
+        document.getElementById("btnSubRepeat").style.display = perms.includes("repeat") ? "block" : "none";
+        document.getElementById("btnSubKhata").style.display = perms.includes("khata") ? "block" : "none";
+        document.getElementById("btnSubSearch").style.display = perms.includes("search") ? "block" : "none";
+        document.getElementById("btnSubStock").style.display = perms.includes("stock") ? "block" : "none";
+        document.getElementById("btnNavSet").style.display = perms.includes("set") ? "flex" : "none";
+
+        var canSeeAlerts = perms.includes("alert_stock");
+        if (!canSeeAlerts) {
+          document.getElementById("lowStockAlertBox").style.display = "none";
+        }
       }
     }
 
@@ -1180,7 +1162,7 @@
     };
 
     window.openMasterDriveFolder = function() {
-      var url = masterDriveFolderLink || "https://drive.google.com/drive/search?q=" + encodeURIComponent("Moon Light Electricals Bills");
+      var url = masterDriveFolderLink || "https://drive.google.com/drive/my-drive";
       window.open(url, "_blank");
     };
 
@@ -1615,6 +1597,7 @@
       document.getElementById("chkPermSearch").checked = isAll || currentPerms.includes("search");
       document.getElementById("chkPermStock").checked = isAll || currentPerms.includes("stock");
       document.getElementById("chkPermSet").checked = isAll || currentPerms.includes("set");
+      document.getElementById("chkPermAlertStock").checked = isAll || currentPerms.includes("alert_stock");
 
       document.getElementById("permModal").style.display = "flex";
     };
@@ -1632,9 +1615,10 @@
       if (document.getElementById("chkPermSearch").checked) list.push("search");
       if (document.getElementById("chkPermStock").checked) list.push("stock");
       if (document.getElementById("chkPermSet").checked) list.push("set");
+      if (document.getElementById("chkPermAlertStock").checked) list.push("alert_stock");
 
       var pStr = list.join(",");
-      if (list.length === 7) pStr = "all";
+      if (list.length === 8) pStr = "all";
 
       var res = await apiCall("updateUserPermissions", { phone: selectedPermUserPhone, permissions: pStr });
       if (res && res.success) {
@@ -1730,12 +1714,12 @@
         }
       });
       if (res && res.success) {
-        alert("Rates updated successfully!");
+        alert("Rates updated successfully for " + name + "!");
         refreshAppData();
       }
     };
 
-    // 🖨️ CLEAN HARD COPY INVOICE PRINT
+    // 🖨️️ STRICT CONDITIONAL BILL PRINT FORMAT
     function buildReceiptHtml(b) {
       if (!b) return "";
       var lines = "";
@@ -1778,8 +1762,14 @@
       var shopGstLine = (b.isGst) ? '<div style="font-weight:bold; margin-top:2px;">GSTIN/UIN: 07DBOPG3647H1ZF | State: Delhi, Code: 07</div>' : '';
       var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? '<div>GSTIN/UIN: ' + b.gstin + ' | State: Delhi, Code: 07</div>' : '';
 
+      var isEstimateDoc = false;
+      if (b.docNo) {
+        if (b.docNo.indexOf("EST") !== -1) isEstimateDoc = true;
+        if (b.docNo.indexOf("INV") !== -1) isEstimateDoc = false;
+      }
+      if (b.isInvoice === true) isEstimateDoc = false;
+
       var docHeading = "INVOICE";
-      var isEstimateDoc = (b.docNo && b.docNo.includes('EST'));
       if (isEstimateDoc) {
         docHeading = "ESTIMATE INVOICE";
       } else if (b.isGst) {
@@ -2053,11 +2043,13 @@
         }
       });
       if (res && res.success) {
-        alert("Stock auto-added successfully! New Total Stock: " + res.newStock);
+        alert("Stock auto-added successfully for " + name + "! New Total Stock: " + res.newStock);
         document.getElementById("stkName").value = "";
         document.getElementById("stkQty").value = "0";
         refreshAppData();
         loadInwardAuditLog();
+      } else {
+        alert((res && res.message) ? res.message : "Error updating stock!");
       }
     };
 
@@ -2067,9 +2059,11 @@
       if (!name || !hsn) { alert("Enter item and HSN code!"); return; }
       var res = await apiCall("updateHsnOnly", { data: { name: name, hsn: hsn } });
       if (res && res.success) {
-        alert("HSN code updated successfully!");
+        alert("HSN code updated successfully for " + name + "!");
         refreshAppData();
         loadInwardAuditLog();
+      } else {
+        alert((res && res.message) ? res.message : "Error updating HSN!");
       }
     };
 
@@ -2079,9 +2073,11 @@
       if (!name) { alert("Select item!"); return; }
       var res = await apiCall("correctStockQty", { data: { name: name, correctQty: qty } });
       if (res && res.success) {
-        alert("Real stock count overridden successfully! Set to: " + qty);
+        alert("Real stock count overridden successfully for " + name + "! Set to: " + qty);
         refreshAppData();
         loadInwardAuditLog();
+      } else {
+        alert((res && res.message) ? res.message : "Error correcting quantity!");
       }
     };
 
@@ -2159,7 +2155,10 @@
           bankSettings = res.bankInfo;
           if (res.driveFolderUrl) masterDriveFolderLink = res.driveFolderUrl;
 
-          if (res.alerts && res.alerts.length > 0) {
+          var perms = (currentUser && currentUser.permissions) ? currentUser.permissions : "all";
+          var canSeeAlerts = (currentUser && currentUser.role === "Admin") || perms === "all" || perms.includes("alert_stock");
+
+          if (canSeeAlerts && res.alerts && res.alerts.length > 0) {
             document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(function(a) { return "• " + a; }).join("<br>");
             document.getElementById("lowStockAlertBox").style.display = "block";
           } else {
@@ -2420,29 +2419,36 @@
         grandTotal: totalAmt
       };
 
-      var res = await apiCall("processBillOrEstimate", payload);
-      btn.disabled = false;
-      btn.innerText = "⚡ Checkout / Save Bill & Generate PDF";
+      try {
+        var res = await apiCall("processBillOrEstimate", payload);
+        btn.disabled = false;
+        btn.innerText = "⚡ Checkout / Save Bill & Generate PDF";
 
-      if (res && res.success) {
-        lastGeneratedBillData = {
-          docNo: res.docNo,
-          customerName: payload.customerName,
-          phone: payload.phone,
-          address: payload.address,
-          gstin: payload.gstin,
-          paymentMode: payload.paymentMode,
-          isGst: isGstSelected,
-          grandTotal: totalAmt,
-          amount: totalAmt,
-          date: payload.billDate,
-          items: JSON.parse(JSON.stringify(billItems)),
-          pdfUrl: res.pdfUrl || ""
-        };
-        document.getElementById("lblSuccessDocNo").innerText = "Doc No: " + res.docNo + " | Amount: ₹" + totalAmt.toFixed(2);
-        document.getElementById("checkoutSuccessModal").style.display = "flex";
-      } else {
-        alert("Server error. Please retry!");
+        if (res && res.success) {
+          lastGeneratedBillData = {
+            docNo: res.docNo,
+            customerName: payload.customerName,
+            phone: payload.phone,
+            address: payload.address,
+            gstin: payload.gstin,
+            paymentMode: payload.paymentMode,
+            isInvoice: !payload.billMode.includes("Estimate"),
+            isGst: isGstSelected,
+            grandTotal: totalAmt,
+            amount: totalAmt,
+            date: payload.billDate,
+            items: JSON.parse(JSON.stringify(billItems)),
+            pdfUrl: res.pdfUrl || ""
+          };
+          document.getElementById("lblSuccessDocNo").innerText = "Doc No: " + res.docNo + " | Amount: ₹" + totalAmt.toFixed(2);
+          document.getElementById("checkoutSuccessModal").style.display = "flex";
+        } else {
+          alert((res && res.message) ? ("Server Note: " + res.message) : "Server response delay. Please retry!");
+        }
+      } catch (e) {
+        btn.disabled = false;
+        btn.innerText = "⚡ Checkout / Save Bill & Generate PDF";
+        alert("Network Error: " + e.toString());
       }
     };
   </script>
