@@ -415,7 +415,7 @@
           <div id="lowStockItemsList" style="margin-top: 4px;"></div>
         </div>
 
-        <!-- VIEW 1: DASHBOARD -->
+        <!-- VIEW 1: DASHBOARD (HISTORICAL & CUSTOM DATE FILTERS) -->
         <div id="viewDashboard">
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
@@ -425,11 +425,34 @@
                   📅 Viewing Report For: TODAY
                 </div>
               </div>
-              <div style="display:flex; gap:6px;">
-                <button class="btn-sync filter-btn-active" id="btnFilterToday" onclick="filterDash('today')">Today</button>
-                <button class="btn-sync" id="btnFilterWeek" onclick="filterDash('week')">This Week</button>
-                <button class="btn-sync" id="btnFilterMonth" onclick="filterDash('month')">This Month</button>
-                <button class="btn-sync" id="btnFilterYear" onclick="filterDash('year')">Yearly</button>
+              <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                <button class="btn-sync filter-btn-active" id="btnFilterToday" onclick="applyDashMode('today')">Today</button>
+                <button class="btn-sync" id="btnFilterWeek" onclick="applyDashMode('week')">This Week</button>
+                <button class="btn-sync" id="btnFilterMonth" onclick="applyDashMode('month')">Month View ▾</button>
+                <button class="btn-sync" id="btnFilterYear" onclick="applyDashMode('year')">Yearly ▾</button>
+                <button class="btn-sync" id="btnFilterCustom" onclick="applyDashMode('custom')">📅 Specific Date</button>
+              </div>
+            </div>
+
+            <!-- Dynamic Selectors (Month View / Year View / Custom Date Picker) -->
+            <div id="dashSelectorBar" style="display:none; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; margin-bottom:14px; align-items:center; gap:10px; flex-wrap:wrap;">
+              <!-- Month Selector -->
+              <div id="selectorMonthGroup" style="display:none; gap:10px; align-items:center; flex-wrap:wrap;">
+                <label style="font-size:12px; font-weight:800; color:#334155;">SELECT YEAR & MONTH:</label>
+                <select id="selDashYear" style="width:110px; padding:6px 10px;" onchange="onDashDropdownChange()"></select>
+                <select id="selDashMonth" style="width:130px; padding:6px 10px;" onchange="onDashDropdownChange()"></select>
+              </div>
+
+              <!-- Year Only Selector -->
+              <div id="selectorYearGroup" style="display:none; gap:10px; align-items:center; flex-wrap:wrap;">
+                <label style="font-size:12px; font-weight:800; color:#334155;">SELECT FINANCIAL YEAR:</label>
+                <select id="selDashYearOnly" style="width:120px; padding:6px 10px;" onchange="onDashDropdownChange()"></select>
+              </div>
+
+              <!-- Specific Single Date Selector -->
+              <div id="selectorCustomGroup" style="display:none; gap:10px; align-items:center; flex-wrap:wrap;">
+                <label style="font-size:12px; font-weight:800; color:#334155;">PICK SPECIFIC DATE (ANY DAY/YEAR):</label>
+                <input type="date" id="selDashCustomDate" style="width:160px; padding:6px 10px;" onchange="onDashDropdownChange()">
               </div>
             </div>
 
@@ -822,11 +845,22 @@
           </div>
         </div>
 
-        <!-- VIEW 6: SETTINGS, USERS & PERMISSIONS -->
+        <!-- VIEW 6: SETTINGS, USERS & DRIVE FOLDER BUTTON -->
         <div id="viewSettings" style="display: none;">
           <div class="card">
             <h3 style="font-weight:900; margin-bottom:14px;">ERP Settings & Configurations</h3>
             
+            <!-- Direct Drive Master Folder Access Button -->
+            <div style="background:#fffbeb; border:2px solid #fde68a; border-radius:8px; padding:16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <div>
+                <h4 style="font-weight:900; color:#b45309; font-size:15px;">📁 Master Google Drive Bills Repository</h4>
+                <div style="font-size:12px; color:#78350f; margin-top:2px;">Access all categorized GST Invoices, Regular Invoices, and Estimates saved month-by-month directly on Google Drive.</div>
+              </div>
+              <button class="btn-checkout" style="background:#d97706; color:#ffffff; width:auto; padding:10px 20px; font-size:13px;" onclick="openMasterDriveFolder()">
+                📁 Open Bills Google Drive Folder ➔
+              </button>
+            </div>
+
             <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:16px; margin-bottom:18px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h4 style="font-weight:800; color:#0284c7;">👥 User Accounts, Role & Access Permissions (5 Users)</h4>
@@ -871,9 +905,13 @@
     var lastGeneratedBillData = null;
     var cachedBillHistory = [];
     var bankSettings = null;
+    var masterDriveFolderLink = "";
     var sessionTimerInterval = null;
     var deferredPrompt = null;
     var selectedPermUserPhone = "";
+
+    var activeDashMode = "today";
+    var mNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
@@ -1068,6 +1106,8 @@
       var pField = document.getElementById("purDate");
       if (pField) pField.value = todayFormatted;
 
+      populateDashboardDateDropdowns();
+
       try {
         var stored = localStorage.getItem("mle_user");
         if (stored && stored.startsWith("{")) currentUser = JSON.parse(stored);
@@ -1148,381 +1188,190 @@
       document.getElementById("adminSecurityAlertBox").style.display = "none";
     };
 
-    window.handleItemSearchFocus = function(e) {
-      if (e) e.stopPropagation();
-      var field = document.getElementById("itemSearch");
-      field.value = "";
-      renderItemDropdown("");
+    window.openMasterDriveFolder = function() {
+      var url = masterDriveFolderLink || "https://drive.google.com/drive/search?q=Moon%20Light%20Electricals%20Bills";
+      window.open(url, "_blank");
     };
 
-    window.onItemSearchInput = function() {
-      var val = document.getElementById("itemSearch").value.trim().toLowerCase();
-      renderItemDropdown(val);
-    };
+    // DASHBOARD HISTORICAL DROPDOWNS & FILTER LOGIC
+    function populateDashboardDateDropdowns() {
+      var now = new Date();
+      var currYear = now.getFullYear();
+      var currMonth = now.getMonth();
 
-    function renderItemDropdown(val) {
-      var menu = document.getElementById("billingItemMenu");
-      menu.innerHTML = "";
+      var ySel = document.getElementById("selDashYear");
+      var yoSel = document.getElementById("selDashYearOnly");
+      var mSel = document.getElementById("selDashMonth");
 
-      var itemsToUse = cachedItems.length > 0 ? cachedItems : [
-        { name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, stock: "∞" },
-        { name: "Fan 1200mm", hsn: "8414", custRate: 1550, elecRate: 1450, famRate: 1400, stock: 12 },
-        { name: "Jugnu 1W White", hsn: "8539", custRate: 410, elecRate: 380, famRate: 350, stock: 50 },
-        { name: "1.5 Sqmm Wire (90m)", hsn: "8544", custRate: 1250, elecRate: 1150, famRate: 1100, stock: 25 },
-        { name: "Modular Switch 6A", hsn: "8536", custRate: 35, elecRate: 28, famRate: 25, stock: 200 }
-      ];
+      ySel.innerHTML = "";
+      yoSel.innerHTML = "";
+      for (var y = currYear + 1; y >= currYear - 3; y--) {
+        ySel.innerHTML += "<option value='" + y + "'" + (y === currYear ? " selected" : "") + ">" + y + "</option>";
+        yoSel.innerHTML += "<option value='" + y + "'" + (y === currYear ? " selected" : "") + ">" + y + "</option>";
+      }
 
-      var filtered = !val ? itemsToUse.slice(0, 40) : itemsToUse.filter(function(it) {
-        return it.name.toLowerCase().includes(val);
+      mSel.innerHTML = "";
+      mNames.forEach(function(mn, idx) {
+        mSel.innerHTML += "<option value='" + idx + "'" + (idx === currMonth ? " selected" : "") + ">" + mn + "</option>";
       });
 
-      if (filtered.length === 0) {
-        menu.style.display = "none";
-        return;
-      }
-
-      filtered.forEach(function(it) {
-        var div = document.createElement("div");
-        div.className = "dropdown-item";
-        div.innerHTML = "<span><b>" + it.name + "</b></span> <small>Stock: " + it.stock + " | ₹" + it.custRate + "</small>";
-        div.onmousedown = function(ev) {
-          ev.preventDefault();
-          selectBillingItem(it);
-        };
-        menu.appendChild(div);
-      });
-      menu.style.display = "block";
+      var mStr = String(currMonth + 1).padStart(2, '0');
+      var dStr = String(now.getDate()).padStart(2, '0');
+      document.getElementById("selDashCustomDate").value = currYear + "-" + mStr + "-" + dStr;
     }
 
-    function selectBillingItem(item) {
-      document.getElementById("itemSearch").value = item.name;
-      document.getElementById("billingItemMenu").style.display = "none";
-      currentItemObj = item;
-      document.getElementById("itemHsn").value = resolveSmartHsn(item.name);
-
-      var isLabour = item.name.toLowerCase().includes("labour");
-      var rateField = document.getElementById("itemRate");
-      if (isLabour) {
-        rateField.readOnly = false;
-        rateField.placeholder = "Enter Amount";
-        rateField.value = "";
-        rateField.focus();
-      } else {
-        rateField.readOnly = true;
-        resolveRate();
-      }
-      calculateItemTotal();
-    }
-
-    window.onGstToggleChange = function() {
-      var isGst = document.getElementById("isGstBill").value.includes("Yes");
-      if (!isGst) {
-        document.getElementById("custGstin").value = "";
-      }
-      calculateItemTotal();
-      checkFormState();
-    };
-
-    async function loadRepeatCustomers() {
-      var c = document.getElementById("repeatCustTableContainer");
-      c.innerHTML = "Loading regular customers directory...";
-      var res = await apiCall("getRepeatCustomers");
-      if (res && res.customers) {
-        var html = '<div class="table-wrap"><table><thead><tr><th>Customer Name</th><th>Address</th><th>Mobile</th><th>Repeat Bills</th><th>GSTIN</th><th>Action</th></tr></thead><tbody>';
-        res.customers.forEach(function(cust) {
-          html += "<tr>" +
-            "<td><b>" + cust.name + "</b></td>" +
-            "<td>" + cust.address + "</td>" +
-            "<td>" + cust.phone + "</td>" +
-            "<td><span style='background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:12px; font-weight:800; font-size:11px;'>⭐ " + cust.count + " Bills</span></td>" +
-            "<td>" + (cust.gstin || "-") + "</td>" +
-            "<td><button class='btn-sync' style='padding:4px 10px; font-weight:900;' onclick='useRepeatCustomer(\"" + cust.name + "\", \"" + cust.phone + "\", \"" + cust.address + "\", \"" + (cust.gstin || "") + "\")'>➕ Use</button></td>" +
-            "</tr>";
-        });
-        html += '</tbody></table></div>';
-        c.innerHTML = html;
-      }
-    }
-
-    window.useRepeatCustomer = function(name, phone, address, gstin) {
-      switchBillingView('gen');
-      document.getElementById("custName").value = name;
-      document.getElementById("custPhone").value = phone;
-      document.getElementById("custAddress").value = address;
-      if (gstin && gstin !== "-" && gstin !== "") {
-        document.getElementById("custGstin").value = gstin;
-        document.getElementById("isGstBill").value = "Yes (GST Invoice)";
-      } else {
-        document.getElementById("custGstin").value = "";
-        document.getElementById("isGstBill").value = "No (Regular Bill)";
-      }
-      calculateItemTotal();
-      checkFormState();
-      document.getElementById("cardBillForm").scrollIntoView({ behavior: 'smooth' });
-    };
-
-    window.handleStockClick = function(e, inputId, menuId) {
-      if (e) e.stopPropagation();
-      var field = document.getElementById(inputId);
-      field.value = "";
-      onStockSearchInput(inputId, menuId);
-    };
-
-    window.onStockSearchInput = function(inputId, menuId) {
-      var val = document.getElementById(inputId).value.trim().toLowerCase();
-      var menu = document.getElementById(menuId);
-      menu.innerHTML = "";
-
-      var itemsToUse = cachedItems.length > 0 ? cachedItems : [
-        { name: "Fan 1200mm", hsn: "8414", custRate: 1550, elecRate: 1450, famRate: 1400, stock: 12 },
-        { name: "Jugnu 1W White", hsn: "8539", custRate: 410, elecRate: 380, famRate: 350, stock: 50 },
-        { name: "1.5 Sqmm Wire (90m)", hsn: "8544", custRate: 1250, elecRate: 1150, famRate: 1100, stock: 25 },
-        { name: "Modular Switch 6A", hsn: "8536", custRate: 35, elecRate: 28, famRate: 25, stock: 200 }
-      ];
-
-      var filtered = !val ? itemsToUse.slice(0, 40) : itemsToUse.filter(function(it) { return it.name.toLowerCase().includes(val); });
-      if (filtered.length === 0) { menu.style.display = "none"; return; }
-
-      filtered.forEach(function(it) {
-        var div = document.createElement("div");
-        div.className = "dropdown-item";
-        div.innerHTML = "<span><b>" + it.name + "</b></span> <small>Stock: " + it.stock + "</small>";
-        div.onmousedown = function(e) {
-          e.preventDefault();
-          document.getElementById(inputId).value = it.name;
-          if (inputId === "stkName") {
-            document.getElementById("stkHsn").value = it.hsn || "";
-            document.getElementById("stkCustRate").value = it.custRate || 0;
-            document.getElementById("stkElecRate").value = it.elecRate || 0;
-            document.getElementById("stkFamRate").value = it.famRate || 0;
-          } else if (inputId === "hsnOnlyName") {
-            document.getElementById("hsnOnlyCode").value = it.hsn || "";
-          } else if (inputId === "rateOnlyName") {
-            document.getElementById("rateOnlyCust").value = it.custRate || 0;
-            document.getElementById("rateOnlyElec").value = it.elecRate || 0;
-            document.getElementById("rateOnlyFam").value = it.famRate || 0;
-          } else if (inputId === "correctName") {
-            document.getElementById("correctQty").value = it.stock || 0;
-          } else if (inputId === "purItemName") {
-            document.getElementById("purPrice").value = it.famRate || it.custRate || 0;
-            calcPurTotal();
-          }
-          menu.style.display = "none";
-        };
-        menu.appendChild(div);
-      });
-      menu.style.display = "block";
-    };
-
-    // ACTIVE ORANGE HIGHLIGHT FOR STOCK INWARD BUTTONS
-    window.setStockMode = function(mode) {
-      ["Inward", "Hsn", "Rate", "Correct", "Purchase"].forEach(function(t) {
-        var b = document.getElementById("btnStkTab" + t);
+    window.applyDashMode = function(mode) {
+      activeDashMode = mode;
+      ["Today", "Week", "Month", "Year", "Custom"].forEach(function(m) {
+        var b = document.getElementById("btnFilter" + m);
         if (b) b.classList.remove("filter-btn-active");
       });
 
-      var mapBtn = { inward: "btnStkTabInward", hsn: "btnStkTabHsn", rate: "btnStkTabRate", correct: "btnStkTabCorrect", purchase: "btnStkTabPurchase" };
+      var mapBtn = { today: "btnFilterToday", week: "btnFilterWeek", month: "btnFilterMonth", year: "btnFilterYear", custom: "btnFilterCustom" };
       if (mapBtn[mode] && document.getElementById(mapBtn[mode])) {
         document.getElementById(mapBtn[mode]).classList.add("filter-btn-active");
       }
 
-      document.getElementById("boxStockInward").style.display = (mode === 'inward') ? 'block' : 'none';
-      document.getElementById("boxStockHsn").style.display = (mode === 'hsn') ? 'block' : 'none';
-      document.getElementById("boxStockRate").style.display = (mode === 'rate') ? 'block' : 'none';
-      document.getElementById("boxStockCorrect").style.display = (mode === 'correct') ? 'block' : 'none';
-      document.getElementById("boxStockPurchase").style.display = (mode === 'purchase') ? 'block' : 'none';
-    };
+      var bar = document.getElementById("dashSelectorBar");
+      var mGroup = document.getElementById("selectorMonthGroup");
+      var yGroup = document.getElementById("selectorYearGroup");
+      var cGroup = document.getElementById("selectorCustomGroup");
 
-    window.calcPurTotal = function() {
-      var q = parseFloat(document.getElementById("purQty").value) || 0;
-      var p = parseFloat(document.getElementById("purPrice").value) || 0;
-      document.getElementById("purTotal").value = (q * p).toFixed(2);
-    };
-
-    window.submitPurchaseEntry = async function() {
-      var name = document.getElementById("purItemName").value.trim();
-      var qty = parseFloat(document.getElementById("purQty").value) || 0;
-      var price = parseFloat(document.getElementById("purPrice").value) || 0;
-      if (!name || qty <= 0) { alert("Enter valid item and quantity!"); return; }
-
-      var res = await apiCall("savePurchaseEntry", {
-        data: {
-          date: document.getElementById("purDate").value,
-          name: name,
-          qty: qty,
-          price: price,
-          total: qty * price,
-          vendor: document.getElementById("purVendor").value,
-          paymentMode: document.getElementById("purPayMode").value
-        }
-      });
-      if (res && res.success) {
-        alert("Purchase entry saved and stock auto-incremented!");
-        document.getElementById("purItemName").value = "";
-        refreshAppData();
-        loadDashboardAnalytics();
+      if (mode === "month") {
+        bar.style.display = "flex";
+        mGroup.style.display = "flex";
+        yGroup.style.display = "none";
+        cGroup.style.display = "none";
+      } else if (mode === "year") {
+        bar.style.display = "flex";
+        mGroup.style.display = "none";
+        yGroup.style.display = "flex";
+        cGroup.style.display = "none";
+      } else if (mode === "custom") {
+        bar.style.display = "flex";
+        mGroup.style.display = "none";
+        yGroup.style.display = "none";
+        cGroup.style.display = "flex";
+      } else {
+        bar.style.display = "none";
       }
+
+      renderDashboardAnalytics();
     };
 
-    window.submitRateOnly = async function() {
-      var name = document.getElementById("rateOnlyName").value.trim();
-      if (!name) { alert("Select item!"); return; }
-      var res = await apiCall("updateRateOnly", {
-        data: {
-          name: name,
-          custRate: document.getElementById("rateOnlyCust").value,
-          elecRate: document.getElementById("rateOnlyElec").value,
-          famRate: document.getElementById("rateOnlyFam").value
+    window.onDashDropdownChange = function() {
+      renderDashboardAnalytics();
+    };
+
+    function renderDashboardAnalytics() {
+      if (!window.dashData || !window.dashData.daysMap) return;
+      var daysMap = window.dashData.daysMap;
+      var now = new Date();
+
+      var cashSale = 0, onlineSale = 0, totalSale = 0, profitSale = 0;
+      var cashPur = 0, onlinePur = 0, totalPur = 0;
+      var dayRows = [];
+      var badgeLabel = "";
+
+      if (activeDashMode === "today") {
+        var tKey = now.getFullYear() + "-" + ("0" + (now.getMonth() + 1)).slice(-2) + "-" + ("0" + now.getDate()).slice(-2);
+        badgeLabel = "📅 Viewing Report For: TODAY (" + now.getDate() + "-Oct-" + now.getFullYear() + ")";
+        if (daysMap[tKey]) {
+          var t = daysMap[tKey];
+          cashSale = t.cash; onlineSale = t.online; totalSale = t.total; profitSale = t.profit;
+          cashPur = t.purCash; onlinePur = t.purOnline; totalPur = t.purTotal;
         }
-      });
-      if (res && res.success) {
-        alert("Rates updated successfully!");
-        refreshAppData();
-      }
-    };
-
-    async function loadUsersList() {
-      var c = document.getElementById("usersListContainer");
-      c.innerHTML = "Loading users list...";
-      var res = await apiCall("getUsersList");
-      if (res && res.users) {
-        var html = '<div class="table-wrap"><table><thead><tr><th>User Name</th><th>Mobile</th><th>Role</th><th>Status</th><th>Permissions</th><th>Actions</th></tr></thead><tbody>';
-        res.users.forEach(function(u) {
-          var isOwner = (u.phone === "8860706865" || u.isOwner === true);
-          var isAct = (u.status === "Active");
-          var btnColor = isAct ? "color:#dc2626;" : "color:#059669;";
-          var btnText = isAct ? "🔴 Deactivate" : "🟢 Activate";
-
-          var actionHtml = "";
-          if (isOwner) {
-            actionHtml = '<span style="color:#d97706; font-weight:900; font-size:12px; background:#fef3c7; padding:4px 10px; border-radius:12px; border:1px solid #fde68a;">Owner</span>';
-          } else {
-            actionHtml = '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px; ' + btnColor + '" onclick="toggleUserStatus(\'' + u.phone + '\')">' + btnText + '</button>' +
-                         '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px;" onclick="openPermModal(\'' + u.phone + '\', \'' + u.name + '\', \'' + u.permissions + '\')">⚙️ Access</button>' +
-                         '<button class="btn-sync" style="padding:3px 8px; font-size:11px; color:#dc2626;" onclick="deleteUserAccount(\'' + u.phone + '\', \'' + u.name + '\')">🗑 Delete</button>';
+      } else if (activeDashMode === "week") {
+        badgeLabel = "📅 Viewing Report For: THIS WEEK (Last 7 Days Day-Wise)";
+        var sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 3600 * 1000));
+        for (var k in daysMap) {
+          var itemDate = new Date(daysMap[k].year, daysMap[k].month, daysMap[k].day);
+          if (itemDate >= sevenDaysAgo && itemDate <= now) {
+            var itm = daysMap[k];
+            cashSale += itm.cash; onlineSale += itm.online; totalSale += itm.total; profitSale += itm.profit;
+            cashPur += itm.purCash; onlinePur += itm.purOnline; totalPur += itm.purTotal;
+            dayRows.push(itm);
           }
+        }
+      } else if (activeDashMode === "month") {
+        var selY = parseInt(document.getElementById("selDashYear").value, 10);
+        var selM = parseInt(document.getElementById("selDashMonth").value, 10);
+        badgeLabel = "📅 Viewing Report For: " + mNames[selM] + " " + selY + " (Full Month Day-Wise)";
+        for (var k in daysMap) {
+          if (daysMap[k].year === selY && daysMap[k].month === selM) {
+            var itm = daysMap[k];
+            cashSale += itm.cash; onlineSale += itm.online; totalSale += itm.total; profitSale += itm.profit;
+            cashPur += itm.purCash; onlinePur += itm.purOnline; totalPur += itm.purTotal;
+            dayRows.push(itm);
+          }
+        }
+      } else if (activeDashMode === "year") {
+        var selYr = parseInt(document.getElementById("selDashYearOnly").value, 10);
+        badgeLabel = "📅 Viewing Report For: FINANCIAL YEAR " + selYr + " (Month-Wise Summary)";
 
+        // Month-wise aggregation for this year
+        var monthlyMap = {};
+        mNames.forEach(function(mn, idx) { monthlyMap[idx] = { monthName: mn, cash:0, online:0, total:0, profit:0 }; });
+
+        for (var k in daysMap) {
+          if (daysMap[k].year === selYr) {
+            var itm = daysMap[k];
+            cashSale += itm.cash; onlineSale += itm.online; totalSale += itm.total; profitSale += itm.profit;
+            cashPur += itm.purCash; onlinePur += itm.purOnline; totalPur += itm.purTotal;
+            monthlyMap[itm.month].cash += itm.cash;
+            monthlyMap[itm.month].online += itm.online;
+            monthlyMap[itm.month].total += itm.total;
+            monthlyMap[itm.month].profit += itm.profit;
+          }
+        }
+      } else if (activeDashMode === "custom") {
+        var custDateVal = document.getElementById("selDashCustomDate").value;
+        if (daysMap[custDateVal]) {
+          var itm = daysMap[custDateVal];
+          badgeLabel = "📅 Viewing Report For Specific Date: " + itm.label;
+          cashSale = itm.cash; onlineSale = itm.online; totalSale = itm.total; profitSale = itm.profit;
+          cashPur = itm.purCash; onlinePur = itm.purOnline; totalPur = itm.purTotal;
+          dayRows.push(itm);
+        } else {
+          badgeLabel = "📅 Viewing Report For Specific Date: " + custDateVal + " (No transactions recorded)";
+        }
+      }
+
+      document.getElementById("lblActiveFilterBadge").innerText = badgeLabel;
+      document.getElementById("dashSaleCash").innerText = "₹" + cashSale.toFixed(2);
+      document.getElementById("dashSaleOnline").innerText = "₹" + onlineSale.toFixed(2);
+      document.getElementById("dashSaleTotal").innerText = "₹" + totalSale.toFixed(2);
+
+      document.getElementById("dashPurCash").innerText = "₹" + cashPur.toFixed(2);
+      document.getElementById("dashPurOnline").innerText = "₹" + onlinePur.toFixed(2);
+      document.getElementById("dashPurTotal").innerText = "₹" + totalPur.toFixed(2);
+
+      document.getElementById("dashProfitTotal").innerText = "₹" + profitSale.toFixed(2);
+      document.getElementById("dashStockAsset").innerText = "₹" + (window.dashData.closingStockAsset || 0).toFixed(2);
+
+      // Render Day-Wise or Month-Wise Tables
+      var dayBox = document.getElementById("boxDayWiseContainer");
+      if (activeDashMode === "year") {
+        document.getElementById("lblDayWiseTitle").innerText = "📅 " + selYr + ": Month-Wise Business Ledger";
+        var html = '<div class="table-wrap"><table><thead><tr><th>Month</th><th>Cash Sales</th><th>Online / UPI</th><th>Total Sales</th><th>Gross Profit</th></tr></thead><tbody>';
+        mNames.forEach(function(mn, idx) {
+          var mData = monthlyMap[idx];
           html += "<tr>" +
-            "<td><b>" + u.name + "</b></td>" +
-            "<td>" + u.phone + "</td>" +
-            "<td>" + u.role + "</td>" +
-            "<td><b style='color:" + (isAct ? "#059669" : "#dc2626") + "'>" + u.status + "</b></td>" +
-            "<td><small>" + u.permissions + "</small></td>" +
-            "<td>" + actionHtml + "</td>" +
+            "<td><b>" + mn + "</b></td>" +
+            "<td>₹" + mData.cash.toFixed(2) + "</td>" +
+            "<td>₹" + mData.online.toFixed(2) + "</td>" +
+            "<td><b style='color:#b45309;'>₹" + mData.total.toFixed(2) + "</b></td>" +
+            "<td><b style='color:#059669;'>₹" + mData.profit.toFixed(2) + "</b></td>" +
             "</tr>";
         });
         html += '</tbody></table></div>';
-        c.innerHTML = html;
-      }
-    }
-
-    window.toggleUserStatus = async function(phone) {
-      var res = await apiCall("toggleUserStatus", { phone: phone });
-      if (res && res.success) loadUsersList();
-    };
-
-    window.openPermModal = function(phone, name, currentPerms) {
-      selectedPermUserPhone = phone;
-      document.getElementById("permUserName").innerText = name;
-      document.getElementById("permUserPhone").innerText = phone;
-      
-      var isAll = (currentPerms === "all");
-      document.getElementById("chkPermGen").checked = isAll || currentPerms.includes("gen");
-      document.getElementById("chkPermRepeat").checked = isAll || currentPerms.includes("repeat");
-      document.getElementById("chkPermDash").checked = isAll || currentPerms.includes("dash");
-      document.getElementById("chkPermKhata").checked = isAll || currentPerms.includes("khata");
-      document.getElementById("chkPermSearch").checked = isAll || currentPerms.includes("search");
-      document.getElementById("chkPermStock").checked = isAll || currentPerms.includes("stock");
-      document.getElementById("chkPermSet").checked = isAll || currentPerms.includes("set");
-
-      document.getElementById("permModal").style.display = "flex";
-    };
-
-    window.closePermModal = function() {
-      document.getElementById("permModal").style.display = "none";
-    };
-
-    window.saveUserPermsFromModal = async function() {
-      var list = [];
-      if (document.getElementById("chkPermGen").checked) list.push("gen");
-      if (document.getElementById("chkPermRepeat").checked) list.push("repeat");
-      if (document.getElementById("chkPermDash").checked) list.push("dash");
-      if (document.getElementById("chkPermKhata").checked) list.push("khata");
-      if (document.getElementById("chkPermSearch").checked) list.push("search");
-      if (document.getElementById("chkPermStock").checked) list.push("stock");
-      if (document.getElementById("chkPermSet").checked) list.push("set");
-
-      var pStr = list.join(",");
-      if (list.length === 7) pStr = "all";
-
-      var res = await apiCall("updateUserPermissions", { phone: selectedPermUserPhone, permissions: pStr });
-      if (res && res.success) {
-        closePermModal();
-        loadUsersList();
-      }
-    };
-
-    window.deleteUserAccount = async function(phone, name) {
-      if (confirm("Are you sure you want to permanently delete user " + name + " (" + phone + ")? This action cannot be undone.")) {
-        var res = await apiCall("deleteUser", { phone: phone });
-        if (res && res.success) {
-          alert("User deleted successfully!");
-          loadUsersList();
-        } else {
-          alert(res.message || "Cannot delete user!");
-        }
-      }
-    };
-
-    window.createNewUser = async function() {
-      var name = document.getElementById("newUserName").value.trim();
-      var phone = document.getElementById("newUserPhone").value.trim();
-      var pin = document.getElementById("newUserPin").value.trim() || "1234";
-      var role = document.getElementById("newUserRole").value;
-      if (!name || phone.length !== 10) { alert("Enter valid name and 10-digit mobile!"); return; }
-
-      var res = await apiCall("createUser", { data: { name: name, phone: phone, pin: pin, role: role, permissions: role === "Admin" ? "all" : "gen,repeat" } });
-      if (res && res.success) {
-        alert("New user created successfully!");
-        loadUsersList();
-      }
-    };
-
-    // DASHBOARD DAY-WISE VISIBILITY & ACCURATE ASSET VALUE
-    window.filterDash = function(period) {
-      if (!window.dashData) return;
-      document.querySelectorAll(".filter-btn-active").forEach(function(b) {
-        if (b.id.startsWith("btnFilter")) b.classList.remove("filter-btn-active");
-      });
-      var mapBtn = { today: "btnFilterToday", week: "btnFilterWeek", month: "btnFilterMonth", year: "btnFilterYear" };
-      if (mapBtn[period]) document.getElementById(mapBtn[period]).classList.add("filter-btn-active");
-
-      var now = new Date();
-      var badgeText = "📅 Viewing Report For: TODAY (" + now.getDate() + "-Oct-" + now.getFullYear() + ")";
-      if (period === "week") badgeText = "📅 Viewing Report For: THIS WEEK (Last 7 Days Day-Wise)";
-      if (period === "month") badgeText = "📅 Viewing Report For: THIS MONTH (October " + now.getFullYear() + " Day-Wise)";
-      if (period === "year") badgeText = "📅 Viewing Report For: YEAR " + now.getFullYear();
-      document.getElementById("lblActiveFilterBadge").innerText = badgeText;
-
-      var s = window.dashData.sales[period] || { cash:0, online:0, total:0, profit:0, days:[] };
-      var p = window.dashData.purchases[period] || { cash:0, online:0, total:0 };
-
-      document.getElementById("dashSaleCash").innerText = "₹" + s.cash.toFixed(2);
-      document.getElementById("dashSaleOnline").innerText = "₹" + s.online.toFixed(2);
-      document.getElementById("dashSaleTotal").innerText = "₹" + s.total.toFixed(2);
-
-      document.getElementById("dashPurCash").innerText = "₹" + p.cash.toFixed(2);
-      document.getElementById("dashPurOnline").innerText = "₹" + p.online.toFixed(2);
-      document.getElementById("dashPurTotal").innerText = "₹" + p.total.toFixed(2);
-
-      document.getElementById("dashProfitTotal").innerText = "₹" + (s.profit || (s.total * 0.15)).toFixed(2);
-      document.getElementById("dashStockAsset").innerText = "₹" + (window.dashData.closingStockAsset || 0).toFixed(2);
-
-      var dayBox = document.getElementById("boxDayWiseContainer");
-      if ((period === 'week' || period === 'month') && s.days && s.days.length > 0) {
-        document.getElementById("lblDayWiseTitle").innerText = (period === 'week' ? "📅 This Week: Day-Wise Sales & Profit" : "📅 This Month: Day-Wise Sales & Profit");
+        document.getElementById("dayWiseTableWrap").innerHTML = html;
+        dayBox.style.display = "block";
+      } else if ((activeDashMode === "week" || activeDashMode === "month" || activeDashMode === "custom") && dayRows.length > 0) {
+        dayRows.sort(function(a, b) { return new Date(b.dateKey).getTime() - new Date(a.dateKey).getTime(); });
+        document.getElementById("lblDayWiseTitle").innerText = "📅 Day-Wise Sales & Profit Breakdown";
         var html = '<div class="table-wrap"><table><thead><tr><th>Date & Day</th><th>Cash Sales</th><th>Online / UPI</th><th>Total Sales</th><th>Gross Profit</th></tr></thead><tbody>';
-        s.days.forEach(function(d) {
+        dayRows.forEach(function(d) {
           html += "<tr>" +
             "<td><b>" + d.label + "</b></td>" +
             "<td>₹" + d.cash.toFixed(2) + "</td>" +
@@ -1537,7 +1386,7 @@
       } else {
         dayBox.style.display = "none";
       }
-    };
+    }
 
     function startSessionTimer() {
       if (sessionTimerInterval) clearInterval(sessionTimerInterval);
@@ -1586,6 +1435,7 @@
           if (!hasLabour) cachedItems.unshift({ name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, stock: "∞" });
           localStorage.setItem("mle_items", JSON.stringify(cachedItems));
           bankSettings = res.bankInfo;
+          if (res.driveFolderUrl) masterDriveFolderLink = res.driveFolderUrl;
 
           if (res.alerts && res.alerts.length > 0) {
             document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(function(a) { return "• " + a; }).join("<br>");
@@ -1972,7 +1822,7 @@
         '</td>' +
         '</tr>' +
         '</table>' +
-        '<table style="width:100%; border-collapse:collapse; border-bottom:1.5px solid #1e3a8a;">' +
+        '<table style="width:100%; border-collapse:collapse; border-bottom:1.5px solid #1e3a8a; margin-bottom:20px;">' +
         '<thead>' +
         '<tr style="background:#1e3a8a; color:#fff;">' +
         '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:50px; text-align:center; white-space:nowrap;">Sl No.</th>' +
@@ -2069,9 +1919,10 @@
 
     async function loadDashboardAnalytics() {
       var res = await apiCall("getDashboardAnalytics");
-      if (res && res.sales) {
+      if (res && res.daysMap) {
         window.dashData = res;
-        filterDash('today');
+        if (res.driveFolderUrl) masterDriveFolderLink = res.driveFolderUrl;
+        applyDashMode('today');
       }
     }
 
