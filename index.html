@@ -211,7 +211,7 @@
 
   <div id="printableInvoice" style="display:none;"></div>
 
-  <!-- 1. AUTH OVERLAY (100% BLANK DEFAULT) -->
+  <!-- 1. AUTH OVERLAY -->
   <div id="authOverlay" style="display: flex;">
     <div class="auth-box">
       <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
@@ -352,7 +352,7 @@
         
         <button class="nav-btn" id="btnNavBill" onclick="toggleBillingSub()">🧾 Billing ▾</button>
         <div class="sub-menu" id="billingSubMenu">
-          <button class="sub-nav-btn active" id="btnSubGen" onclick="switchBillingView('gen')">• Generate Bill</button>
+          <button class="sub-nav-btn" id="btnSubGen" onclick="switchBillingView('gen')">• Generate Bill</button>
           <button class="sub-nav-btn" id="btnSubRepeat" onclick="switchBillingView('repeat')">• Repeat Customers</button>
           <button class="sub-nav-btn" id="btnSubKhata" onclick="switchBillingView('khata')">• Credit Ledger</button>
           <button class="sub-nav-btn" id="btnSubSearch" onclick="switchBillingView('search')">• Search Bill</button>
@@ -392,7 +392,7 @@
               </div>
             </div>
 
-            <!-- Dynamic Dropdown Bar (Auto-Bound to Transactions) -->
+            <!-- Dynamic Dropdown Bar -->
             <div id="dashSelectorBar" style="display:none; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; margin-bottom:14px; align-items:center; gap:10px; flex-wrap:wrap;">
               <div id="selectorMonthGroup" style="display:none; gap:10px; align-items:center; flex-wrap:wrap;">
                 <label style="font-size:12px; font-weight:800; color:#334155;">SELECT TRANSACTION YEAR & MONTH:</label>
@@ -897,7 +897,6 @@
       }
     };
 
-    // Outside-Click Dismissal for Dropdowns
     document.addEventListener("click", function(e) {
       var itemInput = document.getElementById("itemSearch");
       var itemMenu = document.getElementById("billingItemMenu");
@@ -1048,7 +1047,6 @@
       initSession();
     };
 
-    // 🚀 FIXED: CLEAN WINDOW.ONLOAD (ZERO CRASH)
     window.onload = function() {
       var now = new Date();
       var mStr = String(now.getMonth() + 1).padStart(2, '0');
@@ -1145,7 +1143,6 @@
       window.open(url, "_blank");
     };
 
-    // 🗓 AUTO-DETECT BOUNDED DROPDOWNS (STRICTLY VALID TRANSACTION DATES ONLY)
     function setupDynamicDateBounds(minB, maxB) {
       transactionBounds = { minB: minB, maxB: maxB };
       var ySel = document.getElementById("selDashYear");
@@ -1321,7 +1318,6 @@
       document.getElementById("dashPurTotal").innerText = "₹" + totalPur.toFixed(2);
 
       document.getElementById("dashProfitTotal").innerText = "₹" + profitSale.toFixed(2);
-      // PURE FIFO REAL PHYSICAL STOCK VALUE
       document.getElementById("dashStockAsset").innerText = "₹" + (window.dashData.closingStockAsset || 0).toFixed(2);
 
       var dayBox = document.getElementById("boxDayWiseContainer");
@@ -1483,7 +1479,7 @@
       menu.style.display = "block";
     };
 
-    // 👥 REPEAT CUSTOMERS (GUARANTEED RENDERING)
+    // 👥 REPEAT CUSTOMERS
     async function loadRepeatCustomers() {
       var c = document.getElementById("repeatCustTableContainer");
       if (!c) return;
@@ -1525,7 +1521,7 @@
       document.getElementById("cardBillForm").scrollIntoView({ behavior: 'smooth' });
     };
 
-    // 👥 USERS LIST (GUARANTEED RENDERING)
+    // 👥 USERS LIST
     async function loadUsersList() {
       var c = document.getElementById("usersListContainer");
       if (!c) return;
@@ -1636,7 +1632,6 @@
       }
     };
 
-    // ACTIVE ORANGE BUTTON TOGGLE FOR STOCK INWARD
     window.setStockMode = function(mode) {
       ["Inward", "Hsn", "Rate", "Correct", "Purchase"].forEach(function(t) {
         var b = document.getElementById("btnStkTab" + t);
@@ -1703,7 +1698,7 @@
       }
     };
 
-    // HARD COPY INVOICE PRINT (CONDITIONAL ESTIMATE LINE)
+    // 🖨️ CLEAN HARD COPY INVOICE PRINT (NO SYNTAX ERRORS)
     function buildReceiptHtml(b) {
       if (!b) return "";
       var lines = "";
@@ -1722,29 +1717,29 @@
         }
 
         var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
-        lines += "<tr>" +
-          "<td style='padding:6px 4px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px; white-space:nowrap;'>" + (idx + 1) + "</td>" +
-          "<td style='padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;'><b>" + it.name + "</b>" + snStr + "</td>" +
-          "<td style='padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;'>" + (it.hsn || '-') + "</td>" +
-          "<td style='padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;'>" + (it.qty || 1) + "</td>" +
-          "<td style='padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;'>₹ " + parseFloat(it.finalRate || it.baseRate || 0).toFixed(2) + "</td>" +
-          "<td style='padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;'>₹ " + parseFloat(it.total || 0).toFixed(2) + "</td>" +
-          "</tr>";
+        lines += '<tr>' +
+          '<td style="padding:6px 4px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px; white-space:nowrap;">' + (idx + 1) + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;"><b>' + it.name + '</b>' + snStr + '</td>' +
+          '<td style="padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + (it.hsn || '-') + '</td>' +
+          '<td style="padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + (it.qty || 1) + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;">₹ ' + parseFloat(it.finalRate || it.baseRate || 0).toFixed(2) + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;">₹ ' + parseFloat(it.total || 0).toFixed(2) + '</td>' +
+          '</tr>';
       });
 
       var fillerHeight = Math.max(90, 420 - (itms.length * 28));
-      lines += "<tr>" +
-        "<td style='height:" + fillerHeight + "px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
-        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
-        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
-        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
-        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
-        "<td style='border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a;'>&nbsp;</td>" +
-        "</tr>";
+      lines += '<tr>' +
+        '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+        '<td style="border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">&nbsp;</td>' +
+        '</tr>';
 
       var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
-      var shopGstLine = (b.isGst) ? "<div style='font-weight:bold; margin-top:2px;'>GSTIN/UIN: 07DBOPG3647H1ZF | State: Delhi, Code: 07</div>" : "";
-      var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? "<div>GSTIN/UIN: " + b.gstin + " | State: Delhi, Code: 07</div>" : "";
+      var shopGstLine = (b.isGst) ? '<div style="font-weight:bold; margin-top:2px;">GSTIN/UIN: 07DBOPG3647H1ZF | State: Delhi, Code: 07</div>' : '';
+      var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? '<div>GSTIN/UIN: ' + b.gstin + ' | State: Delhi, Code: 07</div>' : '';
 
       var docHeading = "INVOICE";
       var isEstimateDoc = (b.docNo && b.docNo.includes('EST'));
@@ -1754,22 +1749,22 @@
         docHeading = "TAX INVOICE";
       }
 
-      var estimatePrintValidity = isEstimateDoc ? "<tr><td style='border:none; padding:2px 0;'><b>Estimate validity period:</b></td><td style='border:none; padding:2px 0; text-align:right;'>3 Days</td></tr>" : "";
+      var estimatePrintValidity = isEstimateDoc ? '<tr><td style="border:none; padding:2px 0;"><b>Estimate validity period:</b></td><td style="border:none; padding:2px 0; text-align:right;">3 Days</td></tr>' : '';
 
       var taxBoxHtml = "";
       if (b.isGst) {
         var cgst = totalGst / 2;
         var sgst = totalGst / 2;
-        taxBoxHtml = "<table style='width:100%; border-collapse:collapse;'>" +
-          "<tr><td style='padding:3px; font-weight:bold;'>Subtotal (Taxable Value)</td><td style='padding:3px; text-align:right; font-weight:bold;'>₹ " + totalTaxable.toFixed(2) + "</td></tr>" +
-          "<tr><td style='padding:3px; font-weight:bold;'>CGST (9%)</td><td style='padding:3px; text-align:right; font-weight:bold;'>₹ " + cgst.toFixed(2) + "</td></tr>" +
-          "<tr><td style='padding:3px; font-weight:bold;'>SGST (9%)</td><td style='padding:3px; text-align:right; font-weight:bold;'>₹ " + sgst.toFixed(2) + "</td></tr>" +
-          "<tr style='border-top:1.5px solid #1e3a8a;'><td style='padding:4px; font-weight:900;'>Total Amount</td><td style='padding:4px; text-align:right; font-weight:900; font-size:13.5px; color:#1e3a8a;'>₹ " + totalAmt.toFixed(2) + "</td></tr>" +
-          "</table>";
+        taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
+          '<tr><td style="padding:3px; font-weight:bold;">Subtotal (Taxable Value)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + totalTaxable.toFixed(2) + '</td></tr>' +
+          '<tr><td style="padding:3px; font-weight:bold;">CGST (9%)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + cgst.toFixed(2) + '</td></tr>' +
+          '<tr><td style="padding:3px; font-weight:bold;">SGST (9%)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + sgst.toFixed(2) + '</td></tr>' +
+          '<tr style="border-top:1.5px solid #1e3a8a;"><td style="padding:4px; font-weight:900;">Total Amount</td><td style="padding:4px; text-align:right; font-weight:900; font-size:13.5px; color:#1e3a8a;">₹ ' + totalAmt.toFixed(2) + '</td></tr>' +
+          '</table>';
       } else {
-        taxBoxHtml = "<table style='width:100%; border-collapse:collapse; height:100%;'>" +
-          "<tr><td style='padding:12px 4px; font-weight:900; font-size:12px;'>Total Amount</td><td style='padding:12px 4px; text-align:right; font-weight:900; font-size:16px; color:#1e3a8a;'>₹ " + totalAmt.toFixed(2) + "</td></tr>" +
-          "</table>";
+        taxBoxHtml = '<table style="width:100%; border-collapse:collapse; height:100%;">' +
+          '<tr><td style="padding:12px 4px; font-weight:900; font-size:12px;">Total Amount</td><td style="padding:12px 4px; text-align:right; font-weight:900; font-size:16px; color:#1e3a8a;">₹ ' + totalAmt.toFixed(2) + '</td></tr>' +
+          '</table>';
       }
 
       var wordsDisplay = getWordsText(totalAmt);
@@ -1996,7 +1991,7 @@
           "<td>" +
           "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='triggerDirectPrint(cachedBillHistory[" + idx + "])'>🖨️ Re-Print</button>" +
           "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;' onclick='shareBillOnWhatsApp(cachedBillHistory[" + idx + "])'>📲 WhatsApp</button>" +
-          "<button class='btn-sync' style='padding:4px 8px; font-size:11px;' onclick='viewDownloadPdf(cachedBillHistory[" + idx + "])'>👁️️ View</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px;' onclick='viewDownloadPdf(cachedBillHistory[" + idx + "])'>👁 View</button>" +
           "</td>" +
           "</tr>";
       });
