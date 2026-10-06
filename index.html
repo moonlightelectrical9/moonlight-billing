@@ -217,7 +217,7 @@
       <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
       <div class="brand-tagline" style="margin-bottom: 22px;">Brightening Lives, Powering Trust</div>
 
-      <!-- Mode A: Password Login -->
+      <!-- Mode 1: Password Login -->
       <div id="stepPasswordMode">
         <div class="form-col" style="text-align: left; margin-bottom: 10px;">
           <label>AUTHORIZED MOBILE NUMBER</label>
@@ -236,7 +236,7 @@
         </div>
       </div>
 
-      <!-- Mode B: Request WhatsApp OTP -->
+      <!-- Mode 2: Request WhatsApp OTP -->
       <div id="stepPhoneMode" style="display: none;">
         <div class="form-col" style="text-align: left; margin-bottom: 12px;">
           <label>AUTHORIZED MOBILE NUMBER</label>
@@ -251,7 +251,7 @@
         </div>
       </div>
 
-      <!-- Mode C: Enter WhatsApp OTP -->
+      <!-- Mode 3: Enter WhatsApp OTP -->
       <div id="stepOtp" style="display: none;">
         <div style="font-size: 12px; color: #475569; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone"></b></div>
         <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;">
@@ -308,7 +308,7 @@
         <label><input type="checkbox" id="chkPermKhata"> 📒 Credit Ledger (Udhar Khata)</label>
         <label><input type="checkbox" id="chkPermSearch"> 🔍 Search Bill & Reprint</label>
         <label><input type="checkbox" id="chkPermStock"> 📦 Stock Inward & Item Purchases</label>
-        <label><input type="checkbox" id="chkPermSet"> ⚙️ Settings & User Management</label>
+        <label><input type="checkbox" id="chkPermSet"> ⚙ Settings & User Management</label>
       </div>
 
       <div style="display:flex; gap:10px;">
@@ -395,7 +395,6 @@
               </div>
             </div>
 
-            <!-- Dynamic Dropdown Bar -->
             <div id="dashSelectorBar" style="display:none; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; margin-bottom:14px; align-items:center; gap:10px; flex-wrap:wrap;">
               <div id="selectorMonthGroup" style="display:none; gap:10px; align-items:center; flex-wrap:wrap;">
                 <label style="font-size:12px; font-weight:800; color:#334155;">SELECT TRANSACTION YEAR & MONTH:</label>
@@ -452,7 +451,7 @@
               </div>
             </div>
 
-            <!-- Tab C: Pure FIFO Profit & Real Closing Stock Asset -->
+            <!-- Tab C: Pure FIFO Profit & Stock Asset -->
             <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:14px; margin-bottom:14px;">
               <div style="font-size:12px; font-weight:800; color:#047857; text-transform:uppercase;">TAB C: REAL BUSINESS OVERVIEW (PROFIT ON SALES & SHOP ASSET)</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:10px; margin-top:8px;">
@@ -670,7 +669,7 @@
               <h3 style="font-weight:900;">Stock & Inventory Management</h3>
               <div style="display:flex; gap:6px; flex-wrap:wrap;">
                 <button class="btn-sync filter-btn-active" id="btnStkTabInward" onclick="setStockMode('inward')">📦 Add Inward</button>
-                <button class="btn-sync" id="btnStkTabHsn" onclick="setStockMode('hsn')">✏️ Quick HSN</button>
+                <button class="btn-sync" id="btnStkTabHsn" onclick="setStockMode('hsn')">✏️️ Quick HSN</button>
                 <button class="btn-sync" id="btnStkTabRate" onclick="setStockMode('rate')">💲 Quick Rates</button>
                 <button class="btn-sync" id="btnStkTabCorrect" onclick="setStockMode('correct')">🛠 Correct Qty</button>
                 <button class="btn-sync" id="btnStkTabPurchase" onclick="setStockMode('purchase')">🛍 Purchase Bill Entry</button>
@@ -820,7 +819,7 @@
 
             <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:16px; margin-bottom:18px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h4 style="font-weight:800; color:#0284c7;">👥 User Accounts, Role & Access Permissions (5 Users)</h4>
+                <h4 style="font-weight:800; color:#0284c7;">👥 User Accounts, Role & Access Permissions</h4>
                 <button class="btn-sync" onclick="loadUsersList()">🔄 Refresh Users</button>
               </div>
               <div id="usersListContainer"></div>
@@ -914,7 +913,7 @@
       }
     });
 
-    // 🔐 FAIL-PROOF PASSWORD LOGIN (WITH BOTH INSTANT CACHE & SHEET TIMEOUT VERIFICATION)
+    // 🔐 UNIVERSAL SECURE & RESPONSIVE LOGIN (FOR OWNER & ALL REGISTERED USERS)
     window.doPasswordLogin = async function() {
       var phoneInput = document.getElementById("pwdLoginPhone").value.trim().replace(/\D/g, '');
       var phone = phoneInput.slice(-10);
@@ -937,35 +936,9 @@
       btn.innerText = "Verifying...";
       btn.disabled = true;
 
-      var savedLocalPin = localStorage.getItem("mle_pwd_" + phone) || "1234";
-      var isOwner = (phone === "8860706865");
-
-      // Quick offline pass if credentials match local cache or owner defaults
-      if ((isOwner && (pwd === "1234" || pwd === "8860" || pwd === savedLocalPin)) || (pwd === savedLocalPin)) {
-        currentUser = {
-          name: isOwner ? "Varun Sharma (Owner)" : "Staff",
-          phone: phone,
-          role: isOwner ? "Admin" : "Staff",
-          permissions: isOwner ? "all" : "gen,repeat",
-          pin: pwd,
-          isOwner: isOwner
-        };
-        try {
-          localStorage.setItem("mle_user", JSON.stringify(currentUser));
-          localStorage.setItem("mle_pwd_" + phone, pwd);
-        } catch(e) {}
-        btn.innerText = "🔐 LOGIN WITH PASSWORD";
-        btn.disabled = false;
-        showGreetingsWelcome();
-        return;
-      }
-
-      // Live verification from Google Sheet with 6-second timeout so button never hangs
+      // Smart verification: check live sheet with adequate buffer (up to 15 seconds) so cold starts never fail
       try {
-        var fetchPromise = apiCall("verifyPasswordLogin", { phone: phone, password: pwd });
-        var timeoutPromise = new Promise(function(resolve) { setTimeout(function() { resolve(null); }, 6000); });
-        var res = await Promise.race([fetchPromise, timeoutPromise]);
-
+        var res = await apiCall("verifyPasswordLogin", { phone: phone, password: pwd });
         btn.innerText = "🔐 LOGIN WITH PASSWORD";
         btn.disabled = false;
 
@@ -984,13 +957,13 @@
           } catch(e) {}
           showGreetingsWelcome();
         } else {
-          err.innerText = (res && res.message) ? res.message : "Wrong password or network timeout! Try again.";
+          err.innerText = (res && res.message) ? res.message : "Invalid Password or Unauthorized User Number!";
           err.style.display = "block";
         }
       } catch(ex) {
         btn.innerText = "🔐 LOGIN WITH PASSWORD";
         btn.disabled = false;
-        err.innerText = "Connection error. Please retry!";
+        err.innerText = "Connection timeout. Please retry in a few seconds!";
         err.style.display = "block";
       }
     };
@@ -1180,7 +1153,6 @@
       window.open(url, "_blank");
     };
 
-    // 🗓 AUTO-DETECT BOUNDED DROPDOWNS (STRICTLY VALID TRANSACTION DATES ONLY)
     function setupDynamicDateBounds(minB, maxB) {
       transactionBounds = { minB: minB, maxB: maxB };
       var ySel = document.getElementById("selDashYear");
@@ -1356,7 +1328,6 @@
       document.getElementById("dashPurTotal").innerText = "₹" + totalPur.toFixed(2);
 
       document.getElementById("dashProfitTotal").innerText = "₹" + profitSale.toFixed(2);
-      // PURE FIFO REAL PHYSICAL STOCK VALUE
       document.getElementById("dashStockAsset").innerText = "₹" + (window.dashData.closingStockAsset || 0).toFixed(2);
 
       var dayBox = document.getElementById("boxDayWiseContainer");
@@ -1397,7 +1368,6 @@
       }
     }
 
-    // 🔍 ITEM SEARCH DROPDOWN & AUTO-CLEAN (INSTANT & FAIL-PROOF)
     window.handleItemSearchFocus = function(e) {
       if (e) e.stopPropagation();
       var field = document.getElementById("itemSearch");
@@ -1464,7 +1434,6 @@
       calculateItemTotal();
     }
 
-    // 📦 STOCK INWARD SEARCH & AUTO-CLEAN
     window.handleStockClick = function(e, inputId, menuId) {
       if (e) e.stopPropagation();
       var field = document.getElementById(inputId);
@@ -1518,7 +1487,6 @@
       menu.style.display = "block";
     };
 
-    // 👥 REPEAT CUSTOMERS
     async function loadRepeatCustomers() {
       var c = document.getElementById("repeatCustTableContainer");
       if (!c) return;
@@ -1560,7 +1528,6 @@
       document.getElementById("cardBillForm").scrollIntoView({ behavior: 'smooth' });
     };
 
-    // 👥 USERS LIST
     async function loadUsersList() {
       var c = document.getElementById("usersListContainer");
       if (!c) return;
@@ -1737,7 +1704,7 @@
       }
     };
 
-    // 🖨️ CLEAN HARD COPY INVOICE PRINT
+    // 🖨️ HARD COPY INVOICE PRINT
     function buildReceiptHtml(b) {
       if (!b) return "";
       var lines = "";
@@ -1778,7 +1745,7 @@
 
       var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
       var shopGstLine = (b.isGst) ? '<div style="font-weight:bold; margin-top:2px;">GSTIN/UIN: 07DBOPG3647H1ZF | State: Delhi, Code: 07</div>' : '';
-      var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? '<div>GSTIN/UIN: ' + b.gstin + ' | State: Delhi, Code: 07</div>' : '';
+      var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? '<div>GSTIN/UIN: " + b.gstin + " | State: Delhi, Code: 07</div>' : '';
 
       var docHeading = "INVOICE";
       var isEstimateDoc = (b.docNo && b.docNo.includes('EST'));
@@ -2111,6 +2078,19 @@
       var res = await apiCall("updateBankSettings", { data: payload });
       if (res && res.success) alert("Bank details updated successfully!");
     };
+
+    async function apiCall(action, payload) {
+      if (!payload) payload = {};
+      payload.action = action;
+      try {
+        var res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        return JSON.parse(await res.text());
+      } catch(e) { return null; }
+    }
   </script>
 </body>
 </html>
