@@ -114,7 +114,7 @@
     /* Cards & Components */
     .card { background: #ffffff; border: 1.5px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 14px; }
     .alert-banner { background: var(--danger-bg); border: 1.5px solid #fca5a5; border-radius: 8px; padding: 10px 14px; color: var(--danger); font-size: 12.5px; margin-bottom: 14px; display: none; }
-    .notify-banner { background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 8px; padding: 10px 14px; color: #1e40af; font-size: 12.5px; margin-bottom: 14px; display: none; }
+    .notify-banner { background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 8px; padding: 10px 14px; color: #1e40af; font-size: 12.5px; margin-bottom: 14px; }
     
     .grid-row { display: grid; gap: 10px; margin-bottom: 12px; }
     .row-5 { grid-template-columns: 1fr 1.3fr 1.2fr 1.1fr 1.2fr; }
@@ -183,7 +183,7 @@
     .btn-checkout { background: var(--accent); color: #000; border: none; padding: 13px; border-radius: 6px; font-size: 14.5px; font-weight: 900; width: 100%; cursor: pointer; }
     .btn-checkout:disabled { background: #e2e8f0 !important; color: #94a3b8 !important; cursor: not-allowed; }
 
-    /* Active Orange Class */
+    /* Active Highlight Class */
     .filter-btn-active { background: #d97706 !important; color: #ffffff !important; border-color: #b45309 !important; font-weight: 900 !important; }
 
     /* SOLID DARK BACKGROUND FOR LOGIN */
@@ -404,6 +404,7 @@
       </aside>
 
       <main class="content-area">
+        <!-- Security Alert Banner with Dismiss Button -->
         <div class="notify-banner" id="adminSecurityAlertBox" style="display:none; justify-content:space-between; align-items:center;">
           <div id="adminSecurityAlertText"></div>
           <button class="btn-sync" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:4px 8px; font-size:11px;" onclick="dismissAdminAlert()">✕ Clear Alert</button>
@@ -874,7 +875,6 @@
     var deferredPrompt = null;
     var selectedPermUserPhone = "";
 
-    // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         var swCode = "self.addEventListener('install', function(e) { self.skipWaiting(); }); self.addEventListener('fetch', function(e) {});";
@@ -904,7 +904,6 @@
       }
     };
 
-    // Outside-Click Dismissal for Dropdowns
     document.addEventListener("click", function(e) {
       var itemInput = document.getElementById("itemSearch");
       var itemMenu = document.getElementById("billingItemMenu");
@@ -969,7 +968,6 @@
       }
     };
 
-    // 📲 WHATSAPP OTP LOGIN HANDLERS
     window.showOtpScreen = function() {
       document.getElementById("stepPasswordMode").style.display = "none";
       document.getElementById("stepPhoneMode").style.display = "block";
@@ -1108,4 +1106,1140 @@
         if (!perms.includes("gen")) document.getElementById("btnSubGen").style.display = "none";
         if (!perms.includes("repeat")) document.getElementById("btnSubRepeat").style.display = "none";
         if (!perms.includes("khata")) document.getElementById("btnSubKhata").style.display = "none";
-        if (!perms.includes("search"))
+        if (!perms.includes("search")) document.getElementById("btnSubSearch").style.display = "none";
+        if (!perms.includes("stock")) document.getElementById("btnSubStock").style.display = "none";
+        if (!perms.includes("set")) document.getElementById("btnNavSet").style.display = "none";
+      }
+    }
+
+    window.openPwdModal = function() {
+      document.getElementById("chgPwdPhone").value = currentUser.phone;
+      document.getElementById("chgPwdNew").value = "";
+      document.getElementById("changePwdModal").style.display = "flex";
+    };
+    window.closePwdModal = function() {
+      document.getElementById("changePwdModal").style.display = "none";
+    };
+    window.submitPasswordChange = async function() {
+      var newPin = document.getElementById("chgPwdNew").value.trim();
+      if (!newPin || newPin.length < 4) { alert("Enter at least 4-digit password!"); return; }
+
+      localStorage.setItem("mle_pwd_" + currentUser.phone, newPin);
+      currentUser.pin = newPin;
+      localStorage.setItem("mle_user", JSON.stringify(currentUser));
+
+      var res = await apiCall("changeUserPassword", { phone: currentUser.phone, newPin: newPin, changedBy: currentUser.role });
+      alert("Password updated successfully! From now on, only this new password will work.");
+      closePwdModal();
+    };
+
+    async function loadAdminAlerts() {
+      var res = await apiCall("getAdminAlerts");
+      if (res && res.alerts && res.alerts.length > 0) {
+        document.getElementById("adminSecurityAlertText").innerHTML = res.alerts.join("<br>");
+        document.getElementById("adminSecurityAlertBox").style.display = "flex";
+      } else {
+        document.getElementById("adminSecurityAlertBox").style.display = "none";
+      }
+    }
+
+    window.dismissAdminAlert = async function() {
+      await apiCall("clearAdminAlerts");
+      document.getElementById("adminSecurityAlertBox").style.display = "none";
+    };
+
+    window.handleItemSearchFocus = function(e) {
+      if (e) e.stopPropagation();
+      var field = document.getElementById("itemSearch");
+      field.value = "";
+      renderItemDropdown("");
+    };
+
+    window.onItemSearchInput = function() {
+      var val = document.getElementById("itemSearch").value.trim().toLowerCase();
+      renderItemDropdown(val);
+    };
+
+    function renderItemDropdown(val) {
+      var menu = document.getElementById("billingItemMenu");
+      menu.innerHTML = "";
+
+      var itemsToUse = cachedItems.length > 0 ? cachedItems : [
+        { name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, stock: "∞" },
+        { name: "Fan 1200mm", hsn: "8414", custRate: 1550, elecRate: 1450, famRate: 1400, stock: 12 },
+        { name: "Jugnu 1W White", hsn: "8539", custRate: 410, elecRate: 380, famRate: 350, stock: 50 },
+        { name: "1.5 Sqmm Wire (90m)", hsn: "8544", custRate: 1250, elecRate: 1150, famRate: 1100, stock: 25 },
+        { name: "Modular Switch 6A", hsn: "8536", custRate: 35, elecRate: 28, famRate: 25, stock: 200 }
+      ];
+
+      var filtered = !val ? itemsToUse.slice(0, 40) : itemsToUse.filter(function(it) {
+        return it.name.toLowerCase().includes(val);
+      });
+
+      if (filtered.length === 0) {
+        menu.style.display = "none";
+        return;
+      }
+
+      filtered.forEach(function(it) {
+        var div = document.createElement("div");
+        div.className = "dropdown-item";
+        div.innerHTML = "<span><b>" + it.name + "</b></span> <small>Stock: " + it.stock + " | ₹" + it.custRate + "</small>";
+        div.onmousedown = function(ev) {
+          ev.preventDefault();
+          selectBillingItem(it);
+        };
+        menu.appendChild(div);
+      });
+      menu.style.display = "block";
+    }
+
+    function selectBillingItem(item) {
+      document.getElementById("itemSearch").value = item.name;
+      document.getElementById("billingItemMenu").style.display = "none";
+      currentItemObj = item;
+      document.getElementById("itemHsn").value = resolveSmartHsn(item.name);
+
+      var isLabour = item.name.toLowerCase().includes("labour");
+      var rateField = document.getElementById("itemRate");
+      if (isLabour) {
+        rateField.readOnly = false;
+        rateField.placeholder = "Enter Amount";
+        rateField.value = "";
+        rateField.focus();
+      } else {
+        rateField.readOnly = true;
+        resolveRate();
+      }
+      calculateItemTotal();
+    }
+
+    window.onGstToggleChange = function() {
+      var isGst = document.getElementById("isGstBill").value.includes("Yes");
+      if (!isGst) {
+        document.getElementById("custGstin").value = "";
+      }
+      calculateItemTotal();
+      checkFormState();
+    };
+
+    async function loadRepeatCustomers() {
+      var c = document.getElementById("repeatCustTableContainer");
+      c.innerHTML = "Loading regular customers directory...";
+      var res = await apiCall("getRepeatCustomers");
+      if (res && res.customers) {
+        var html = '<div class="table-wrap"><table><thead><tr><th>Customer Name</th><th>Address</th><th>Mobile</th><th>Repeat Bills</th><th>GSTIN</th><th>Action</th></tr></thead><tbody>';
+        res.customers.forEach(function(cust) {
+          html += "<tr>" +
+            "<td><b>" + cust.name + "</b></td>" +
+            "<td>" + cust.address + "</td>" +
+            "<td>" + cust.phone + "</td>" +
+            "<td><span style='background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:12px; font-weight:800; font-size:11px;'>⭐ " + cust.count + " Bills</span></td>" +
+            "<td>" + (cust.gstin || "-") + "</td>" +
+            "<td><button class='btn-sync' style='padding:4px 10px; font-weight:900;' onclick='useRepeatCustomer(\"" + cust.name + "\", \"" + cust.phone + "\", \"" + cust.address + "\", \"" + (cust.gstin || "") + "\")'>➕ Use</button></td>" +
+            "</tr>";
+        });
+        html += '</tbody></table></div>';
+        c.innerHTML = html;
+      }
+    }
+
+    window.useRepeatCustomer = function(name, phone, address, gstin) {
+      switchBillingView('gen');
+      document.getElementById("custName").value = name;
+      document.getElementById("custPhone").value = phone;
+      document.getElementById("custAddress").value = address;
+      if (gstin && gstin !== "-" && gstin !== "") {
+        document.getElementById("custGstin").value = gstin;
+        document.getElementById("isGstBill").value = "Yes (GST Invoice)";
+      } else {
+        document.getElementById("custGstin").value = "";
+        document.getElementById("isGstBill").value = "No (Regular Bill)";
+      }
+      calculateItemTotal();
+      checkFormState();
+      document.getElementById("cardBillForm").scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.handleStockClick = function(e, inputId, menuId) {
+      if (e) e.stopPropagation();
+      var field = document.getElementById(inputId);
+      field.value = "";
+      onStockSearchInput(inputId, menuId);
+    };
+
+    window.onStockSearchInput = function(inputId, menuId) {
+      var val = document.getElementById(inputId).value.trim().toLowerCase();
+      var menu = document.getElementById(menuId);
+      menu.innerHTML = "";
+
+      var itemsToUse = cachedItems.length > 0 ? cachedItems : [
+        { name: "Fan 1200mm", hsn: "8414", custRate: 1550, elecRate: 1450, famRate: 1400, stock: 12 },
+        { name: "Jugnu 1W White", hsn: "8539", custRate: 410, elecRate: 380, famRate: 350, stock: 50 },
+        { name: "1.5 Sqmm Wire (90m)", hsn: "8544", custRate: 1250, elecRate: 1150, famRate: 1100, stock: 25 },
+        { name: "Modular Switch 6A", hsn: "8536", custRate: 35, elecRate: 28, famRate: 25, stock: 200 }
+      ];
+
+      var filtered = !val ? itemsToUse.slice(0, 40) : itemsToUse.filter(function(it) { return it.name.toLowerCase().includes(val); });
+      if (filtered.length === 0) { menu.style.display = "none"; return; }
+
+      filtered.forEach(function(it) {
+        var div = document.createElement("div");
+        div.className = "dropdown-item";
+        div.innerHTML = "<span><b>" + it.name + "</b></span> <small>Stock: " + it.stock + "</small>";
+        div.onmousedown = function(e) {
+          e.preventDefault();
+          document.getElementById(inputId).value = it.name;
+          if (inputId === "stkName") {
+            document.getElementById("stkHsn").value = it.hsn || "";
+            document.getElementById("stkCustRate").value = it.custRate || 0;
+            document.getElementById("stkElecRate").value = it.elecRate || 0;
+            document.getElementById("stkFamRate").value = it.famRate || 0;
+          } else if (inputId === "hsnOnlyName") {
+            document.getElementById("hsnOnlyCode").value = it.hsn || "";
+          } else if (inputId === "rateOnlyName") {
+            document.getElementById("rateOnlyCust").value = it.custRate || 0;
+            document.getElementById("rateOnlyElec").value = it.elecRate || 0;
+            document.getElementById("rateOnlyFam").value = it.famRate || 0;
+          } else if (inputId === "correctName") {
+            document.getElementById("correctQty").value = it.stock || 0;
+          } else if (inputId === "purItemName") {
+            document.getElementById("purPrice").value = it.famRate || it.custRate || 0;
+            calcPurTotal();
+          }
+          menu.style.display = "none";
+        };
+        menu.appendChild(div);
+      });
+      menu.style.display = "block";
+    };
+
+    // ACTIVE ORANGE HIGHLIGHT FOR STOCK INWARD BUTTONS
+    window.setStockMode = function(mode) {
+      ["Inward", "Hsn", "Rate", "Correct", "Purchase"].forEach(function(t) {
+        var b = document.getElementById("btnStkTab" + t);
+        if (b) b.classList.remove("filter-btn-active");
+      });
+
+      var mapBtn = { inward: "btnStkTabInward", hsn: "btnStkTabHsn", rate: "btnStkTabRate", correct: "btnStkTabCorrect", purchase: "btnStkTabPurchase" };
+      if (mapBtn[mode] && document.getElementById(mapBtn[mode])) {
+        document.getElementById(mapBtn[mode]).classList.add("filter-btn-active");
+      }
+
+      document.getElementById("boxStockInward").style.display = (mode === 'inward') ? 'block' : 'none';
+      document.getElementById("boxStockHsn").style.display = (mode === 'hsn') ? 'block' : 'none';
+      document.getElementById("boxStockRate").style.display = (mode === 'rate') ? 'block' : 'none';
+      document.getElementById("boxStockCorrect").style.display = (mode === 'correct') ? 'block' : 'none';
+      document.getElementById("boxStockPurchase").style.display = (mode === 'purchase') ? 'block' : 'none';
+    };
+
+    window.calcPurTotal = function() {
+      var q = parseFloat(document.getElementById("purQty").value) || 0;
+      var p = parseFloat(document.getElementById("purPrice").value) || 0;
+      document.getElementById("purTotal").value = (q * p).toFixed(2);
+    };
+
+    window.submitPurchaseEntry = async function() {
+      var name = document.getElementById("purItemName").value.trim();
+      var qty = parseFloat(document.getElementById("purQty").value) || 0;
+      var price = parseFloat(document.getElementById("purPrice").value) || 0;
+      if (!name || qty <= 0) { alert("Enter valid item and quantity!"); return; }
+
+      var res = await apiCall("savePurchaseEntry", {
+        data: {
+          date: document.getElementById("purDate").value,
+          name: name,
+          qty: qty,
+          price: price,
+          total: qty * price,
+          vendor: document.getElementById("purVendor").value,
+          paymentMode: document.getElementById("purPayMode").value
+        }
+      });
+      if (res && res.success) {
+        alert("Purchase entry saved and stock auto-incremented!");
+        document.getElementById("purItemName").value = "";
+        refreshAppData();
+        loadDashboardAnalytics();
+      }
+    };
+
+    window.submitRateOnly = async function() {
+      var name = document.getElementById("rateOnlyName").value.trim();
+      if (!name) { alert("Select item!"); return; }
+      var res = await apiCall("updateRateOnly", {
+        data: {
+          name: name,
+          custRate: document.getElementById("rateOnlyCust").value,
+          elecRate: document.getElementById("rateOnlyElec").value,
+          famRate: document.getElementById("rateOnlyFam").value
+        }
+      });
+      if (res && res.success) {
+        alert("Rates updated successfully!");
+        refreshAppData();
+      }
+    };
+
+    async function loadUsersList() {
+      var c = document.getElementById("usersListContainer");
+      c.innerHTML = "Loading users list...";
+      var res = await apiCall("getUsersList");
+      if (res && res.users) {
+        var html = '<div class="table-wrap"><table><thead><tr><th>User Name</th><th>Mobile</th><th>Role</th><th>Status</th><th>Permissions</th><th>Actions</th></tr></thead><tbody>';
+        res.users.forEach(function(u) {
+          var isOwner = (u.phone === "8860706865" || u.isOwner === true);
+          var isAct = (u.status === "Active");
+          var btnColor = isAct ? "color:#dc2626;" : "color:#059669;";
+          var btnText = isAct ? "🔴 Deactivate" : "🟢 Activate";
+
+          var actionHtml = "";
+          if (isOwner) {
+            actionHtml = '<span style="color:#d97706; font-weight:900; font-size:12px; background:#fef3c7; padding:4px 10px; border-radius:12px; border:1px solid #fde68a;">Owner</span>';
+          } else {
+            actionHtml = '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px; ' + btnColor + '" onclick="toggleUserStatus(\'' + u.phone + '\')">' + btnText + '</button>' +
+                         '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px;" onclick="openPermModal(\'' + u.phone + '\', \'' + u.name + '\', \'' + u.permissions + '\')">⚙️ Access</button>' +
+                         '<button class="btn-sync" style="padding:3px 8px; font-size:11px; color:#dc2626;" onclick="deleteUserAccount(\'' + u.phone + '\', \'' + u.name + '\')">🗑 Delete</button>';
+          }
+
+          html += "<tr>" +
+            "<td><b>" + u.name + "</b></td>" +
+            "<td>" + u.phone + "</td>" +
+            "<td>" + u.role + "</td>" +
+            "<td><b style='color:" + (isAct ? "#059669" : "#dc2626") + "'>" + u.status + "</b></td>" +
+            "<td><small>" + u.permissions + "</small></td>" +
+            "<td>" + actionHtml + "</td>" +
+            "</tr>";
+        });
+        html += '</tbody></table></div>';
+        c.innerHTML = html;
+      }
+    }
+
+    window.toggleUserStatus = async function(phone) {
+      var res = await apiCall("toggleUserStatus", { phone: phone });
+      if (res && res.success) loadUsersList();
+    };
+
+    window.openPermModal = function(phone, name, currentPerms) {
+      selectedPermUserPhone = phone;
+      document.getElementById("permUserName").innerText = name;
+      document.getElementById("permUserPhone").innerText = phone;
+      
+      var isAll = (currentPerms === "all");
+      document.getElementById("chkPermGen").checked = isAll || currentPerms.includes("gen");
+      document.getElementById("chkPermRepeat").checked = isAll || currentPerms.includes("repeat");
+      document.getElementById("chkPermDash").checked = isAll || currentPerms.includes("dash");
+      document.getElementById("chkPermKhata").checked = isAll || currentPerms.includes("khata");
+      document.getElementById("chkPermSearch").checked = isAll || currentPerms.includes("search");
+      document.getElementById("chkPermStock").checked = isAll || currentPerms.includes("stock");
+      document.getElementById("chkPermSet").checked = isAll || currentPerms.includes("set");
+
+      document.getElementById("permModal").style.display = "flex";
+    };
+
+    window.closePermModal = function() {
+      document.getElementById("permModal").style.display = "none";
+    };
+
+    window.saveUserPermsFromModal = async function() {
+      var list = [];
+      if (document.getElementById("chkPermGen").checked) list.push("gen");
+      if (document.getElementById("chkPermRepeat").checked) list.push("repeat");
+      if (document.getElementById("chkPermDash").checked) list.push("dash");
+      if (document.getElementById("chkPermKhata").checked) list.push("khata");
+      if (document.getElementById("chkPermSearch").checked) list.push("search");
+      if (document.getElementById("chkPermStock").checked) list.push("stock");
+      if (document.getElementById("chkPermSet").checked) list.push("set");
+
+      var pStr = list.join(",");
+      if (list.length === 7) pStr = "all";
+
+      var res = await apiCall("updateUserPermissions", { phone: selectedPermUserPhone, permissions: pStr });
+      if (res && res.success) {
+        closePermModal();
+        loadUsersList();
+      }
+    };
+
+    window.deleteUserAccount = async function(phone, name) {
+      if (confirm("Are you sure you want to permanently delete user " + name + " (" + phone + ")? This action cannot be undone.")) {
+        var res = await apiCall("deleteUser", { phone: phone });
+        if (res && res.success) {
+          alert("User deleted successfully!");
+          loadUsersList();
+        } else {
+          alert(res.message || "Cannot delete user!");
+        }
+      }
+    };
+
+    window.createNewUser = async function() {
+      var name = document.getElementById("newUserName").value.trim();
+      var phone = document.getElementById("newUserPhone").value.trim();
+      var pin = document.getElementById("newUserPin").value.trim() || "1234";
+      var role = document.getElementById("newUserRole").value;
+      if (!name || phone.length !== 10) { alert("Enter valid name and 10-digit mobile!"); return; }
+
+      var res = await apiCall("createUser", { data: { name: name, phone: phone, pin: pin, role: role, permissions: role === "Admin" ? "all" : "gen,repeat" } });
+      if (res && res.success) {
+        alert("New user created successfully!");
+        loadUsersList();
+      }
+    };
+
+    // DASHBOARD DAY-WISE VISIBILITY & ACCURATE ASSET VALUE
+    window.filterDash = function(period) {
+      if (!window.dashData) return;
+      document.querySelectorAll(".filter-btn-active").forEach(function(b) {
+        if (b.id.startsWith("btnFilter")) b.classList.remove("filter-btn-active");
+      });
+      var mapBtn = { today: "btnFilterToday", week: "btnFilterWeek", month: "btnFilterMonth", year: "btnFilterYear" };
+      if (mapBtn[period]) document.getElementById(mapBtn[period]).classList.add("filter-btn-active");
+
+      var now = new Date();
+      var badgeText = "📅 Viewing Report For: TODAY (" + now.getDate() + "-Oct-" + now.getFullYear() + ")";
+      if (period === "week") badgeText = "📅 Viewing Report For: THIS WEEK (Last 7 Days Day-Wise)";
+      if (period === "month") badgeText = "📅 Viewing Report For: THIS MONTH (October " + now.getFullYear() + " Day-Wise)";
+      if (period === "year") badgeText = "📅 Viewing Report For: YEAR " + now.getFullYear();
+      document.getElementById("lblActiveFilterBadge").innerText = badgeText;
+
+      var s = window.dashData.sales[period] || { cash:0, online:0, total:0, profit:0, days:[] };
+      var p = window.dashData.purchases[period] || { cash:0, online:0, total:0 };
+
+      document.getElementById("dashSaleCash").innerText = "₹" + s.cash.toFixed(2);
+      document.getElementById("dashSaleOnline").innerText = "₹" + s.online.toFixed(2);
+      document.getElementById("dashSaleTotal").innerText = "₹" + s.total.toFixed(2);
+
+      document.getElementById("dashPurCash").innerText = "₹" + p.cash.toFixed(2);
+      document.getElementById("dashPurOnline").innerText = "₹" + p.online.toFixed(2);
+      document.getElementById("dashPurTotal").innerText = "₹" + p.total.toFixed(2);
+
+      document.getElementById("dashProfitTotal").innerText = "₹" + (s.profit || (s.total * 0.15)).toFixed(2);
+      document.getElementById("dashStockAsset").innerText = "₹" + (window.dashData.closingStockAsset || 0).toFixed(2);
+
+      var dayBox = document.getElementById("boxDayWiseContainer");
+      if ((period === 'week' || period === 'month') && s.days && s.days.length > 0) {
+        document.getElementById("lblDayWiseTitle").innerText = (period === 'week' ? "📅 This Week: Day-Wise Sales & Profit" : "📅 This Month: Day-Wise Sales & Profit");
+        var html = '<div class="table-wrap"><table><thead><tr><th>Date & Day</th><th>Cash Sales</th><th>Online / UPI</th><th>Total Sales</th><th>Gross Profit</th></tr></thead><tbody>';
+        s.days.forEach(function(d) {
+          html += "<tr>" +
+            "<td><b>" + d.label + "</b></td>" +
+            "<td>₹" + d.cash.toFixed(2) + "</td>" +
+            "<td>₹" + d.online.toFixed(2) + "</td>" +
+            "<td><b style='color:#b45309;'>₹" + d.total.toFixed(2) + "</b></td>" +
+            "<td><b style='color:#059669;'>₹" + d.profit.toFixed(2) + "</b></td>" +
+            "</tr>";
+        });
+        html += '</tbody></table></div>';
+        document.getElementById("dayWiseTableWrap").innerHTML = html;
+        dayBox.style.display = "block";
+      } else {
+        dayBox.style.display = "none";
+      }
+    };
+
+    function startSessionTimer() {
+      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+      var loginTime = parseInt(localStorage.getItem("mle_login_time") || new Date().getTime());
+      sessionTimerInterval = setInterval(function() {
+        var diff = (loginTime + 24 * 3600 * 1000) - new Date().getTime();
+        if (diff <= 0) { clearInterval(sessionTimerInterval); executeUserLogout(); return; }
+        var h = Math.floor(diff / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        var s = Math.floor((diff % 60000) / 1000);
+        var pad = function(n) { return String(n).padStart(2, '0'); };
+        document.getElementById("sessionTimerBadge").innerText = "⏳ " + pad(h) + ":" + pad(m) + ":" + pad(s);
+      }, 1000);
+    }
+
+    window.confirmUserLogout = function() {
+      if (confirm("Are you sure you want to log out of your session?")) executeUserLogout();
+    };
+
+    function executeUserLogout() {
+      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+      localStorage.removeItem("mle_user");
+      localStorage.removeItem("mle_login_time");
+      location.reload();
+    }
+
+    async function apiCall(action, payload) {
+      if (!payload) payload = {};
+      payload.action = action;
+      try {
+        var res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        return JSON.parse(await res.text());
+      } catch(e) { return null; }
+    }
+
+    window.refreshAppData = async function() {
+      try {
+        var res = await apiCall("getAppData");
+        if (res && res.items) {
+          cachedItems = res.items;
+          var hasLabour = cachedItems.some(function(x) { return x.name.toLowerCase().includes("labour charge"); });
+          if (!hasLabour) cachedItems.unshift({ name: "Labour Charge", hsn: "998519", custRate: 0, elecRate: 0, famRate: 0, stock: "∞" });
+          localStorage.setItem("mle_items", JSON.stringify(cachedItems));
+          bankSettings = res.bankInfo;
+
+          if (res.alerts && res.alerts.length > 0) {
+            document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(function(a) { return "• " + a; }).join("<br>");
+            document.getElementById("lowStockAlertBox").style.display = "block";
+          } else {
+            document.getElementById("lowStockAlertBox").style.display = "none";
+          }
+        }
+      } catch(e) {}
+    };
+
+    window.switchNav = function(nav) {
+      document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
+      document.getElementById("viewDashboard").style.display = (nav === 'dash') ? 'block' : 'none';
+      document.getElementById("viewGenBill").style.display = 'none';
+      document.getElementById("viewRepeatCustomers").style.display = 'none';
+      document.getElementById("viewCreditLedger").style.display = 'none';
+      document.getElementById("viewSearchBills").style.display = 'none';
+      document.getElementById("viewStockInward").style.display = 'none';
+      document.getElementById("viewSettings").style.display = (nav === 'settings') ? 'block' : 'none';
+
+      if (nav === 'dash') {
+        document.getElementById("btnNavDash").classList.add("active");
+        loadDashboardAnalytics();
+      }
+      if (nav === 'settings') {
+        document.getElementById("btnNavSet").classList.add("active");
+        if (currentUser.role === "Admin") loadUsersList();
+      }
+    };
+
+    window.toggleBillingSub = function() {
+      var sub = document.getElementById("billingSubMenu");
+      sub.style.display = (sub.style.display === "none") ? "flex" : "none";
+      switchBillingView('gen');
+    };
+
+    window.switchBillingView = function(subView) {
+      document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
+      document.getElementById("btnNavBill").classList.add("active");
+      document.querySelectorAll(".sub-nav-btn").forEach(function(b) { b.classList.remove("active"); });
+
+      document.getElementById("viewDashboard").style.display = 'none';
+      document.getElementById("viewSettings").style.display = 'none';
+      document.getElementById("viewGenBill").style.display = (subView === 'gen') ? 'block' : 'none';
+      document.getElementById("viewRepeatCustomers").style.display = (subView === 'repeat') ? 'block' : 'none';
+      document.getElementById("viewCreditLedger").style.display = (subView === 'khata') ? 'block' : 'none';
+      document.getElementById("viewSearchBills").style.display = (subView === 'search') ? 'block' : 'none';
+      document.getElementById("viewStockInward").style.display = (subView === 'stock') ? 'block' : 'none';
+
+      if (subView === 'gen') document.getElementById("btnSubGen").classList.add("active");
+      if (subView === 'repeat') {
+        document.getElementById("btnSubRepeat").classList.add("active");
+        loadRepeatCustomers();
+      }
+      if (subView === 'khata') {
+        document.getElementById("btnSubKhata").classList.add("active");
+        loadKhataRecords();
+      }
+      if (subView === 'search') {
+        document.getElementById("btnSubSearch").classList.add("active");
+        loadBillHistory();
+      }
+      if (subView === 'stock') {
+        document.getElementById("btnSubStock").classList.add("active");
+        loadInwardAuditLog();
+      }
+    };
+
+    function detectHsnFromName(name) {
+      var n = (name || "").toLowerCase().trim();
+      if (!n) return "";
+      if (n.includes("labour") || n.includes("service") || n.includes("repair")) return "998519";
+      if (n.includes("fan") || n.includes("cooler") || n.includes("exhaust")) return "8414";
+      if (n.includes("wire") || n.includes("cable") || n.includes("cord")) return "8544";
+      if (n.includes("switch") || n.includes("socket") || n.includes("mcb") || n.includes("regulator") || n.includes("holder")) return "8536";
+      if (n.includes("board") || n.includes("gang box") || n.includes("plate") || n.includes("sheet")) return "8538";
+      if (n.includes("led") || n.includes("bulb") || n.includes("tube") || n.includes("batten")) return "8539";
+      if (n.includes("iron") || n.includes("press") || n.includes("geyser") || n.includes("heater")) return "8516";
+      return "";
+    }
+
+    function resolveSmartHsn(itemName) {
+      var clean = (itemName || "").trim();
+      var match = cachedItems.find(function(x) { return x.name.toLowerCase() === clean.toLowerCase(); });
+      if (match && match.hsn && match.hsn !== "-") return match.hsn;
+      var catHsn = detectHsnFromName(clean);
+      if (catHsn) return catHsn;
+      if (confirm('"' + clean + '" is a new item without category.\nAssign default HSN (8538)?')) return "8538";
+      return "";
+    }
+
+    function getWordsText(num) {
+      num = parseFloat(num) || 0;
+      var rupees = Math.floor(num);
+      var paise = Math.round((num - rupees) * 100);
+
+      var a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+      var b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+      function inW(n) {
+        if (n === 0) return '';
+        if (n < 20) return a[n];
+        if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
+        if (n < 1000) return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' and ' + inW(n % 100) : '');
+        if (n < 100000) return inW(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 !== 0 ? ' ' + inW(n % 1000) : '');
+        if (n < 10000000) return inW(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 !== 0 ? ' ' + inW(n % 100000) : '');
+        return inW(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 !== 0 ? ' ' + inW(n % 10000000) : '');
+      }
+
+      var res = (rupees === 0 ? 'Zero' : inW(rupees)) + ' Rupees';
+      if (paise > 0) res += ' and ' + inW(paise) + ' Paise';
+      return res + ' Only';
+    }
+
+    window.onRateTypeChange = function() {
+      if (currentItemObj && !currentItemObj.name.toLowerCase().includes("labour")) resolveRate();
+      calculateItemTotal();
+      checkFormState();
+    };
+
+    function resolveRate() {
+      if (!currentItemObj) return;
+      var type = document.getElementById("rateType").value;
+      var r = currentItemObj.custRate || 0;
+      if (type === "Electrician Rate") r = currentItemObj.elecRate || r;
+      if (type === "Wholesale Rate") r = currentItemObj.famRate || r;
+      document.getElementById("itemRate").value = "₹" + parseFloat(r).toFixed(2);
+    }
+
+    window.calculateItemTotal = function() {
+      var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
+      var baseRate = parseFloat(rVal) || 0;
+      var disc = parseFloat(document.getElementById("itemDisc").value) || 0;
+      var qty = parseFloat(document.getElementById("itemQty").value) || 1;
+      var discountedRate = Math.max(0, baseRate - disc);
+
+      var isGst = document.getElementById("isGstBill").value.includes("Yes");
+      var gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
+      var gstPerPc = isGst ? ((discountedRate * gstPct) / 100) : 0;
+
+      document.getElementById("itemGstAdded").value = "+₹" + gstPerPc.toFixed(2);
+      var finalUnitRate = discountedRate + gstPerPc;
+      var total = finalUnitRate * qty;
+      document.getElementById("itemTotal").value = total.toFixed(2);
+      return { finalUnitRate: finalUnitRate, total: total, gstPerPc: gstPerPc };
+    };
+
+    window.addItemToBill = function() {
+      var name = document.getElementById("itemSearch").value.trim();
+      if (!name) return;
+
+      var bMode = document.getElementById("billMode").value;
+      var rType = document.getElementById("rateType").value;
+      var gstMode = document.getElementById("isGstBill").value;
+      var pMode = document.getElementById("paymentMode").value;
+      if (!bMode || !rType || !gstMode || !pMode) {
+        alert("Please select Mode, Rate Type, GST Bill?, and Payment mode before adding items!");
+        return;
+      }
+
+      var found = cachedItems.some(function(x) { return x.name.toLowerCase() === name.toLowerCase(); });
+      if (!found) { alert("Item not found in inventory! Please inward stock first."); return; }
+
+      var calc = calculateItemTotal();
+      var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
+      var baseRate = parseFloat(rVal) || 0;
+      if (baseRate <= 0) { alert("Please enter valid rate!"); return; }
+
+      billItems.push({
+        name: name,
+        serialNo: document.getElementById("itemSerial").value.trim() || "-",
+        hsn: document.getElementById("itemHsn").value.trim() || "-",
+        baseRate: baseRate,
+        discount: parseFloat(document.getElementById("itemDisc").value) || 0,
+        gstPerPc: calc.gstPerPc,
+        finalRate: calc.finalUnitRate,
+        qty: parseFloat(document.getElementById("itemQty").value) || 1,
+        total: calc.total
+      });
+
+      renderBillTable();
+      document.getElementById("itemSearch").value = "";
+      document.getElementById("itemSerial").value = "";
+      document.getElementById("itemHsn").value = "";
+      document.getElementById("itemRate").value = "Locked";
+      document.getElementById("itemRate").readOnly = true;
+      document.getElementById("itemDisc").value = "0";
+      document.getElementById("itemQty").value = "1";
+      document.getElementById("itemTotal").value = "0.00";
+      currentItemObj = null;
+      checkFormState();
+    };
+
+    function renderBillTable() {
+      var tbody = document.getElementById("billItemsTbody");
+      tbody.innerHTML = "";
+      var grand = 0, totalUnits = 0;
+
+      billItems.forEach(function(it, idx) {
+        grand += it.total;
+        totalUnits += it.qty;
+        var snDisplay = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#d97706;">' + it.serialNo + '</small>' : '';
+        tbody.innerHTML += "<tr>" +
+          "<td>" + (idx + 1) + "</td>" +
+          "<td><b>" + it.name + "</b>" + snDisplay + "</td>" +
+          "<td>" + it.hsn + "</td>" +
+          "<td>₹" + it.baseRate.toFixed(2) + "</td>" +
+          "<td style='color:#059669;'>-₹" + it.discount.toFixed(2) + "</td>" +
+          "<td style='color:#b45309;'>+₹" + it.gstPerPc.toFixed(2) + "</td>" +
+          "<td>" + it.qty + "</td>" +
+          "<td>₹" + it.total.toFixed(2) + "</td>" +
+          "<td><button class='btn-del' onclick='deleteBillItem(" + idx + ")'>✕</button></td>" +
+          "</tr>";
+      });
+
+      document.getElementById("lblTotalItemCount").innerText = billItems.length;
+      document.getElementById("lblTotalUnitsCount").innerText = totalUnits + " Pcs";
+      document.getElementById("lblGrandTotal").innerText = "₹" + grand.toFixed(2);
+    }
+
+    window.deleteBillItem = function(idx) {
+      billItems.splice(idx, 1);
+      renderBillTable();
+      checkFormState();
+    };
+
+    function checkFormState() {
+      var bMode = document.getElementById("billMode").value;
+      var rType = document.getElementById("rateType").value;
+      var gstMode = document.getElementById("isGstBill").value;
+      var pMode = document.getElementById("paymentMode").value;
+
+      var ok = bMode && rType && gstMode && pMode &&
+               document.getElementById("custName").value.trim() && 
+               document.getElementById("custPhone").value.trim().length >= 10 && 
+               billItems.length > 0;
+      document.getElementById("btnSubmitBill").disabled = !ok;
+    }
+
+    window.submitBillToBackend = async function() {
+      var btn = document.getElementById("btnSubmitBill");
+      btn.disabled = true;
+      btn.innerText = "⏳ Generating Bill & Drive PDF...";
+
+      var isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
+      var totalAmt = billItems.reduce(function(acc, c) { return acc + c.total; }, 0);
+
+      var payload = {
+        billMode: document.getElementById("billMode").value.includes("Estimate") ? "Estimate" : "Invoice",
+        billDate: document.getElementById("billDate").value,
+        rateType: document.getElementById("rateType").value,
+        isGst: isGstSelected,
+        paymentMode: document.getElementById("paymentMode").value,
+        customerName: document.getElementById("custName").value.trim(),
+        phone: document.getElementById("custPhone").value.trim(),
+        address: document.getElementById("custAddress").value.trim(),
+        gstin: document.getElementById("custGstin").value.trim(),
+        items: billItems,
+        grandTotal: totalAmt
+      };
+
+      var res = await apiCall("processBillOrEstimate", payload);
+      btn.disabled = false;
+      btn.innerText = "⚡ Checkout / Save Bill & Generate PDF";
+
+      if (res && res.success) {
+        lastGeneratedBillData = {
+          docNo: res.docNo,
+          customerName: payload.customerName,
+          phone: payload.phone,
+          address: payload.address,
+          gstin: payload.gstin,
+          paymentMode: payload.paymentMode,
+          isGst: isGstSelected,
+          grandTotal: totalAmt,
+          amount: totalAmt,
+          date: payload.billDate,
+          items: JSON.parse(JSON.stringify(billItems)),
+          pdfUrl: res.pdfUrl || ""
+        };
+        document.getElementById("lblSuccessDocNo").innerText = "Doc No: " + res.docNo + " | Amount: ₹" + totalAmt.toFixed(2);
+        document.getElementById("checkoutSuccessModal").style.display = "flex";
+      } else {
+        alert("Server error. Please retry!");
+      }
+    };
+
+    function buildReceiptHtml(b) {
+      if (!b) return "";
+      var lines = "";
+      var itms = b.items || [];
+      var totalTaxable = 0, totalGst = 0;
+
+      itms.forEach(function(it, idx) {
+        var qty = parseFloat(it.qty) || 1;
+        var baseRate = parseFloat(it.finalRate || it.baseRate || 0);
+        if (b.isGst) {
+          var gstPerPc = parseFloat(it.gstPerPc) || 0;
+          totalTaxable += (baseRate - gstPerPc) * qty;
+          totalGst += gstPerPc * qty;
+        } else {
+          totalTaxable += baseRate * qty;
+        }
+
+        var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
+        lines += "<tr>" +
+          "<td style='padding:6px 4px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px; white-space:nowrap;'>" + (idx + 1) + "</td>" +
+          "<td style='padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;'><b>" + it.name + "</b>" + snStr + "</td>" +
+          "<td style='padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;'>" + (it.hsn || '-') + "</td>" +
+          "<td style='padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;'>" + (it.qty || 1) + "</td>" +
+          "<td style='padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;'>₹ " + parseFloat(it.finalRate || it.baseRate || 0).toFixed(2) + "</td>" +
+          "<td style='padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;'>₹ " + parseFloat(it.total || 0).toFixed(2) + "</td>" +
+          "</tr>";
+      });
+
+      var fillerHeight = Math.max(90, 420 - (itms.length * 28));
+      lines += "<tr>" +
+        "<td style='height:" + fillerHeight + "px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
+        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
+        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
+        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
+        "<td style='border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;'>&nbsp;</td>" +
+        "<td style='border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a;'>&nbsp;</td>" +
+        "</tr>";
+
+      var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
+      var shopGstLine = (b.isGst) ? "<div style='font-weight:bold; margin-top:2px;'>GSTIN/UIN: 07DBOPG3647H1ZF | State: Delhi, Code: 07</div>" : "";
+      var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? "<div>GSTIN/UIN: " + b.gstin + " | State: Delhi, Code: 07</div>" : "";
+
+      var docHeading = "INVOICE";
+      if (b.docNo && b.docNo.includes('EST')) {
+        docHeading = "ESTIMATE INVOICE";
+      } else if (b.isGst) {
+        docHeading = "TAX INVOICE";
+      }
+
+      var taxBoxHtml = "";
+      if (b.isGst) {
+        var cgst = totalGst / 2;
+        var sgst = totalGst / 2;
+        taxBoxHtml = "<table style='width:100%; border-collapse:collapse;'>" +
+          "<tr><td style='padding:3px; font-weight:bold;'>Subtotal (Taxable Value)</td><td style='padding:3px; text-align:right; font-weight:bold;'>₹ " + totalTaxable.toFixed(2) + "</td></tr>" +
+          "<tr><td style='padding:3px; font-weight:bold;'>CGST (9%)</td><td style='padding:3px; text-align:right; font-weight:bold;'>₹ " + cgst.toFixed(2) + "</td></tr>" +
+          "<tr><td style='padding:3px; font-weight:bold;'>SGST (9%)</td><td style='padding:3px; text-align:right; font-weight:bold;'>₹ " + sgst.toFixed(2) + "</td></tr>" +
+          "<tr style='border-top:1.5px solid #1e3a8a;'><td style='padding:4px; font-weight:900;'>Total Amount</td><td style='padding:4px; text-align:right; font-weight:900; font-size:13.5px; color:#1e3a8a;'>₹ " + totalAmt.toFixed(2) + "</td></tr>" +
+          "</table>";
+      } else {
+        taxBoxHtml = "<table style='width:100%; border-collapse:collapse; height:100%;'>" +
+          "<tr><td style='padding:12px 4px; font-weight:900; font-size:12px;'>Total Amount</td><td style='padding:12px 4px; text-align:right; font-weight:900; font-size:16px; color:#1e3a8a;'>₹ " + totalAmt.toFixed(2) + "</td></tr>" +
+          "</table>";
+      }
+
+      var wordsDisplay = getWordsText(totalAmt);
+
+      return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
+        '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + docHeading + '</div>' +
+        '<div style="border:2px solid #1e3a8a; width:100%; box-sizing:border-box;">' +
+        '<table style="width:100%; border-collapse:collapse;">' +
+        '<tr>' +
+        '<td style="width:60%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">' +
+        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">SUPPLIER (BILL FROM)</div>' +
+        '<div style="font-size:13px; font-weight:900;">MOONLIGHT ELECTRICALS</div>' +
+        'Shop No 1, Sadbhavna Market, Opp. Cleo County Gate No 3,<br>Ghadi Chaukhandi, Sector-121, Noida - 201304 (U.P.)<br>' +
+        'Contact: 9650897965 / 8860706865 / 8860880453<br>' +
+        'Email: moonlightelectrical9@gmail.com' +
+        shopGstLine +
+        '</td>' +
+        '<td style="width:40%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a;">' +
+        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">INVOICE DETAILS</div>' +
+        'Invoice No.: <b>' + b.docNo + '</b><br>' +
+        'Dated: <b>' + b.date + '</b><br>' +
+        'Payment Mode: <b>' + (b.paymentMode || 'Cash') + '</b><br>' +
+        'Estimate validity period: 3 Days' +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td colspan="2" style="padding:6px 8px; border-bottom:1.5px solid #1e3a8a;">' +
+        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">BUYER / CONSIGNEE (SHIP TO & BILL TO)</div>' +
+        '<div style="font-size:12px; font-weight:bold;">' + b.customerName + '</div>' +
+        (b.address || 'Sector-121, Noida') + '<br>' +
+        'Contact No: ' + (b.phone || '-') + buyerGstLine + '<br>' +
+        'State Name: Uttar Pradesh, Code: 09' +
+        '</td>' +
+        '</tr>' +
+        '</table>' +
+        '<table style="width:100%; border-collapse:collapse; border-bottom:1.5px solid #1e3a8a;">' +
+        '<thead>' +
+        '<tr style="background:#1e3a8a; color:#fff;">' +
+        '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:50px; text-align:center; white-space:nowrap;">Sl No.</th>' +
+        '<th style="padding:6px 6px; border:1px solid #1e3a8a; text-align:left;">Description of Goods</th>' +
+        '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:65px; text-align:center;">HSN/SAC</th>' +
+        '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:50px; text-align:center;">Quantity</th>' +
+        '<th style="padding:6px 6px; border:1px solid #1e3a8a; width:70px; text-align:right;">Rate (₹)</th>' +
+        '<th style="padding:6px 6px; border:1px solid #1e3a8a; width:80px; text-align:right;">Amount (₹)</th>' +
+        '</tr>' +
+        '</thead>' +
+        '<tbody>' + lines + '</tbody>' +
+        '</table>' +
+        '<div style="padding:6px 8px; font-size:11px; font-weight:bold; border-top:1.5px solid #1e3a8a; border-bottom:1.5px solid #1e3a8a; background:#fff;">' +
+        'Amount (In Words): <span style="font-weight:normal;">' + wordsDisplay + '</span>' +
+        '</div>' +
+        '<table style="width:100%; border-collapse:collapse;">' +
+        '<tr>' +
+        '<td style="width:60%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:6px;">' +
+        '<table style="width:100%; border-collapse:collapse; border:1px solid #1e3a8a;">' +
+        '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:2px 5px;">Bank Details</td></tr>' +
+        '<tr><td style="width:35%; padding:3px 5px; border:1px solid #cbd5e1;"><b>A/c Holder\'s Name:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">SHIVAM CHAUHAN</td></tr>' +
+        '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>Bank Name:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">Kotak Mahindra Bank</td></tr>' +
+        '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>A/c No.:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">6413488039</td></tr>' +
+        '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>Branch & IFS Code:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">Sector 18, Noida & KKBK0000181</td></tr>' +
+        '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>UPI ID:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">8860880453@kotak</td></tr>' +
+        '</table>' +
+        '</td>' +
+        '<td style="width:40%; vertical-align:middle; padding:6px; background:#fafafa;">' +
+        taxBoxHtml +
+        '</td>' +
+        '</tr>' +
+        '</table>' +
+        '</div>' +
+        '<div style="text-align:center; font-size:9.5px; padding-top:6px; margin-top:6px; line-height:1.35;">' +
+        'Thank you for choosing Moon Light Electricals!<br>' +
+        'All electrical products covered under manufacturer warranty. Please keep this invoice safe for warranty claims.<br>' +
+        '<b>THIS IS A COMPUTER-GENERATED DOCUMENT, NO SIGNATURE/STAMP REQUIRED.</b>' +
+        '</div>' +
+        '</div>';
+    }
+
+    window.triggerDirectPrint = function(customData) {
+      var data = customData || lastGeneratedBillData;
+      if (!data) return;
+      var container = document.getElementById("printableInvoice");
+      container.innerHTML = buildReceiptHtml(data);
+      container.style.display = "block";
+      window.print();
+      container.style.display = "none";
+    };
+
+    window.viewDownloadPdf = function(customData) {
+      var data = customData || lastGeneratedBillData;
+      if (!data) return;
+      if (data.pdfUrl && data.pdfUrl.startsWith("http")) {
+        window.open(data.pdfUrl, '_blank');
+      } else {
+        var w = window.open("", "_blank");
+        w.document.write("<html><head><title>" + data.docNo + "</title></head><body>" + buildReceiptHtml(data) + "</body></html>");
+        w.document.close();
+      }
+    };
+
+    window.shareBillOnWhatsApp = function(customData) {
+      var d = customData || lastGeneratedBillData;
+      if (!d) return;
+
+      var docWord = (d.docNo && d.docNo.includes("EST")) ? "Estimate" : "Invoice";
+      var totalAmt = parseFloat(d.grandTotal || d.amount || 0).toFixed(2);
+      
+      var fileLink = (d.pdfUrl && d.pdfUrl.startsWith("http")) 
+        ? d.pdfUrl 
+        : ("https://drive.google.com/drive/u/0/search?q=" + encodeURIComponent(d.docNo));
+      var pdfSection = "\n\n📄 *Download PDF Document:*\n" + fileLink;
+
+      var msg = "Hi " + d.customerName + ",\n\nGreetings from *Moon Light Electricals*!\n\nYour *" + docWord + "* (*" + d.docNo + "*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: " + d.date + "\n  • Total Amount: *₹" + totalAmt + "*\n  • Payment Mode: " + (d.paymentMode || 'Cash / Online') + pdfSection + "\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453";
+
+      window.open("https://wa.me/91" + d.phone + "?text=" + encodeURIComponent(msg), '_blank');
+    };
+
+    window.closeSuccessAndNextBill = function() {
+      document.getElementById("checkoutSuccessModal").style.display = "none";
+      billItems = [];
+      renderBillTable();
+      document.getElementById("custName").value = "";
+      document.getElementById("custPhone").value = "";
+      document.getElementById("custGstin").value = "";
+      document.getElementById("billMode").value = "";
+      document.getElementById("rateType").value = "";
+      document.getElementById("isGstBill").value = "";
+      document.getElementById("paymentMode").value = "";
+      checkFormState();
+    };
+
+    async function loadDashboardAnalytics() {
+      var res = await apiCall("getDashboardAnalytics");
+      if (res && res.sales) {
+        window.dashData = res;
+        filterDash('today');
+      }
+    }
+
+    async function loadKhataRecords() {
+      var c = document.getElementById("khataListContainer");
+      c.innerHTML = "Fetching pending udhar records...";
+      var res = await apiCall("getKhataRecords");
+      if (res && res.records) {
+        var totalPending = 0, count = 0;
+        res.records.forEach(function(r) {
+          if (r.status.toLowerCase().indexOf("paid") === -1) {
+            totalPending += parseFloat(r.amount) || 0;
+            count++;
+          }
+        });
+        document.getElementById("lblTotalPendingUdhar").innerText = "₹" + totalPending.toFixed(2);
+        document.getElementById("lblTotalPendingCount").innerText = count + " Pending Bills";
+
+        var html = '<div class="table-wrap"><table><thead><tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Reminder Tracking</th><th>Actions</th></tr></thead><tbody>';
+        res.records.forEach(function(r) {
+          var isPending = r.status.toLowerCase().indexOf("paid") === -1;
+          var statusColor = isPending ? '#d97706' : '#059669';
+          var statusText = isPending ? 'Pending' : 'Paid';
+          var remHtml = '<small>Sent: ' + (r.remCount || 0) + ' times<br>Last: ' + (r.remDate || '-') + '</small>';
+          var actHtml = isPending ? '<button class="btn-sync" style="padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick="sendKhataReminder(\'' + r.docNo + '\', \'' + r.customerName + '\', \'' + r.phone + '\', ' + r.amount + ')">📲 Reminder</button><button class="btn-add" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="markPaid(\'' + r.docNo + '\')">✓ Mark as Paid</button>' : '<span style="color:#059669; font-weight:800;">✓ Settled</span>';
+
+          html += "<tr>" +
+            "<td><b>" + r.docNo + "</b></td>" +
+            "<td>" + r.date + "</td>" +
+            "<td>" + r.customerName + "</td>" +
+            "<td>" + (r.phone || '-') + "</td>" +
+            "<td><b>₹" + parseFloat(r.amount || 0).toFixed(2) + "</b></td>" +
+            "<td><b style='color:" + statusColor + "'>" + statusText + "</b></td>" +
+            "<td>" + remHtml + "</td>" +
+            "<td>" + actHtml + "</td>" +
+            "</tr>";
+        });
+        html += '</tbody></table></div>';
+        c.innerHTML = html;
+      }
+    }
+
+    window.sendKhataReminder = async function(docNo, name, phone, amount) {
+      var upi = (bankSettings && bankSettings.upi) ? bankSettings.upi : "8860880453@kotak";
+      var payUrl = "https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=" + encodeURIComponent(upi) + "&am=" + amount;
+      var msg = "*Greetings from Moon Light Electricals!*\n\nHi " + name + ",\nThis is a reminder that payment for Bill *" + docNo + "* is pending.\n\n• *Pending Amount:* ₹" + parseFloat(amount).toFixed(2) + "\n• *Due To:* Moon Light Electricals\n\n👉 *Pay via UPI (GPay/PhonePe):*\n" + payUrl + "\n\nThank you!";
+      window.open("https://wa.me/91" + phone + "?text=" + encodeURIComponent(msg), '_blank');
+      await apiCall("recordKhataReminder", { docNo: docNo });
+      loadKhataRecords();
+    };
+
+    window.markPaid = async function(docNo) {
+      if (!confirm("Mark " + docNo + " as Paid?")) return;
+      var res = await apiCall("markKhataPaid", { docNo: docNo });
+      if (res && res.success) loadKhataRecords();
+    };
+
+    async function loadBillHistory() {
+      var c = document.getElementById("historyTableContainer");
+      c.innerHTML = "Fetching invoices list...";
+      var res = await apiCall("getBillHistory");
+      if (res && res.records) {
+        cachedBillHistory = res.records;
+        filterBillHistory();
+      }
+    }
+
+    window.filterBillHistory = function() {
+      var query = (document.getElementById("historySearchInput").value || "").trim().toLowerCase();
+      var filtered = !query ? cachedBillHistory : cachedBillHistory.filter(function(r) {
+        return (r.docNo && r.docNo.toLowerCase().includes(query)) ||
+               (r.customerName && r.customerName.toLowerCase().includes(query)) ||
+               (r.phone && String(r.phone).includes(query));
+      });
+
+      var c = document.getElementById("historyTableContainer");
+      var html = '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Doc No</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Actions</th></tr></thead><tbody>';
+      filtered.forEach(function(r, idx) {
+        html += "<tr>" +
+          "<td>" + (r.date || '-') + "</td>" +
+          "<td><b>" + r.docNo + "</b></td>" +
+          "<td>" + r.customerName + "</td>" +
+          "<td>" + (r.phone || '-') + "</td>" +
+          "<td><b>₹" + parseFloat(r.amount || 0).toFixed(2) + "</b></td>" +
+          "<td>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='triggerDirectPrint(cachedBillHistory[" + idx + "])'>🖨️ Re-Print</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;' onclick='shareBillOnWhatsApp(cachedBillHistory[" + idx + "])'>📲 WhatsApp</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px;' onclick='viewDownloadPdf(cachedBillHistory[" + idx + "])'>👁️ View</button>" +
+          "</td>" +
+          "</tr>";
+      });
+      html += '</tbody></table></div>';
+      c.innerHTML = html;
+    };
+
+    window.submitStockInward = async function() {
+      var name = document.getElementById("stkName").value.trim();
+      var qty = parseFloat(document.getElementById("stkQty").value) || 0;
+      if (!name || qty <= 0) { alert("Enter valid item and quantity!"); return; }
+
+      var res = await apiCall("inwardStock", {
+        data: {
+          name: name,
+          hsn: document.getElementById("stkHsn").value.trim() || "-",
+          qty: qty,
+          custRate: parseFloat(document.getElementById("stkCustRate").value) || 0,
+          elecRate: parseFloat(document.getElementById("stkElecRate").value) || 0,
+          famRate: parseFloat(document.getElementById("stkFamRate").value) || 0,
+          minQty: parseFloat(document.getElementById("stkMinQty").value) || 2
+        }
+      });
+      if (res && res.success) {
+        alert("Stock auto-added successfully! New Total Stock: " + res.newStock);
+        document.getElementById("stkName").value = "";
+        document.getElementById("stkQty").value = "0";
+        refreshAppData();
+        loadInwardAuditLog();
+      }
+    };
+
+    window.submitHsnOnly = async function() {
+      var name = document.getElementById("hsnOnlyName").value.trim();
+      var hsn = document.getElementById("hsnOnlyCode").value.trim();
+      if (!name || !hsn) { alert("Enter item and HSN code!"); return; }
+      var res = await apiCall("updateHsnOnly", { data: { name: name, hsn: hsn } });
+      if (res && res.success) {
+        alert("HSN code updated successfully!");
+        refreshAppData();
+        loadInwardAuditLog();
+      }
+    };
+
+    window.submitCorrectQty = async function() {
+      var name = document.getElementById("correctName").value.trim();
+      var qty = parseFloat(document.getElementById("correctQty").value) || 0;
+      if (!name) { alert("Select item!"); return; }
+      var res = await apiCall("correctStockQty", { data: { name: name, correctQty: qty } });
+      if (res && res.success) {
+        alert("Real stock count overridden successfully! Set to: " + qty);
+        refreshAppData();
+        loadInwardAuditLog();
+      }
+    };
+
+    async function loadInwardAuditLog() {
+      var res = await apiCall("getInwardAuditLog");
+      if (res && res.records) {
+        var c = document.getElementById("auditLogContainer");
+        var html = '<div class="table-wrap"><table><thead><tr><th>Date & Time</th><th>Item Name</th><th>Action Type</th><th>Prev Stock</th><th>Change</th><th>Current Stock</th></tr></thead><tbody>';
+        res.records.forEach(function(r) {
+          html += "<tr><td>" + r.time + "</td><td><b>" + r.name + "</b></td><td>" + r.type + "</td><td>" + r.prev + " Pcs</td><td><b style='color:#059669;'>" + r.change + "</b></td><td><b>" + r.current + " Pcs</b></td></tr>";
+        });
+        html += '</tbody></table></div>';
+        c.innerHTML = html;
+      }
+    }
+
+    window.saveBankSettings = async function() {
+      var payload = {
+        bankName: document.getElementById("setBankName").value.trim(),
+        holder: document.getElementById("setHolder").value.trim(),
+        accNo: document.getElementById("setAccNo").value.trim(),
+        ifsc: document.getElementById("setIfsc").value.trim(),
+        upi: document.getElementById("setUpi").value.trim()
+      };
+      var res = await apiCall("updateBankSettings", { data: payload });
+      if (res && res.success) alert("Bank details updated successfully!");
+    };
+  </script>
+</body>
+</html>
