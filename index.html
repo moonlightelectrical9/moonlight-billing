@@ -295,22 +295,33 @@
     </div>
   </div>
 
-  <!-- 4. PERMISSIONS CHECKBOX MODAL (WITH LOW STOCK ALERTS PERMISSION) -->
+  <!-- 4. GRANULAR PERMISSIONS MODAL -->
   <div id="permModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
-    <div class="modal-box" style="text-align:left; max-width:400px;">
-      <h3 style="font-size:16px; margin-bottom:10px; color:#0f172a;">⚙ Assign Access Permissions</h3>
-      <div style="font-size:12px; color:#64748b; margin-bottom:12px;">User: <b id="permUserName"></b> (<span id="permUserPhone"></span>)</div>
+    <div class="modal-box" style="text-align:left; max-width:440px; max-height:90vh; overflow-y:auto;">
+      <h3 style="font-size:16px; margin-bottom:6px; color:#0f172a;">⚙ Assign Detailed Access Permissions</h3>
+      <div style="font-size:12px; color:#64748b; margin-bottom:14px;">User: <b id="permUserName"></b> (<span id="permUserPhone"></span>)</div>
       
-      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px; font-size:13px; font-weight:700;">
-        <label><input type="checkbox" id="chkPermGen"> 🧾 Generate Bill (Counter POS)</label>
-        <label><input type="checkbox" id="chkPermRepeat"> 👥 Repeat Customers Directory</label>
-        <label><input type="checkbox" id="chkPermDash"> 📊 Dashboard Analytics (Sales/Profit)</label>
-        <label><input type="checkbox" id="chkPermKhata"> 📒 Credit Ledger (Udhar Khata)</label>
-        <label><input type="checkbox" id="chkPermSearch"> 🔍 Search Bill & Reprint</label>
-        <label><input type="checkbox" id="chkPermStock"> 📦 Stock Inward & Item Purchases</label>
-        <label><input type="checkbox" id="chkPermSet"> ⚙ Settings & User Management</label>
-        <div style="border-top:1px dashed #cbd5e1; margin-top:4px; padding-top:6px;"></div>
-        <label style="color:#b45309;"><input type="checkbox" id="chkPermAlertStock"> ⚠️ Low Stock Alerts Visibility (alert_stock)</label>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px; font-size:12.5px; font-weight:700;">
+        <div style="font-size:11px; color:#0284c7; text-transform:uppercase;">📊 Dashboard Access</div>
+        <label><input type="checkbox" id="chkPermDash"> Dashboard Analytics (Sales/Profit)</label>
+
+        <div style="font-size:11px; color:#0284c7; text-transform:uppercase; margin-top:6px;">🧾 Billing Modules</div>
+        <label><input type="checkbox" id="chkPermGen"> Generate Bill (Counter POS)</label>
+        <label><input type="checkbox" id="chkPermDraft"> 📝 Draft Bills (Running Bills Hold/Resume)</label>
+        <label><input type="checkbox" id="chkPermRepeat"> Repeat Customers Directory</label>
+        <label><input type="checkbox" id="chkPermKhata"> Credit Ledger (Udhar Khata)</label>
+        <label><input type="checkbox" id="chkPermSearch"> Search Bill & Reprint</label>
+
+        <div style="font-size:11px; color:#0284c7; text-transform:uppercase; margin-top:6px;">📦 Stock & Inventory Modules (Granular)</div>
+        <label><input type="checkbox" id="chkPermStkInward"> Inward Stock (Regular Add Inward)</label>
+        <label><input type="checkbox" id="chkPermStkHsn"> Quick HSN Update Only</label>
+        <label><input type="checkbox" id="chkPermStkRate"> Quick Rates Update Only</label>
+        <label><input type="checkbox" id="chkPermStkCorrect"> Correct / Override Real Stock Qty</label>
+        <label><input type="checkbox" id="chkPermStkPur"> Purchase Bill Entry (Mandi/HUB)</label>
+
+        <div style="font-size:11px; color:#0284c7; text-transform:uppercase; margin-top:6px;">⚙️ Admin & Security Controls</div>
+        <label><input type="checkbox" id="chkPermSet"> Settings & User Accounts</label>
+        <label style="color:#b45309;"><input type="checkbox" id="chkPermAlertStock"> ⚠️ Low Stock Alerts Visibility</label>
       </div>
 
       <div style="display:flex; gap:10px;">
@@ -358,6 +369,7 @@
         <button class="nav-btn" id="btnNavBill" onclick="toggleBillingSub()">🧾 Billing ▾</button>
         <div class="sub-menu" id="billingSubMenu">
           <button class="sub-nav-btn active" id="btnSubGen" onclick="switchBillingView('gen')">• Generate Bill</button>
+          <button class="sub-nav-btn" id="btnSubDraft" onclick="switchBillingView('draft')">• Draft Bills</button>
           <button class="sub-nav-btn" id="btnSubRepeat" onclick="switchBillingView('repeat')">• Repeat Customers</button>
           <button class="sub-nav-btn" id="btnSubKhata" onclick="switchBillingView('khata')">• Credit Ledger</button>
           <button class="sub-nav-btn" id="btnSubSearch" onclick="switchBillingView('search')">• Search Bill</button>
@@ -480,6 +492,11 @@
         <!-- VIEW 2: BILLING -> GENERATE BILL -->
         <div id="viewGenBill" style="display: none;">
           <div class="card" id="cardBillForm">
+            <div id="bannerResumedDraft" style="display:none; background:#eff6ff; border:1.5px solid #3b82f6; border-radius:6px; padding:8px 12px; margin-bottom:12px; justify-content:space-between; align-items:center;">
+              <span style="font-size:12.5px; color:#1d4ed8; font-weight:800;">📝 Editing Resumed Draft Bill (<span id="lblResumedDraftId"></span>)</span>
+              <button class="btn-sync" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:3px 8px; font-size:11px;" onclick="cancelResumedDraft()">✕ Cancel Draft Mode</button>
+            </div>
+
             <div class="grid-row row-5">
               <div class="form-col">
                 <label>BILL DATE <span>*</span></label>
@@ -553,7 +570,7 @@
               </div>
               <div class="form-col">
                 <label>WORK NOTE / SERIAL / WARRANTY</label>
-                <input type="text" id="itemSerial" placeholder="e.g. Fan Fitting / SN1092">
+                <input type="text" id="itemSerial" placeholder="e.g. Fan Fitting / SN1092 / Red Color">
               </div>
               <div class="form-col">
                 <label>HSN / SAC (EDITABLE)</label>
@@ -616,9 +633,25 @@
               </div>
             </div>
 
-            <button class="btn-checkout" id="btnSubmitBill" onclick="submitBillToBackend()" disabled>
-              ⚡ Checkout / Save Bill & Generate PDF
-            </button>
+            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px;">
+              <button type="button" class="btn-sync" id="btnSaveDraft" onclick="saveCurrentBillAsDraft()" style="height:48px; background:#eff6ff; color:#1d4ed8; border:1.5px solid #3b82f6; font-size:13.5px; font-weight:900; justify-content:center;">
+                💾 Hold / Save as Draft
+              </button>
+              <button class="btn-checkout" id="btnSubmitBill" onclick="submitBillToBackend()" disabled>
+                ⚡ Checkout / Save Bill & Generate PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 2.2: DRAFT BILLS DIRECTORY (RUNNING BILLS) -->
+        <div id="viewDraftBills" style="display: none;">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 style="font-weight:900; color:#0f172a;">📝 Draft Bills / Running Bills (Customer Under Construction)</h3>
+              <button class="btn-sync" onclick="loadDraftBills()">🔄 Refresh Drafts</button>
+            </div>
+            <div id="draftBillsTableContainer"></div>
           </div>
         </div>
 
@@ -866,8 +899,10 @@
     var bankSettings = null;
     var masterDriveFolderLink = "";
     var sessionTimerInterval = null;
+    var securityHeartbeatInterval = null;
     var deferredPrompt = null;
     var selectedPermUserPhone = "";
+    var activeResumedDraftId = null;
 
     var activeDashMode = "today";
     var allMonthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -916,7 +951,7 @@
       }
     });
 
-    // 🔐 DYNAMIC USER AUTHENTICATION
+    // 🔐 AUTHENTICATION
     window.doPasswordLogin = async function() {
       var phoneInput = document.getElementById("pwdLoginPhone").value.trim().replace(/\D/g, '');
       var phone = phoneInput.slice(-10);
@@ -1095,27 +1130,57 @@
       document.getElementById("lblUser").innerText = currentUser.name + " 🔑";
       applyUserPermissions();
       startSessionTimer();
+      startSecurityHeartbeat();
       loadDashboardAnalytics();
       refreshAppData();
       loadInwardAuditLog();
       loadRepeatCustomers();
+      loadDraftBills();
       if (currentUser.role === "Admin") {
         loadUsersList();
         loadAdminAlerts();
       }
     }
 
-    // ⚙️ PRECISE USER PERMISSION CONTROL
+    // 🔒 INSTANT FORCE LOGOUT SECURITY GUARD
+    function startSecurityHeartbeat() {
+      if (securityHeartbeatInterval) clearInterval(securityHeartbeatInterval);
+      if (currentUser && currentUser.phone === "8860706865") return; // Owner skip
+
+      securityHeartbeatInterval = setInterval(async function() {
+        if (!currentUser) return;
+        var res = await apiCall("checkUserStatus", { phone: currentUser.phone });
+        if (res && res.active === false) {
+          clearInterval(securityHeartbeatInterval);
+          alert("⚠️ Your account has been deactivated by Admin! Session Terminated.");
+          executeUserLogout();
+        }
+      }, 25000);
+    }
+
+    // ⚙️ GRANULAR ACCESS ENFORCEMENT
     function applyUserPermissions() {
       var perms = currentUser.permissions || "all";
       var isStaff = (currentUser.role !== "Admin");
+
       if (isStaff && perms !== "all") {
         document.getElementById("btnNavDash").style.display = perms.includes("dash") ? "flex" : "none";
         document.getElementById("btnSubGen").style.display = perms.includes("gen") ? "block" : "none";
+        document.getElementById("btnSubDraft").style.display = perms.includes("draft") ? "block" : "none";
         document.getElementById("btnSubRepeat").style.display = perms.includes("repeat") ? "block" : "none";
         document.getElementById("btnSubKhata").style.display = perms.includes("khata") ? "block" : "none";
         document.getElementById("btnSubSearch").style.display = perms.includes("search") ? "block" : "none";
-        document.getElementById("btnSubStock").style.display = perms.includes("stock") ? "block" : "none";
+
+        var hasAnyStock = perms.includes("stock") || perms.includes("stk_inward") || perms.includes("stk_hsn") || perms.includes("stk_rate") || perms.includes("stk_correct") || perms.includes("stk_pur");
+        document.getElementById("btnSubStock").style.display = hasAnyStock ? "block" : "none";
+
+        // Granular stock buttons
+        document.getElementById("btnStkTabInward").style.display = (perms.includes("stock") || perms.includes("stk_inward")) ? "inline-block" : "none";
+        document.getElementById("btnStkTabHsn").style.display = (perms.includes("stock") || perms.includes("stk_hsn")) ? "inline-block" : "none";
+        document.getElementById("btnStkTabRate").style.display = (perms.includes("stock") || perms.includes("stk_rate")) ? "inline-block" : "none";
+        document.getElementById("btnStkTabCorrect").style.display = (perms.includes("stock") || perms.includes("stk_correct")) ? "inline-block" : "none";
+        document.getElementById("btnStkTabPurchase").style.display = (perms.includes("stock") || perms.includes("stk_pur")) ? "inline-block" : "none";
+
         document.getElementById("btnNavSet").style.display = perms.includes("set") ? "flex" : "none";
 
         var canSeeAlerts = perms.includes("alert_stock");
@@ -1500,6 +1565,129 @@
       menu.style.display = "block";
     };
 
+    // 📝 DRAFT BILLS HOLD & RESUME HANDLERS
+    window.saveCurrentBillAsDraft = async function() {
+      var cName = document.getElementById("custName").value.trim();
+      var cPhone = document.getElementById("custPhone").value.trim();
+      if (!cName && !cPhone) {
+        alert("Please enter customer name or phone to identify this draft!");
+        return;
+      }
+      if (billItems.length === 0) {
+        alert("Cart is empty! Add at least 1 item before saving as draft.");
+        return;
+      }
+
+      var grand = billItems.reduce(function(a, b) { return a + b.total; }, 0);
+      var payload = {
+        draftId: activeResumedDraftId || ("DRF-" + new Date().getTime()),
+        date: document.getElementById("billDate").value,
+        customerName: cName || "Customer",
+        phone: cPhone,
+        address: document.getElementById("custAddress").value.trim(),
+        items: billItems,
+        grandTotal: grand,
+        savedBy: currentUser ? currentUser.name : "Staff",
+        billMode: document.getElementById("billMode").value,
+        rateType: document.getElementById("rateType").value,
+        isGst: document.getElementById("isGstBill").value.includes("Yes"),
+        paymentMode: document.getElementById("paymentMode").value
+      };
+
+      var btn = document.getElementById("btnSaveDraft");
+      btn.innerText = "⏳ Saving...";
+      btn.disabled = true;
+
+      var res = await apiCall("saveDraftBill", { draftData: payload });
+      btn.innerText = "💾 Hold / Save as Draft";
+      btn.disabled = false;
+
+      if (res && res.success) {
+        alert("Bill saved to Draft successfully! Counter is now clear for next customer.");
+        clearBillingForm();
+        loadDraftBills();
+      } else {
+        alert("Could not save draft. Try again!");
+      }
+    };
+
+    async function loadDraftBills() {
+      var c = document.getElementById("draftBillsTableContainer");
+      if (!c) return;
+      c.innerHTML = "<div style='padding:12px; font-weight:800; color:#0284c7;'>Loading pending draft bills...</div>";
+      var res = await apiCall("getDraftBills");
+      if (res && res.drafts && res.drafts.length > 0) {
+        var html = '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total Amount</th><th>Saved By</th><th>Actions</th></tr></thead><tbody>';
+        res.drafts.forEach(function(d, idx) {
+          html += "<tr>" +
+            "<td>" + d.date + "</td>" +
+            "<td><b>" + d.customerName + "</b></td>" +
+            "<td>" + (d.phone || '-') + "</td>" +
+            "<td>" + (d.items ? d.items.length : 0) + " items</td>" +
+            "<td><b style='color:#b45309;'>₹" + parseFloat(d.grandTotal || 0).toFixed(2) + "</b></td>" +
+            "<td><small>" + (d.savedBy || '-') + "</small></td>" +
+            "<td>" +
+            "<button class='btn-sync' style='padding:4px 10px; font-weight:900; background:#22c55e; color:#fff; border:none; margin-right:6px;' onclick='resumeDraftBill(" + JSON.stringify(d).replace(/'/g, "&#39;") + ")'>✏️ Resume</button>" +
+            "<button class='btn-sync' style='padding:4px 8px; font-size:11px; color:#dc2626; border:1px solid #fca5a5;' onclick='deleteDraftBill(\"" + d.draftId + "\")'>🗑 Cancel</button>" +
+            "</td>" +
+            "</tr>";
+        });
+        html += '</tbody></table></div>';
+        c.innerHTML = html;
+      } else {
+        c.innerHTML = "<div style='padding:16px; color:#64748b; font-weight:bold;'>No draft bills pending! Any bills saved as draft will show here.</div>";
+      }
+    }
+
+    window.resumeDraftBill = function(draft) {
+      activeResumedDraftId = draft.draftId;
+      switchBillingView('gen');
+
+      document.getElementById("custName").value = draft.customerName || "";
+      document.getElementById("custPhone").value = draft.phone || "";
+      document.getElementById("custAddress").value = draft.address || "Sector-121, Noida";
+      if (draft.billMode) document.getElementById("billMode").value = draft.billMode;
+      if (draft.rateType) document.getElementById("rateType").value = draft.rateType;
+      if (draft.paymentMode) document.getElementById("paymentMode").value = draft.paymentMode;
+      document.getElementById("isGstBill").value = draft.isGst ? "Yes (GST Invoice)" : "No (Regular Bill)";
+
+      billItems = draft.items || [];
+      renderBillTable();
+      checkFormState();
+
+      document.getElementById("lblResumedDraftId").innerText = draft.draftId + " - " + draft.customerName;
+      document.getElementById("bannerResumedDraft").style.display = "flex";
+      document.getElementById("cardBillForm").scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.cancelResumedDraft = function() {
+      activeResumedDraftId = null;
+      document.getElementById("bannerResumedDraft").style.display = "none";
+      clearBillingForm();
+    };
+
+    window.deleteDraftBill = async function(draftId) {
+      if (confirm("Delete this draft bill permanently?")) {
+        await apiCall("deleteDraftBill", { draftId: draftId });
+        loadDraftBills();
+      }
+    };
+
+    function clearBillingForm() {
+      activeResumedDraftId = null;
+      billItems = [];
+      renderBillTable();
+      document.getElementById("custName").value = "";
+      document.getElementById("custPhone").value = "";
+      document.getElementById("custGstin").value = "";
+      document.getElementById("billMode").value = "";
+      document.getElementById("rateType").value = "";
+      document.getElementById("isGstBill").value = "";
+      document.getElementById("paymentMode").value = "";
+      document.getElementById("bannerResumedDraft").style.display = "none";
+      checkFormState();
+    }
+
     async function loadRepeatCustomers() {
       var c = document.getElementById("repeatCustTableContainer");
       if (!c) return;
@@ -1581,7 +1769,9 @@
 
     window.toggleUserStatus = async function(phone) {
       var res = await apiCall("toggleUserStatus", { phone: phone });
-      if (res && res.success) loadUsersList();
+      if (res && res.success) {
+        loadUsersList();
+      }
     };
 
     window.openPermModal = function(phone, name, currentPerms) {
@@ -1590,12 +1780,19 @@
       document.getElementById("permUserPhone").innerText = phone;
       
       var isAll = (currentPerms === "all");
-      document.getElementById("chkPermGen").checked = isAll || currentPerms.includes("gen");
-      document.getElementById("chkPermRepeat").checked = isAll || currentPerms.includes("repeat");
       document.getElementById("chkPermDash").checked = isAll || currentPerms.includes("dash");
+      document.getElementById("chkPermGen").checked = isAll || currentPerms.includes("gen");
+      document.getElementById("chkPermDraft").checked = isAll || currentPerms.includes("draft");
+      document.getElementById("chkPermRepeat").checked = isAll || currentPerms.includes("repeat");
       document.getElementById("chkPermKhata").checked = isAll || currentPerms.includes("khata");
       document.getElementById("chkPermSearch").checked = isAll || currentPerms.includes("search");
-      document.getElementById("chkPermStock").checked = isAll || currentPerms.includes("stock");
+
+      document.getElementById("chkPermStkInward").checked = isAll || currentPerms.includes("stock") || currentPerms.includes("stk_inward");
+      document.getElementById("chkPermStkHsn").checked = isAll || currentPerms.includes("stock") || currentPerms.includes("stk_hsn");
+      document.getElementById("chkPermStkRate").checked = isAll || currentPerms.includes("stock") || currentPerms.includes("stk_rate");
+      document.getElementById("chkPermStkCorrect").checked = isAll || currentPerms.includes("stock") || currentPerms.includes("stk_correct");
+      document.getElementById("chkPermStkPur").checked = isAll || currentPerms.includes("stock") || currentPerms.includes("stk_pur");
+
       document.getElementById("chkPermSet").checked = isAll || currentPerms.includes("set");
       document.getElementById("chkPermAlertStock").checked = isAll || currentPerms.includes("alert_stock");
 
@@ -1608,17 +1805,24 @@
 
     window.saveUserPermsFromModal = async function() {
       var list = [];
-      if (document.getElementById("chkPermGen").checked) list.push("gen");
-      if (document.getElementById("chkPermRepeat").checked) list.push("repeat");
       if (document.getElementById("chkPermDash").checked) list.push("dash");
+      if (document.getElementById("chkPermGen").checked) list.push("gen");
+      if (document.getElementById("chkPermDraft").checked) list.push("draft");
+      if (document.getElementById("chkPermRepeat").checked) list.push("repeat");
       if (document.getElementById("chkPermKhata").checked) list.push("khata");
       if (document.getElementById("chkPermSearch").checked) list.push("search");
-      if (document.getElementById("chkPermStock").checked) list.push("stock");
+
+      if (document.getElementById("chkPermStkInward").checked) list.push("stk_inward");
+      if (document.getElementById("chkPermStkHsn").checked) list.push("stk_hsn");
+      if (document.getElementById("chkPermStkRate").checked) list.push("stk_rate");
+      if (document.getElementById("chkPermStkCorrect").checked) list.push("stk_correct");
+      if (document.getElementById("chkPermStkPur").checked) list.push("stk_pur");
+
       if (document.getElementById("chkPermSet").checked) list.push("set");
       if (document.getElementById("chkPermAlertStock").checked) list.push("alert_stock");
 
       var pStr = list.join(",");
-      if (list.length === 8) pStr = "all";
+      if (list.length === 13) pStr = "all";
 
       var res = await apiCall("updateUserPermissions", { phone: selectedPermUserPhone, permissions: pStr });
       if (res && res.success) {
@@ -1646,7 +1850,7 @@
       var role = document.getElementById("newUserRole").value;
       if (!name || phone.length !== 10) { alert("Enter valid name and 10-digit mobile!"); return; }
 
-      var res = await apiCall("createUser", { data: { name: name, phone: phone, pin: pin, role: role, permissions: role === "Admin" ? "all" : "gen,repeat" } });
+      var res = await apiCall("createUser", { data: { name: name, phone: phone, pin: pin, role: role, permissions: role === "Admin" ? "all" : "gen,draft,repeat" } });
       if (res && res.success) {
         alert("New user created successfully!");
         loadUsersList();
@@ -1719,7 +1923,7 @@
       }
     };
 
-    // 🖨️️ STRICT CONDITIONAL BILL PRINT FORMAT
+    // 🖨 CONDITIONAL BILL PRINT FORMAT
     function buildReceiptHtml(b) {
       if (!b) return "";
       var lines = "";
@@ -1912,16 +2116,7 @@
 
     window.closeSuccessAndNextBill = function() {
       document.getElementById("checkoutSuccessModal").style.display = "none";
-      billItems = [];
-      renderBillTable();
-      document.getElementById("custName").value = "";
-      document.getElementById("custPhone").value = "";
-      document.getElementById("custGstin").value = "";
-      document.getElementById("billMode").value = "";
-      document.getElementById("rateType").value = "";
-      document.getElementById("isGstBill").value = "";
-      document.getElementById("paymentMode").value = "";
-      checkFormState();
+      clearBillingForm();
     };
 
     async function loadDashboardAnalytics() {
@@ -2109,13 +2304,22 @@
     async function apiCall(action, payload) {
       if (!payload) payload = {};
       payload.action = action;
+      if (currentUser && currentUser.phone) {
+        payload.userPhone = currentUser.phone;
+      }
       try {
         var res = await fetch(SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
-        return JSON.parse(await res.text());
+        var data = JSON.parse(await res.text());
+        if (data && data.deactivated) {
+          alert("⚠️ Your account has been deactivated by Admin! Session Terminated.");
+          executeUserLogout();
+          return null;
+        }
+        return data;
       } catch(e) { return null; }
     }
 
@@ -2139,6 +2343,7 @@
 
     function executeUserLogout() {
       if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+      if (securityHeartbeatInterval) clearInterval(securityHeartbeatInterval);
       localStorage.removeItem("mle_user");
       localStorage.removeItem("mle_login_time");
       location.reload();
@@ -2172,6 +2377,7 @@
       document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
       document.getElementById("viewDashboard").style.display = (nav === 'dash') ? 'block' : 'none';
       document.getElementById("viewGenBill").style.display = 'none';
+      document.getElementById("viewDraftBills").style.display = 'none';
       document.getElementById("viewRepeatCustomers").style.display = 'none';
       document.getElementById("viewCreditLedger").style.display = 'none';
       document.getElementById("viewSearchBills").style.display = 'none';
@@ -2202,12 +2408,17 @@
       document.getElementById("viewDashboard").style.display = 'none';
       document.getElementById("viewSettings").style.display = 'none';
       document.getElementById("viewGenBill").style.display = (subView === 'gen') ? 'block' : 'none';
+      document.getElementById("viewDraftBills").style.display = (subView === 'draft') ? 'block' : 'none';
       document.getElementById("viewRepeatCustomers").style.display = (subView === 'repeat') ? 'block' : 'none';
       document.getElementById("viewCreditLedger").style.display = (subView === 'khata') ? 'block' : 'none';
       document.getElementById("viewSearchBills").style.display = (subView === 'search') ? 'block' : 'none';
       document.getElementById("viewStockInward").style.display = (subView === 'stock') ? 'block' : 'none';
 
       if (subView === 'gen') document.getElementById("btnSubGen").classList.add("active");
+      if (subView === 'draft') {
+        document.getElementById("btnSubDraft").classList.add("active");
+        loadDraftBills();
+      }
       if (subView === 'repeat') {
         document.getElementById("btnSubRepeat").classList.add("active");
         loadRepeatCustomers();
@@ -2416,7 +2627,8 @@
         address: document.getElementById("custAddress").value.trim(),
         gstin: document.getElementById("custGstin").value.trim(),
         items: billItems,
-        grandTotal: totalAmt
+        grandTotal: totalAmt,
+        resumedDraftId: activeResumedDraftId
       };
 
       try {
@@ -2442,6 +2654,7 @@
           };
           document.getElementById("lblSuccessDocNo").innerText = "Doc No: " + res.docNo + " | Amount: ₹" + totalAmt.toFixed(2);
           document.getElementById("checkoutSuccessModal").style.display = "flex";
+          loadDraftBills();
         } else {
           alert((res && res.message) ? ("Server Note: " + res.message) : "Server response delay. Please retry!");
         }
