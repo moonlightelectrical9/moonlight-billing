@@ -170,6 +170,31 @@
 
     .filter-btn-active { background: #d97706 !important; color: #ffffff !important; border-color: #b45309 !important; font-weight: 900 !important; }
 
+    /* Drill Down Styles */
+    .drill-down-box {
+      background: #f8fafc;
+      border: 1.5px solid #94a3b8;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 6px 0;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .drill-tab-btn {
+      background: #e2e8f0;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .drill-tab-btn.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: #0369a1;
+    }
+
     #authOverlay {
       position: fixed;
       inset: 0;
@@ -295,7 +320,7 @@
     </div>
   </div>
 
-  <!-- 4. GRANULAR PERMISSIONS MODAL (EXACT TICK/UNTICK PERSISTENCE) -->
+  <!-- 4. GRANULAR PERMISSIONS MODAL -->
   <div id="permModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box" style="text-align:left; max-width:440px; max-height:90vh; overflow-y:auto;">
       <h3 style="font-size:16px; margin-bottom:6px; color:#0f172a;">⚙ Assign Detailed Access Permissions</h3>
@@ -481,9 +506,9 @@
               </div>
             </div>
 
-            <!-- Day-Wise Breakdown List for Week & Month -->
+            <!-- Day-Wise Breakdown List for Week & Month (With Drill-Down) -->
             <div id="boxDayWiseContainer" style="display:none; background:#ffffff; border:1.5px solid var(--border); border-radius:8px; padding:14px;">
-              <h4 style="font-weight:900; color:#1e3a8a; margin-bottom:8px;" id="lblDayWiseTitle">📅 Day-Wise Sales & Profit Breakdown</h4>
+              <h4 style="font-weight:900; color:#1e3a8a; margin-bottom:8px;" id="lblDayWiseTitle">📅 Day-Wise Sales, Purchases & Profit Ledger</h4>
               <div id="dayWiseTableWrap"></div>
             </div>
           </div>
@@ -1157,7 +1182,7 @@
       }, 25000);
     }
 
-    // ⚙️ GRANULAR ACCESS ENFORCEMENT (NO FALLBACK LEAKS)
+    // ⚙️ GRANULAR ACCESS ENFORCEMENT
     function applyUserPermissions() {
       var perms = currentUser.permissions || "all";
       var isStaff = (currentUser.role !== "Admin");
@@ -1322,6 +1347,7 @@
       renderDashboardAnalytics();
     };
 
+    // 🔍 DRILL-DOWN LEDGER RENDERER
     function renderDashboardAnalytics() {
       if (!window.dashData || !window.dashData.daysMap) return;
       var daysMap = window.dashData.daysMap;
@@ -1339,6 +1365,7 @@
           var t = daysMap[tKey];
           cashSale = t.cash; onlineSale = t.online; totalSale = t.total; profitSale = t.profit;
           cashPur = t.purCash; onlinePur = t.purOnline; totalPur = t.purTotal;
+          dayRows.push(t);
         }
       } else if (activeDashMode === "week") {
         badgeLabel = "📅 Viewing Report For: THIS WEEK (Last 7 Days Day-Wise)";
@@ -1373,7 +1400,7 @@
           if (daysMap[k].year === selYr) {
             var itm = daysMap[k];
             if (!monthlyMap[itm.month]) {
-              monthlyMap[itm.month] = { monthName: allMonthNames[itm.month], cash:0, online:0, total:0, profit:0 };
+              monthlyMap[itm.month] = { monthIdx: itm.month, monthName: allMonthNames[itm.month], cash:0, online:0, total:0, profit:0, purCash:0, purOnline:0, purTotal:0 };
             }
             cashSale += itm.cash; onlineSale += itm.online; totalSale += itm.total; profitSale += itm.profit;
             cashPur += itm.purCash; onlinePur += itm.purOnline; totalPur += itm.purTotal;
@@ -1381,6 +1408,9 @@
             monthlyMap[itm.month].online += itm.online;
             monthlyMap[itm.month].total += itm.total;
             monthlyMap[itm.month].profit += itm.profit;
+            monthlyMap[itm.month].purCash += itm.purCash;
+            monthlyMap[itm.month].purOnline += itm.purOnline;
+            monthlyMap[itm.month].purTotal += itm.purTotal;
           }
         }
       } else if (activeDashMode === "custom") {
@@ -1410,34 +1440,62 @@
 
       var dayBox = document.getElementById("boxDayWiseContainer");
       if (activeDashMode === "year") {
-        document.getElementById("lblDayWiseTitle").innerText = "📅 " + selYr + ": Month-Wise Business Ledger";
-        var html = '<div class="table-wrap"><table><thead><tr><th>Month</th><th>Cash Sales</th><th>Online / UPI</th><th>Total Sales</th><th>Gross Profit (FIFO)</th></tr></thead><tbody>';
+        document.getElementById("lblDayWiseTitle").innerText = "📅 " + selYr + ": Month-Wise Business Ledger (Click Month to Drill-Down)";
+        var html = '<div class="table-wrap"><table><thead><tr><th>Month</th><th>Total Sales</th><th>Total Purchases</th><th>Gross Profit (FIFO)</th><th>Action</th></tr></thead><tbody>';
         for (var mi in monthlyMap) {
           var mData = monthlyMap[mi];
           html += "<tr>" +
             "<td><b>" + mData.monthName + "</b></td>" +
-            "<td>₹" + mData.cash.toFixed(2) + "</td>" +
-            "<td>₹" + mData.online.toFixed(2) + "</td>" +
             "<td><b style='color:#b45309;'>₹" + mData.total.toFixed(2) + "</b></td>" +
+            "<td><b style='color:#0284c7;'>₹" + mData.purTotal.toFixed(2) + "</b></td>" +
             "<td><b style='color:#059669;'>₹" + mData.profit.toFixed(2) + "</b></td>" +
+            "<td><button class='btn-sync' style='padding:4px 10px; font-weight:800;' onclick='drillDownToMonth(" + selYr + ", " + mData.monthIdx + ")'>📅 Open Month Breakdown ➔</button></td>" +
             "</tr>";
         }
         html += '</tbody></table></div>';
         document.getElementById("dayWiseTableWrap").innerHTML = html;
         dayBox.style.display = "block";
-      } else if ((activeDashMode === "week" || activeDashMode === "month" || activeDashMode === "custom") && dayRows.length > 0) {
+      } else if (dayRows.length > 0) {
         dayRows.sort(function(a, b) { return new Date(b.dateKey).getTime() - new Date(a.dateKey).getTime(); });
-        document.getElementById("lblDayWiseTitle").innerText = "📅 Day-Wise Sales & Profit Breakdown";
-        var html = '<div class="table-wrap"><table><thead><tr><th>Date & Day</th><th>Cash Sales</th><th>Online / UPI</th><th>Total Sales</th><th>Gross Profit (FIFO)</th></tr></thead><tbody>';
+        document.getElementById("lblDayWiseTitle").innerText = "📅 Day-Wise Sales, Purchases & Profit Ledger";
+        var html = '<div class="table-wrap"><table><thead><tr><th>Date & Day</th><th>Cash Sales</th><th>Online / UPI</th><th>Total Sales</th><th>Total Purchases</th><th>Gross Profit</th><th>Details</th></tr></thead><tbody>';
+        
         dayRows.forEach(function(d) {
+          var rowId = "drillRow_" + d.dateKey;
+          var purCount = d.purchaseItems ? d.purchaseItems.length : 0;
+          var saleCount = d.saleItems ? d.saleItems.length : 0;
+
           html += "<tr>" +
             "<td><b>" + d.label + "</b></td>" +
             "<td>₹" + d.cash.toFixed(2) + "</td>" +
             "<td>₹" + d.online.toFixed(2) + "</td>" +
             "<td><b style='color:#b45309;'>₹" + d.total.toFixed(2) + "</b></td>" +
+            "<td><b style='color:#0284c7;'>₹" + d.purTotal.toFixed(2) + "</b></td>" +
             "<td><b style='color:#059669;'>₹" + d.profit.toFixed(2) + "</b></td>" +
+            "<td><button class='btn-sync' style='padding:4px 8px; font-size:11.5px; font-weight:800;' onclick='toggleDrillDownRow(\"" + d.dateKey + "\")'>🔍 View Items ▾</button></td>" +
             "</tr>";
+
+          // Expandable Accordion Row
+          html += '<tr id="' + rowId + '" style="display:none; background:#f1f5f9;"><td colspan="7" style="padding:10px 14px;">' +
+            '<div class="drill-down-box">' +
+              '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px dashed #cbd5e1; padding-bottom:8px;">' +
+                '<div style="font-weight:900; color:#1e3a8a; font-size:13px;">📅 DETAILED BREAKDOWN FOR: ' + d.label + '</div>' +
+                '<div style="display:flex; gap:8px;">' +
+                  '<button class="drill-tab-btn active" id="tabBtnPur_' + d.dateKey + '" onclick="switchDrillTab(\'' + d.dateKey + '\', \'pur\')">🛍️ Purchases (' + purCount + ' Items)</button>' +
+                  '<button class="drill-tab-btn" id="tabBtnSale_' + d.dateKey + '" onclick="switchDrillTab(\'' + d.dateKey + '\', \'sale\')">🧾 Sales (' + saleCount + ' Items)</button>' +
+                  '<button class="btn-sync" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:4px 8px; font-size:11px;" onclick="toggleDrillDownRow(\'' + d.dateKey + '\')">✕ Close</button>' +
+                '</div>' +
+              '</div>' +
+              
+              // Purchases Drill Content
+              '<div id="drillBoxPur_' + d.dateKey + '">' + renderDrillPurchases(d.purchaseItems) + '</div>' +
+
+              // Sales Drill Content
+              '<div id="drillBoxSale_' + d.dateKey + '" style="display:none;">' + renderDrillSales(d.saleItems) + '</div>' +
+            '</div>' +
+          '</td></tr>';
         });
+
         html += '</tbody></table></div>';
         document.getElementById("dayWiseTableWrap").innerHTML = html;
         dayBox.style.display = "block";
@@ -1445,6 +1503,83 @@
         dayBox.style.display = "none";
       }
     }
+
+    window.toggleDrillDownRow = function(dateKey) {
+      var row = document.getElementById("drillRow_" + dateKey);
+      if (!row) return;
+      row.style.display = (row.style.display === "none") ? "table-row" : "none";
+    };
+
+    window.switchDrillTab = function(dateKey, tab) {
+      var purBox = document.getElementById("drillBoxPur_" + dateKey);
+      var saleBox = document.getElementById("drillBoxSale_" + dateKey);
+      var purBtn = document.getElementById("tabBtnPur_" + dateKey);
+      var saleBtn = document.getElementById("tabBtnSale_" + dateKey);
+
+      if (tab === "pur") {
+        purBox.style.display = "block";
+        saleBox.style.display = "none";
+        purBtn.classList.add("active");
+        saleBtn.classList.remove("active");
+      } else {
+        purBox.style.display = "none";
+        saleBox.style.display = "block";
+        purBtn.classList.remove("active");
+        saleBtn.classList.add("active");
+      }
+    };
+
+    function renderDrillPurchases(items) {
+      if (!items || items.length === 0) {
+        return '<div style="padding:10px; color:#64748b; font-weight:bold;">No purchase entries recorded on this date.</div>';
+      }
+      var out = '<table style="width:100%; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:12px;">' +
+        '<thead style="background:#e0f2fe; color:#0369a1;"><tr><th>#</th><th>Item Name</th><th>Quantity</th><th>Unit Price</th><th>Total (₹)</th><th>Vendor / HUB</th><th>Mode</th></tr></thead><tbody>';
+      items.forEach(function(p, idx) {
+        out += '<tr>' +
+          '<td>' + (idx + 1) + '</td>' +
+          '<td><b>' + p.name + '</b></td>' +
+          '<td>' + p.qty + ' Pcs</td>' +
+          '<td>₹' + parseFloat(p.price || 0).toFixed(2) + '</td>' +
+          '<td><b style="color:#0284c7;">₹' + parseFloat(p.total || 0).toFixed(2) + '</b></td>' +
+          '<td>' + (p.vendor || 'HUB / Sadar Mandi') + '</td>' +
+          '<td>' + (p.mode || 'Cash') + '</td>' +
+          '</tr>';
+      });
+      out += '</tbody></table>';
+      return out;
+    }
+
+    function renderDrillSales(items) {
+      if (!items || items.length === 0) {
+        return '<div style="padding:10px; color:#64748b; font-weight:bold;">No sales/invoices recorded on this date.</div>';
+      }
+      var out = '<table style="width:100%; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:12px;">' +
+        '<thead style="background:#fef3c7; color:#b45309;"><tr><th>#</th><th>Doc No</th><th>Customer</th><th>Item Sold</th><th>Rate</th><th>Qty</th><th>Amount (₹)</th><th>Mode</th></tr></thead><tbody>';
+      items.forEach(function(s, idx) {
+        out += '<tr>' +
+          '<td>' + (idx + 1) + '</td>' +
+          '<td><b>' + s.docNo + '</b></td>' +
+          '<td>' + s.custName + (s.phone ? ' (' + s.phone + ')' : '') + '</td>' +
+          '<td><b>' + s.name + '</b></td>' +
+          '<td>₹' + parseFloat(s.rate || 0).toFixed(2) + '</td>' +
+          '<td>' + s.qty + '</td>' +
+          '<td><b style="color:#b45309;">₹' + parseFloat(s.total || 0).toFixed(2) + '</b></td>' +
+          '<td>' + (s.mode || 'Cash') + '</td>' +
+          '</tr>';
+      });
+      out += '</tbody></table>';
+      return out;
+    }
+
+    window.drillDownToMonth = function(year, monthIdx) {
+      applyDashMode('month');
+      document.getElementById("selDashYear").value = year;
+      onYearSelectionChange();
+      document.getElementById("selDashMonth").value = monthIdx;
+      renderDashboardAnalytics();
+      document.getElementById("boxDayWiseContainer").scrollIntoView({ behavior: 'smooth' });
+    };
 
     window.handleItemSearchFocus = function(e) {
       if (e) e.stopPropagation();
@@ -1774,7 +1909,6 @@
       }
     };
 
-    // ⚙️ UNTICK BUG FIX: EXACT STRING SPLIT & ZERO FALLBACK OVERRIDE
     window.openPermModal = function(phone, name, currentPerms) {
       selectedPermUserPhone = phone;
       document.getElementById("permUserName").innerText = name;
