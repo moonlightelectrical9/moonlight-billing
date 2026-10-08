@@ -211,7 +211,7 @@
 
   <div id="printableInvoice" style="display:none;"></div>
 
-  <!-- 1. AUTH OVERLAY (BOTH PASSWORD & WHATSAPP OTP) -->
+  <!-- 1. AUTH OVERLAY -->
   <div id="authOverlay" style="display: flex;">
     <div class="auth-box">
       <div class="brand-title">MOON<span>LIGHT</span> ELECTRICALS</div>
@@ -295,7 +295,7 @@
     </div>
   </div>
 
-  <!-- 4. GRANULAR PERMISSIONS MODAL -->
+  <!-- 4. GRANULAR PERMISSIONS MODAL (EXACT TICK/UNTICK PERSISTENCE) -->
   <div id="permModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
     <div class="modal-box" style="text-align:left; max-width:440px; max-height:90vh; overflow-y:auto;">
       <h3 style="font-size:16px; margin-bottom:6px; color:#0f172a;">⚙ Assign Detailed Access Permissions</h3>
@@ -644,7 +644,7 @@
           </div>
         </div>
 
-        <!-- VIEW 2.2: DRAFT BILLS DIRECTORY (RUNNING BILLS) -->
+        <!-- VIEW 2.2: DRAFT BILLS DIRECTORY -->
         <div id="viewDraftBills" style="display: none;">
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -1142,10 +1142,9 @@
       }
     }
 
-    // 🔒 INSTANT FORCE LOGOUT SECURITY GUARD
     function startSecurityHeartbeat() {
       if (securityHeartbeatInterval) clearInterval(securityHeartbeatInterval);
-      if (currentUser && currentUser.phone === "8860706865") return; // Owner skip
+      if (currentUser && currentUser.phone === "8860706865") return;
 
       securityHeartbeatInterval = setInterval(async function() {
         if (!currentUser) return;
@@ -1158,32 +1157,33 @@
       }, 25000);
     }
 
-    // ⚙️ GRANULAR ACCESS ENFORCEMENT
+    // ⚙️ GRANULAR ACCESS ENFORCEMENT (NO FALLBACK LEAKS)
     function applyUserPermissions() {
       var perms = currentUser.permissions || "all";
       var isStaff = (currentUser.role !== "Admin");
 
       if (isStaff && perms !== "all") {
-        document.getElementById("btnNavDash").style.display = perms.includes("dash") ? "flex" : "none";
-        document.getElementById("btnSubGen").style.display = perms.includes("gen") ? "block" : "none";
-        document.getElementById("btnSubDraft").style.display = perms.includes("draft") ? "block" : "none";
-        document.getElementById("btnSubRepeat").style.display = perms.includes("repeat") ? "block" : "none";
-        document.getElementById("btnSubKhata").style.display = perms.includes("khata") ? "block" : "none";
-        document.getElementById("btnSubSearch").style.display = perms.includes("search") ? "block" : "none";
+        var pList = perms.split(",").map(function(s) { return s.trim(); });
 
-        var hasAnyStock = perms.includes("stock") || perms.includes("stk_inward") || perms.includes("stk_hsn") || perms.includes("stk_rate") || perms.includes("stk_correct") || perms.includes("stk_pur");
+        document.getElementById("btnNavDash").style.display = pList.includes("dash") ? "flex" : "none";
+        document.getElementById("btnSubGen").style.display = pList.includes("gen") ? "block" : "none";
+        document.getElementById("btnSubDraft").style.display = pList.includes("draft") ? "block" : "none";
+        document.getElementById("btnSubRepeat").style.display = pList.includes("repeat") ? "block" : "none";
+        document.getElementById("btnSubKhata").style.display = pList.includes("khata") ? "block" : "none";
+        document.getElementById("btnSubSearch").style.display = pList.includes("search") ? "block" : "none";
+
+        var hasAnyStock = pList.includes("stk_inward") || pList.includes("stk_hsn") || pList.includes("stk_rate") || pList.includes("stk_correct") || pList.includes("stk_pur");
         document.getElementById("btnSubStock").style.display = hasAnyStock ? "block" : "none";
 
-        // Granular stock buttons
-        document.getElementById("btnStkTabInward").style.display = (perms.includes("stock") || perms.includes("stk_inward")) ? "inline-block" : "none";
-        document.getElementById("btnStkTabHsn").style.display = (perms.includes("stock") || perms.includes("stk_hsn")) ? "inline-block" : "none";
-        document.getElementById("btnStkTabRate").style.display = (perms.includes("stock") || perms.includes("stk_rate")) ? "inline-block" : "none";
-        document.getElementById("btnStkTabCorrect").style.display = (perms.includes("stock") || perms.includes("stk_correct")) ? "inline-block" : "none";
-        document.getElementById("btnStkTabPurchase").style.display = (perms.includes("stock") || perms.includes("stk_pur")) ? "inline-block" : "none";
+        document.getElementById("btnStkTabInward").style.display = pList.includes("stk_inward") ? "inline-block" : "none";
+        document.getElementById("btnStkTabHsn").style.display = pList.includes("stk_hsn") ? "inline-block" : "none";
+        document.getElementById("btnStkTabRate").style.display = pList.includes("stk_rate") ? "inline-block" : "none";
+        document.getElementById("btnStkTabCorrect").style.display = pList.includes("stk_correct") ? "inline-block" : "none";
+        document.getElementById("btnStkTabPurchase").style.display = pList.includes("stk_pur") ? "inline-block" : "none";
 
-        document.getElementById("btnNavSet").style.display = perms.includes("set") ? "flex" : "none";
+        document.getElementById("btnNavSet").style.display = pList.includes("set") ? "flex" : "none";
 
-        var canSeeAlerts = perms.includes("alert_stock");
+        var canSeeAlerts = pList.includes("alert_stock");
         if (!canSeeAlerts) {
           document.getElementById("lowStockAlertBox").style.display = "none";
         }
@@ -1774,27 +1774,31 @@
       }
     };
 
+    // ⚙️ UNTICK BUG FIX: EXACT STRING SPLIT & ZERO FALLBACK OVERRIDE
     window.openPermModal = function(phone, name, currentPerms) {
       selectedPermUserPhone = phone;
       document.getElementById("permUserName").innerText = name;
       document.getElementById("permUserPhone").innerText = phone;
       
       var isAll = (currentPerms === "all");
-      document.getElementById("chkPermDash").checked = isAll || currentPerms.includes("dash");
-      document.getElementById("chkPermGen").checked = isAll || currentPerms.includes("gen");
-      document.getElementById("chkPermDraft").checked = isAll || currentPerms.includes("draft");
-      document.getElementById("chkPermRepeat").checked = isAll || currentPerms.includes("repeat");
-      document.getElementById("chkPermKhata").checked = isAll || currentPerms.includes("khata");
-      document.getElementById("chkPermSearch").checked = isAll || currentPerms.includes("search");
+      var pList = currentPerms.split(",").map(function(s) { return s.trim(); });
 
-      document.getElementById("chkPermStkInward").checked = isAll || currentPerms.includes("stock") || currentPerms.includes("stk_inward");
-      document.getElementById("chkPermStkHsn").checked = isAll || currentPerms.includes("stock") || currentPerms.includes("stk_hsn");
-      document.getElementById("chkPermStkRate").checked = isAll || currentPerms.includes("stock") || currentPerms.includes("stk_rate");
-      document.getElementById("chkPermStkCorrect").checked = isAll || currentPerms.includes("stock") || currentPerms.includes("stk_correct");
-      document.getElementById("chkPermStkPur").checked = isAll || currentPerms.includes("stock") || currentPerms.includes("stk_pur");
+      document.getElementById("chkPermDash").checked = isAll || pList.includes("dash");
+      document.getElementById("chkPermGen").checked = isAll || pList.includes("gen");
+      document.getElementById("chkPermDraft").checked = isAll || pList.includes("draft");
+      document.getElementById("chkPermRepeat").checked = isAll || pList.includes("repeat");
+      document.getElementById("chkPermKhata").checked = isAll || pList.includes("khata");
+      document.getElementById("chkPermSearch").checked = isAll || pList.includes("search");
 
-      document.getElementById("chkPermSet").checked = isAll || currentPerms.includes("set");
-      document.getElementById("chkPermAlertStock").checked = isAll || currentPerms.includes("alert_stock");
+      // Exact checks (Untick will strictly remain unticked!)
+      document.getElementById("chkPermStkInward").checked = isAll || pList.includes("stk_inward");
+      document.getElementById("chkPermStkHsn").checked = isAll || pList.includes("stk_hsn");
+      document.getElementById("chkPermStkRate").checked = isAll || pList.includes("stk_rate");
+      document.getElementById("chkPermStkCorrect").checked = isAll || pList.includes("stk_correct");
+      document.getElementById("chkPermStkPur").checked = isAll || pList.includes("stk_pur");
+
+      document.getElementById("chkPermSet").checked = isAll || pList.includes("set");
+      document.getElementById("chkPermAlertStock").checked = isAll || pList.includes("alert_stock");
 
       document.getElementById("permModal").style.display = "flex";
     };
@@ -1823,6 +1827,7 @@
 
       var pStr = list.join(",");
       if (list.length === 13) pStr = "all";
+      if (list.length === 0) pStr = "none";
 
       var res = await apiCall("updateUserPermissions", { phone: selectedPermUserPhone, permissions: pStr });
       if (res && res.success) {
