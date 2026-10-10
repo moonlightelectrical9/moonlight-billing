@@ -1080,27 +1080,29 @@
       }
     };
 
-    window.doVerifyOtp = async function() {
+window.doVerifyOtp = async function() {
       var enteredOtp = document.getElementById("loginOtp").value.trim();
       var phone = localStorage.getItem("mle_active_phone") || "";
-      var savedOtp = localStorage.getItem("mle_active_otp");
 
-      if (enteredOtp === savedOtp || enteredOtp.length === 4) {
-        var res = await apiCall("verifyLoginOtp", { phone: phone, otp: enteredOtp });
-        if (res && res.success) {
-          currentUser = {
-            name: res.name,
-            phone: res.phone,
-            role: res.role,
-            permissions: res.permissions || "all",
-            pin: res.pin,
-            isOwner: res.isOwner
-          };
-          showGreetingsWelcome();
-          return;
-        }
+      if (!enteredOtp || enteredOtp.length !== 4) {
+        alert("Please enter valid 4-digit OTP!");
+        return;
       }
-      alert("Wrong OTP! Please enter valid 4-digit code.");
+
+      var res = await apiCall("verifyLoginOtp", { phone: phone, otp: enteredOtp });
+      if (res && res.success) {
+        currentUser = {
+          name: res.name,
+          phone: res.phone,
+          role: res.role,
+          permissions: res.permissions || "all",
+          pin: res.pin,
+          isOwner: res.isOwner
+        };
+        showGreetingsWelcome();
+        return;
+      }
+      alert("Wrong OTP! Please enter valid OTP received on WhatsApp.");
     };
 
     function showGreetingsWelcome() {
