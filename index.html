@@ -1080,29 +1080,27 @@
       }
     };
 
-window.doVerifyOtp = async function() {
+    window.doVerifyOtp = async function() {
       var enteredOtp = document.getElementById("loginOtp").value.trim();
       var phone = localStorage.getItem("mle_active_phone") || "";
+      var savedOtp = localStorage.getItem("mle_active_otp");
 
-      if (!enteredOtp || enteredOtp.length !== 4) {
-        alert("Please enter valid 4-digit OTP!");
-        return;
+      if (enteredOtp === savedOtp || enteredOtp.length === 4) {
+        var res = await apiCall("verifyLoginOtp", { phone: phone, otp: enteredOtp });
+        if (res && res.success) {
+          currentUser = {
+            name: res.name,
+            phone: res.phone,
+            role: res.role,
+            permissions: res.permissions || "all",
+            pin: res.pin,
+            isOwner: res.isOwner
+          };
+          showGreetingsWelcome();
+          return;
+        }
       }
-
-      var res = await apiCall("verifyLoginOtp", { phone: phone, otp: enteredOtp });
-      if (res && res.success) {
-        currentUser = {
-          name: res.name,
-          phone: res.phone,
-          role: res.role,
-          permissions: res.permissions || "all",
-          pin: res.pin,
-          isOwner: res.isOwner
-        };
-        showGreetingsWelcome();
-        return;
-      }
-      alert("Wrong OTP! Please enter valid OTP received on WhatsApp.");
+      alert("Wrong OTP! Please enter valid 4-digit code.");
     };
 
     function showGreetingsWelcome() {
@@ -2342,8 +2340,6 @@ window.doVerifyOtp = async function() {
                (r.phone && String(r.phone).includes(query));
       });
 
-      window.currentFilteredHistory = filtered;
-
       var c = document.getElementById("historyTableContainer");
       var html = '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Doc No</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Actions</th></tr></thead><tbody>';
       filtered.forEach(function(r, idx) {
@@ -2354,9 +2350,9 @@ window.doVerifyOtp = async function() {
           "<td>" + (r.phone || '-') + "</td>" +
           "<td><b>₹" + parseFloat(r.amount || 0).toFixed(2) + "</b></td>" +
           "<td>" +
-          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='openHistoryBillDirect(" + idx + ", \"print\")'>🖨️ Re-Print</button>" +
-          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;' onclick='openHistoryBillDirect(" + idx + ", \"wa\")'>📲 WhatsApp</button>" +
-          "<button class='btn-sync' style='padding:4px 8px; font-size:11px;' onclick='openHistoryBillDirect(" + idx + ", \"view\")'>👁 View</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='triggerDirectPrint(cachedBillHistory[" + idx + "])'>🖨️ Re-Print</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;' onclick='shareBillOnWhatsApp(cachedBillHistory[" + idx + "])'>📲 WhatsApp</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px;' onclick='viewDownloadPdf(cachedBillHistory[" + idx + "])'>👁 View</button>" +
           "</td>" +
           "</tr>";
       });
@@ -2364,19 +2360,6 @@ window.doVerifyOtp = async function() {
       c.innerHTML = html;
     };
 
-    window.openHistoryBillDirect = function(index, action) {
-      var list = window.currentFilteredHistory || cachedBillHistory;
-      var item = list[index];
-      if (!item) return;
-
-      if (action === "print") {
-        triggerDirectPrint(item);
-      } else if (action === "wa") {
-        shareBillOnWhatsApp(item);
-      } else if (action === "view") {
-        viewDownloadPdf(item);
-      }
-    };
     window.submitStockInward = async function() {
       var name = document.getElementById("stkName").value.trim();
       var qty = parseFloat(document.getElementById("stkQty").value) || 0;
