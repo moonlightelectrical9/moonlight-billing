@@ -2071,13 +2071,14 @@
 
       itms.forEach(function(it, idx) {
         var qty = parseFloat(it.qty) || 1;
-        var baseRate = parseFloat(it.finalRate || it.baseRate || 0);
+        var finalRate = parseFloat(it.finalRate || it.baseRate || 0);
         if (b.isGst) {
           var gstPerPc = parseFloat(it.gstPerPc) || 0;
-          totalTaxable += (baseRate - gstPerPc) * qty;
+          var taxablePerPc = it.taxablePerPc ? parseFloat(it.taxablePerPc) : (finalRate - gstPerPc);
+          totalTaxable += taxablePerPc * qty;
           totalGst += gstPerPc * qty;
         } else {
-          totalTaxable += baseRate * qty;
+          totalTaxable += finalRate * qty;
         }
 
         var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
@@ -2649,20 +2650,35 @@
 
     window.calculateItemTotal = function() {
       var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
-      var baseRate = parseFloat(rVal) || 0;
+      var baseRate = parseFloat(rVal) || 0; // Yeh aapka Inclusive Rate hai
       var disc = parseFloat(document.getElementById("itemDisc").value) || 0;
       var qty = parseFloat(document.getElementById("itemQty").value) || 1;
-      var discountedRate = Math.max(0, baseRate - disc);
+      var finalUnitRate = Math.max(0, baseRate - disc); // Customer ka final rate per piece
 
       var isGst = document.getElementById("isGstBill").value.includes("Yes");
       var gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
-      var gstPerPc = isGst ? ((discountedRate * gstPct) / 100) : 0;
+      
+      var taxablePerPc = finalUnitRate;
+      var gstPerPc = 0;
 
-      document.getElementById("itemGstAdded").value = "+₹" + gstPerPc.toFixed(2);
-      var finalUnitRate = discountedRate + gstPerPc;
+      if (isGst && gstPct > 0) {
+        // Reverse Calculation: Inclusive me se Tax alag nikalna
+        taxablePerPc = finalUnitRate / (1 + (gstPct / 100));
+        gstPerPc = finalUnitRate - taxablePerPc;
+        document.getElementById("itemGstAdded").value = "Inc (₹" + gstPerPc.toFixed(2) + ")";
+      } else {
+        document.getElementById("itemGstAdded").value = "₹0.00";
+      }
+
       var total = finalUnitRate * qty;
       document.getElementById("itemTotal").value = total.toFixed(2);
-      return { finalUnitRate: finalUnitRate, total: total, gstPerPc: gstPerPc };
+      
+      return { 
+        finalUnitRate: finalUnitRate, 
+        taxablePerPc: taxablePerPc,
+        gstPerPc: gstPerPc, 
+        total: total 
+      };
     };
 
     window.addItemToBill = function() {
@@ -2692,12 +2708,13 @@
         hsn: document.getElementById("itemHsn").value.trim() || "-",
         baseRate: baseRate,
         discount: parseFloat(document.getElementById("itemDisc").value) || 0,
+        taxablePerPc: calc.taxablePerPc,
         gstPerPc: calc.gstPerPc,
         finalRate: calc.finalUnitRate,
         qty: parseFloat(document.getElementById("itemQty").value) || 1,
         total: calc.total
       });
-
+      
       renderBillTable();
       document.getElementById("itemSearch").value = "";
       document.getElementById("itemSerial").value = "";
