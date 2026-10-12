@@ -2072,10 +2072,14 @@
       itms.forEach(function(it, idx) {
         var qty = parseFloat(it.qty) || 1;
         var finalRate = parseFloat(it.finalRate || it.baseRate || 0);
+        var gstPerPc = parseFloat(it.gstPerPc) || 0;
+
+        // GST Bill me table me Taxable Rate aur Taxable Amount aayega
+        var displayRate = b.isGst ? (finalRate - gstPerPc) : finalRate;
+        var displayAmount = displayRate * qty;
+
         if (b.isGst) {
-          var gstPerPc = parseFloat(it.gstPerPc) || 0;
-          var taxablePerPc = it.taxablePerPc ? parseFloat(it.taxablePerPc) : (finalRate - gstPerPc);
-          totalTaxable += taxablePerPc * qty;
+          totalTaxable += displayAmount;
           totalGst += gstPerPc * qty;
         } else {
           totalTaxable += finalRate * qty;
@@ -2084,11 +2088,11 @@
         var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
         lines += '<tr>' +
           '<td style="padding:6px 4px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px; white-space:nowrap;">' + (idx + 1) + '</td>' +
-          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;"><b>' + it.name + '</b>' + snStr + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;'><b>' + it.name + '</b>' + snStr + '</td>' +
           '<td style="padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + (it.hsn || '-') + '</td>' +
-          '<td style="padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + (it.qty || 1) + '</td>' +
-          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;">₹ ' + parseFloat(it.finalRate || it.baseRate || 0).toFixed(2) + '</td>' +
-          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;">₹ ' + parseFloat(it.total || 0).toFixed(2) + '</td>' +
+          '<td style="padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + qty + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;'>₹ ' + displayRate.toFixed(2) + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;'>₹ ' + displayAmount.toFixed(2) + '</td>' +
           '</tr>';
       });
 
@@ -2103,7 +2107,7 @@
         '</tr>';
 
       var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
-      var shopGstLine = (b.isGst) ? '<div style="font-weight:bold; margin-top:2px;">GSTIN/UIN: 07DBOPG3647H1ZF | State: Delhi, Code: 07</div>' : '';
+      var shopGstLine = (b.isGst) ? '<div style="font-weight:bold; margin-top:2px;">GSTIN/UIN: 09BUBPC3406L1ZT | State: Uttar Pradesh, Code: 09</div>' : '';
       var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? '<div>GSTIN/UIN: ' + b.gstin + ' | State: Delhi, Code: 07</div>' : '';
 
       var isEstimateDoc = false;
