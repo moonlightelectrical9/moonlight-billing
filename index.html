@@ -2095,15 +2095,18 @@
           '</tr>';
       });
       
-      var fillerHeight = Math.max(160, 520 - (itms.length * 28));
-      lines += '<tr>' +
-        '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-        '<td style="border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">&nbsp;</td>' +
-        '</tr>';
+      var fillerHeight = (itms.length <= 12) ? Math.max(0, 460 - (itms.length * 26)) : 0;
+      
+      if (fillerHeight > 0) {
+        lines += '<tr>' +
+          '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+          '<td style="border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">&nbsp;</td>' +
+          '</tr>';
+      }
 
       var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
       var shopGstLine = (b.isGst) ? '<div style="font-weight:bold; margin-top:2px;">GSTIN/UIN: 09BUBPC3406L1ZT | State: Uttar Pradesh, Code: 09</div>' : '';
