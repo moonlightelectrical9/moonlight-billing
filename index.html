@@ -2705,13 +2705,16 @@
       var baseRate = parseFloat(rVal) || 0;
       if (baseRate <= 0) { alert("Please enter valid rate!"); return; }
 
+      var isGst = document.getElementById("isGstBill").value.includes("Yes");
+      var taxableRate = isGst ? (calc.finalUnitRate - calc.gstPerPc) : calc.finalUnitRate;
+
       billItems.push({
         name: name,
         serialNo: document.getElementById("itemSerial").value.trim() || "-",
         hsn: document.getElementById("itemHsn").value.trim() || "-",
         baseRate: baseRate,
+        taxableRate: taxableRate,
         discount: parseFloat(document.getElementById("itemDisc").value) || 0,
-        taxablePerPc: calc.taxablePerPc,
         gstPerPc: calc.gstPerPc,
         finalRate: calc.finalUnitRate,
         qty: parseFloat(document.getElementById("itemQty").value) || 1,
@@ -2735,20 +2738,26 @@
       var tbody = document.getElementById("billItemsTbody");
       tbody.innerHTML = "";
       var grand = 0, totalUnits = 0;
+      var isGst = document.getElementById("isGstBill").value.includes("Yes");
 
       billItems.forEach(function(it, idx) {
         grand += it.total;
         totalUnits += it.qty;
         var snDisplay = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#d97706;">' + it.serialNo + '</small>' : '';
+        
+        // Agar GST bill hai toh Taxable Rate dikhayenge (e.g. ₹1355.93), regular bill mein poora rate (₹1600.00)
+        var rateToShow = isGst ? (it.taxableRate || (it.finalRate - it.gstPerPc)) : it.baseRate;
+        var gstSign = isGst ? ("+₹" + it.gstPerPc.toFixed(2)) : "₹0.00";
+
         tbody.innerHTML += "<tr>" +
           "<td>" + (idx + 1) + "</td>" +
           "<td><b>" + it.name + "</b>" + snDisplay + "</td>" +
           "<td>" + it.hsn + "</td>" +
-          "<td>₹" + it.baseRate.toFixed(2) + "</td>" +
+          "<td>₹" + rateToShow.toFixed(2) + "</td>" +
           "<td style='color:#059669;'>-₹" + it.discount.toFixed(2) + "</td>" +
-          "<td style='color:#b45309;'>+₹" + it.gstPerPc.toFixed(2) + "</td>" +
+          "<td style='color:#b45309;'>" + gstSign + "</td>" +
           "<td>" + it.qty + "</td>" +
-          "<td>₹" + it.total.toFixed(2) + "</td>" +
+          "<td><b>₹" + it.total.toFixed(2) + "</b></td>" +
           "<td><button class='btn-del' onclick='deleteBillItem(" + idx + ")'>✕</button></td>" +
           "</tr>";
       });
@@ -2757,7 +2766,6 @@
       document.getElementById("lblTotalUnitsCount").innerText = totalUnits + " Pcs";
       document.getElementById("lblGrandTotal").innerText = "₹" + grand.toFixed(2);
     }
-
     window.deleteBillItem = function(idx) {
       billItems.splice(idx, 1);
       renderBillTable();
