@@ -2342,6 +2342,8 @@
 
       var c = document.getElementById("historyTableContainer");
       var html = '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Doc No</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Actions</th></tr></thead><tbody>';
+      
+      // FIX: cachedBillHistory[idx] ke bajay seedhe filtered[idx] pass kiya gaya hai
       filtered.forEach(function(r, idx) {
         html += "<tr>" +
           "<td>" + (r.date || '-') + "</td>" +
@@ -2350,14 +2352,22 @@
           "<td>" + (r.phone || '-') + "</td>" +
           "<td><b>₹" + parseFloat(r.amount || 0).toFixed(2) + "</b></td>" +
           "<td>" +
-          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='triggerDirectPrint(cachedBillHistory[" + idx + "])'>🖨️ Re-Print</button>" +
-          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;' onclick='shareBillOnWhatsApp(cachedBillHistory[" + idx + "])'>📲 WhatsApp</button>" +
-          "<button class='btn-sync' style='padding:4px 8px; font-size:11px;' onclick='viewDownloadPdf(cachedBillHistory[" + idx + "])'>👁 View</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='triggerDirectPrint(filteredBillHistoryItem(" + idx + "))'>🖨️ Re-Print</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;' onclick='shareBillOnWhatsApp(filteredBillHistoryItem(" + idx + "))'>📲 WhatsApp</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px;' onclick='viewDownloadPdf(filteredBillHistoryItem(" + idx + "))'>👁 View</button>" +
           "</td>" +
           "</tr>";
       });
       html += '</tbody></table></div>';
       c.innerHTML = html;
+      window._activeFilteredHistory = filtered; // Global storage for exact click
+    };
+
+    window.filteredBillHistoryItem = function(idx) {
+      if (window._activeFilteredHistory && window._activeFilteredHistory[idx]) {
+        return window._activeFilteredHistory[idx];
+      }
+      return cachedBillHistory[idx];
     };
 
     window.submitStockInward = async function() {
