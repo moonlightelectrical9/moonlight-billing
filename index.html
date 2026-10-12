@@ -2074,7 +2074,6 @@
         var finalRate = parseFloat(it.finalRate || it.baseRate || 0);
         var gstPerPc = parseFloat(it.gstPerPc) || 0;
 
-        // GST Bill me table me Taxable Rate aur Taxable Amount aayega
         var displayRate = b.isGst ? (finalRate - gstPerPc) : finalRate;
         var displayAmount = displayRate * qty;
 
@@ -2088,14 +2087,14 @@
         var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
         lines += '<tr>' +
           '<td style="padding:6px 4px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px; white-space:nowrap;">' + (idx + 1) + '</td>' +
-          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;'><b>' + it.name + '</b>' + snStr + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;"><b>' + it.name + '</b>' + snStr + '</td>' +
           '<td style="padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + (it.hsn || '-') + '</td>' +
           '<td style="padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + qty + '</td>' +
-          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;'>₹ ' + displayRate.toFixed(2) + '</td>' +
-          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;'>₹ ' + displayAmount.toFixed(2) + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;">₹ ' + displayRate.toFixed(2) + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;">₹ ' + displayAmount.toFixed(2) + '</td>' +
           '</tr>';
       });
-
+      
       var fillerHeight = Math.max(160, 560 - (itms.length * 28));
       lines += '<tr>' +
         '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
