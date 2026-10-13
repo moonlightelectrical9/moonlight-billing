@@ -2180,9 +2180,9 @@
           '</div>' +
           '</div>';
       } else {
-        taxBoxHtml = '<div style="width:100%; display:flex; justify-content:space-between; align-items:center; padding:12px 6px; box-sizing:border-box;">' +
-          '<span style="font-weight:900; font-size:13px; color:#0f172a;">Total Amount:</span>' +
-          '<span style="font-weight:900; font-size:18px; color:#1e3a8a; white-space:nowrap;">₹ ' + grandTotal.toFixed(2) + '</span>' +
+        taxBoxHtml = '<div style="width:100%; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box;">' +
+          '<span style="font-weight:900; font-size:13px; color:#0f172a; white-space:nowrap;">Total Amount:</span>' +
+          '<span style="font-weight:900; font-size:18px; color:#1e3a8a; white-space:nowrap; margin-left:10px;">₹ ' + grandTotal.toFixed(2) + '</span>' +
           '</div>';
       }
 
@@ -2238,19 +2238,23 @@
         '<div style="padding:6px 8px; font-size:11px; font-weight:bold; border-top:1.5px solid #1e3a8a; border-bottom:1.5px solid #1e3a8a; background:#fff;">' +
         'Amount (In Words): <span style="font-weight:normal;">' + getWordsText(grandTotal) + '</span>' +
         '</div>' +
-        '<table style="width:100%; border-collapse:collapse;">' +
+        '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
+        '<colgroup>' +
+        '<col style="width:52%;">' +
+        '<col style="width:48%;">' +
+        '</colgroup>' +
         '<tr>' +
-        '<td style="width:58%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:6px;">' +
+        '<td style="width:52%; vertical-align:top; border-right:1.5px solid #1e3a8a; border-bottom:none; padding:4px 6px; box-sizing:border-box;">' +
         '<table style="width:100%; border-collapse:collapse; border:1px solid #1e3a8a;">' +
-        '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:2px 5px;">Bank Details</td></tr>' +
-        '<tr><td style="width:35%; padding:3px 5px; border:1px solid #cbd5e1;"><b>A/c Holder\'s Name:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">SHIVAM CHAUHAN</td></tr>' +
-        '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>Bank Name:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">Kotak Mahindra Bank</td></tr>' +
-        '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>A/c No.:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">6413488039</td></tr>' +
-        '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>Branch & IFS Code:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">Sector 18, Noida & KKBK0000181</td></tr>' +
-        '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>UPI ID:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">8860880453@kotak</td></tr>' +
+        '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:2px 4px; font-size:10px;">Bank Details</td></tr>' +
+        '<tr><td style="width:38%; padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;"><b>A/c Holder\'s Name:</b></td><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;">SHIVAM CHAUHAN</td></tr>' +
+        '<tr><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;"><b>Bank Name:</b></td><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;">Kotak Mahindra Bank</td></tr>' +
+        '<tr><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;"><b>A/c No.:</b></td><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;">6413488039</td></tr>' +
+        '<tr><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;"><b>Branch & IFS Code:</b></td><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;">Sector 18, Noida & KKBK0000181</td></tr>' +
+        '<tr><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;"><b>UPI ID:</b></td><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;">8860880453@kotak</td></tr>' +
         '</table>' +
         '</td>' +
-        '<td style="width:42%; vertical-align:middle; padding:6px 10px; background:#fafafa; box-sizing:border-box;">' +
+        '<td style="width:48%; vertical-align:middle; padding:8px 12px; background:#fafafa; box-sizing:border-box;">' +
         taxBoxHtml +
         '</td>' +
         '</tr>' +
