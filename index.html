@@ -2085,24 +2085,29 @@
       var totalTaxable = 0, totalGst = 0;
 
       itms.forEach(function(it, idx) {
-        var qty = parseFloat(it.qty) || 1;
-        var finalRate = parseFloat(it.finalRate || it.baseRate || 0);
-        var gstPerPc = parseFloat(it.gstPerPc) || 0;
+        var qty = parseFloat(it.qty || it.quantity) || 1;
+        // Har possible rate field check karega taaki kabhi 0.00 na bane:
+        var rawRate = parseFloat(it.taxableRate || it.finalRate || it.baseRate || it.rate || it.unitPrice || it.price || 0);
+        var itemTotal = parseFloat(it.total || it.amount || 0);
+        if (rawRate === 0 && itemTotal > 0 && qty > 0) {
+          rawRate = itemTotal / qty;
+        }
 
-        var displayRate = b.isGst ? (finalRate - gstPerPc) : finalRate;
-        var displayAmount = displayRate * qty;
+        var gstPerPc = parseFloat(it.gstPerPc) || 0;
+        var displayRate = b.isGst ? (rawRate - gstPerPc) : rawRate;
+        var displayAmount = itemTotal > 0 ? itemTotal : (displayRate * qty);
 
         if (b.isGst) {
           totalTaxable += displayAmount;
           totalGst += gstPerPc * qty;
         } else {
-          totalTaxable += finalRate * qty;
+          totalTaxable += displayAmount;
         }
 
         var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
         lines += '<tr>' +
           '<td style="padding:6px 4px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px; white-space:nowrap;">' + (idx + 1) + '</td>' +
-          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;"><b>' + it.name + '</b>' + snStr + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;"><b>' + (it.name || it.itemName || '-') + '</b>' + snStr + '</td>' +
           '<td style="padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + (it.hsn || '-') + '</td>' +
           '<td style="padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + qty + '</td>' +
           '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;">₹ ' + displayRate.toFixed(2) + '</td>' +
@@ -2110,8 +2115,8 @@
           '</tr>';
       });
 
-      // Perfect height: 1 item par full-page stretch karega, 50 items par auto-adjust karega
-      var fillerHeight = (itms.length <= 12) ? Math.max(0, 580 - (itms.length * 26)) : 0;
+      // A4 portrait par poora 1 page cover karne ke liye perfect filler height
+      var fillerHeight = (itms.length <= 12) ? Math.max(180, 640 - (itms.length * 30)) : 0;
       if (fillerHeight > 0) {
         lines += '<tr>' +
           '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
