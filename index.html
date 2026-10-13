@@ -2078,31 +2078,72 @@
     };
 
     // 🖨 CONDITIONAL BILL PRINT FORMAT
+    // 🖨 CONDITIONAL BILL PRINT FORMAT
     function buildReceiptHtml(b) {
       if (!b) return "";
+
+      // Safe Fallbacks (PDF engine ki tarah har field ko pakdega)
+      var docNo = b.docNo || b.billNo || b.doc_no || "-";
+      var billDate = b.date || b.billDate || "-";
+      var custName = b.customerName || b.custName || "Customer";
+      var custPhone = b.phone || b.custPhone || "-";
+      var custAddr = b.address || b.custAddr || "Sector-121, Noida";
+      var custGstin = b.gstin || b.custGstin || "";
+      var payMode = b.paymentMode || b.payMode || "Cash";
+
+      var isInvoice = true;
+      if (docNo.indexOf("EST") !== -1 || (b.billMode && String(b.billMode).indexOf("Estimate") !== -1)) {
+        isInvoice = false;
+      }
+      if (b.isInvoice === false) isInvoice = false;
+
+      // GST detect karein
+      var isGst = false;
+      if (b.isGst === true || String(b.isGst).toLowerCase() === "true" || (custGstin && custGstin !== "-")) {
+        isGst = true;
+      }
+
+      var headerTitle = isInvoice ? (isGst ? "TAX INVOICE" : "INVOICE") : "ESTIMATE INVOICE";
+      var estimateValidityLine = (!isInvoice) ? "<tr><td style='border:none; padding:2px 0;'><b>Estimate validity period:</b></td><td style='border:none; padding:2px 0; text-align:right;'>3 Days</td></tr>" : "";
+
+      var shopGstLine = isGst ? "<div style='font-weight:bold; margin-top:2px;'>GSTIN/UIN: 09BUBPC3406L1ZT | State: Uttar Pradesh, Code: 09</div>" : "";
+      var buyerGstLine = (isGst && custGstin && custGstin !== "-") ? "<div>GSTIN/UIN: " + custGstin + " | State: Uttar Pradesh, Code: 09</div>" : "";
+
       var lines = "";
       var itms = b.items || [];
-      var totalTaxable = 0, totalGst = 0;
+      var totalTaxable = 0, totalGst = 0, computedTotal = 0;
 
       itms.forEach(function(it, idx) {
         var qty = parseFloat(it.qty || it.quantity) || 1;
-        var finalRate = parseFloat(it.finalRate || it.baseRate || it.rate || 0);
-        var gstPerPc = parseFloat(it.gstPerPc) || 0;
-        
-        // Agar gstPerPc nahi mila aur GST bill hai, toh calculate karein
-        if (b.isGst && gstPerPc === 0 && finalRate > 0) {
+        var itemTotal = parseFloat(it.total || it.amount || 0);
+
+        // Har tarike se Rate nikaalna taaki kabhi 0.00 na aaye
+        var finalRate = 0;
+        if (it.finalRate !== undefined && it.finalRate !== null && parseFloat(it.finalRate) > 0) {
+          finalRate = parseFloat(it.finalRate);
+        } else if (it.baseRate !== undefined && it.baseRate !== null && parseFloat(it.baseRate) > 0) {
+          finalRate = parseFloat(it.baseRate);
+        } else if (it.rate !== undefined && it.rate !== null && parseFloat(it.rate) > 0) {
+          finalRate = parseFloat(it.rate);
+        } else if (itemTotal > 0 && qty > 0) {
+          finalRate = itemTotal / qty;
+        }
+
+        if (itemTotal === 0 && finalRate > 0) {
+          itemTotal = finalRate * qty;
+        }
+
+        var gstPerPc = parseFloat(it.gstPerPc || 0);
+        if (isGst && gstPerPc === 0 && finalRate > 0) {
           gstPerPc = finalRate - (finalRate / 1.18);
         }
 
-        var taxableRate = b.isGst ? (finalRate - gstPerPc) : finalRate;
-        var rowTaxableTotal = taxableRate * qty;
-        var rowGstTotal = gstPerPc * qty;
+        var displayRate = isGst ? (finalRate - gstPerPc) : finalRate;
+        var displayAmount = isGst ? (displayRate * qty) : itemTotal;
 
-        totalTaxable += rowTaxableTotal;
-        totalGst += rowGstTotal;
-
-        var displayRate = taxableRate;
-        var displayAmount = rowTaxableTotal;
+        totalTaxable += (displayRate * qty);
+        totalGst += (gstPerPc * qty);
+        computedTotal += itemTotal;
 
         var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
         lines += '<tr>' +
@@ -2115,58 +2156,40 @@
           '</tr>';
       });
 
-      // PDF engine jaisi exact table height setting
-      var fillerHeight = Math.max(160, 520 - (itms.length * 28));
-      lines += '<tr>' +
-        '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-        '<td style="border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">&nbsp;</td>' +
-        '</tr>';
-
-      var totalAmt = parseFloat(b.grandTotal || b.amount || (totalTaxable + totalGst) || 0);
-      var shopGstLine = (b.isGst) ? '<div style="font-weight:bold; margin-top:2px;">GSTIN/UIN: 09BUBPC3406L1ZT | State: Uttar Pradesh, Code: 09</div>' : '';
-      var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? '<div>GSTIN/UIN: ' + b.gstin + ' | State: Uttar Pradesh, Code: 09</div>' : '';
-
-      var isEstimateDoc = false;
-      if (b.docNo) {
-        if (b.docNo.indexOf("EST") !== -1) isEstimateDoc = true;
-        if (b.docNo.indexOf("INV") !== -1) isEstimateDoc = false;
-      }
-      if (b.isInvoice === true) isEstimateDoc = false;
-
-      var docHeading = "INVOICE";
-      if (isEstimateDoc) {
-        docHeading = "ESTIMATE INVOICE";
-      } else if (b.isGst) {
-        docHeading = "TAX INVOICE";
+      // A4 page full cover karne ke liye perfect filler height
+      var fillerHeight = (itms.length <= 12) ? Math.max(160, 520 - (itms.length * 28)) : 0;
+      if (fillerHeight > 0) {
+        lines += '<tr>' +
+          '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+          '<td style="border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">&nbsp;</td>' +
+          '</tr>';
       }
 
-      var estimatePrintValidity = isEstimateDoc ? '<tr><td style="border:none; padding:2px 0;"><b>Estimate validity period:</b></td><td style="border:none; padding:2px 0; text-align:right;">3 Days</td></tr>' : '';
+      var grandTotal = parseFloat(b.grandTotal || b.amount || computedTotal || 0);
 
       var taxBoxHtml = "";
-      if (b.isGst) {
+      if (isGst) {
         var cgst = totalGst / 2;
         var sgst = totalGst / 2;
         taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
           '<tr><td style="padding:3px; font-weight:bold;">Subtotal (Taxable Value)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + totalTaxable.toFixed(2) + '</td></tr>' +
           '<tr><td style="padding:3px; font-weight:bold;">CGST (9%)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + cgst.toFixed(2) + '</td></tr>' +
           '<tr><td style="padding:3px; font-weight:bold;">SGST (9%)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + sgst.toFixed(2) + '</td></tr>' +
-          '<tr style="border-top:1.5px solid #1e3a8a;"><td style="padding:4px; font-weight:900;">Total Amount</td><td style="padding:4px; text-align:right; font-weight:900; font-size:13.5px; color:#1e3a8a;">₹ ' + totalAmt.toFixed(2) + '</td></tr>' +
+          '<tr style="border-top:1.5px solid #1e3a8a;"><td style="padding:4px; font-weight:900;">Total Amount</td><td style="padding:4px; text-align:right; font-weight:900; font-size:13.5px; color:#1e3a8a;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
           '</table>';
       } else {
-        taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
-          '<tr><td style="padding:12px 4px; font-weight:900; font-size:12px;">Total Amount</td><td style="padding:12px 4px; text-align:right; font-weight:900; font-size:16px; color:#1e3a8a;">₹ ' + totalAmt.toFixed(2) + '</td></tr>' +
+        taxBoxHtml = '<table style="width:100%; border-collapse:collapse; height:100%;">' +
+          '<tr><td style="padding:12px 4px; font-weight:900; font-size:12px;">Total Amount</td><td style="padding:12px 4px; text-align:right; font-weight:900; font-size:16px; color:#1e3a8a;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
           '</table>';
       }
 
-      var wordsDisplay = getWordsText(totalAmt);
-
       return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
-        '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + docHeading + '</div>' +
-        '<div style="border:2px solid #1e3a8a; width:100%; min-height:920px; box-sizing:border-box;">' +
+        '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + headerTitle + '</div>' +
+        '<div style="border:2px solid #1e3a8a; width:100%; min-height:900px; box-sizing:border-box;">' +
         '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
         '<tr>' +
         '<td style="width:60%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
@@ -2180,19 +2203,19 @@
         '<td style="width:40%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">INVOICE DETAILS</div>' +
         '<table style="width:100%; border:none; font-size:10.5px; border-collapse:collapse;">' +
-        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Invoice No.:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;"><b>' + b.docNo + '</b></td></tr>' +
-        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Dated:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;">' + b.date + '</td></tr>' +
-        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Payment Mode:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;">' + (b.paymentMode || 'Cash') + '</td></tr>' +
-        estimatePrintValidity +
+        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Invoice No.:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;"><b>' + docNo + '</b></td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Dated:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;">' + billDate + '</td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Payment Mode:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;">' + payMode + '</td></tr>' +
+        estimateValidityLine +
         '</table>' +
         '</td>' +
         '</tr>' +
         '<tr>' +
         '<td colspan="2" style="padding:6px 8px; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">BUYER / CONSIGNEE (SHIP TO & BILL TO)</div>' +
-        '<div style="font-size:12px; font-weight:bold;">' + b.customerName + '</div>' +
-        (b.address || 'Sector-121, Noida') + '<br>' +
-        'Contact No: ' + (b.phone || '-') + buyerGstLine + '<br>' +
+        '<div style="font-size:12px; font-weight:bold;">' + custName + '</div>' +
+        custAddr + '<br>' +
+        'Contact No: ' + custPhone + buyerGstLine + '<br>' +
         'State Name: Uttar Pradesh, Code: 09' +
         '</td>' +
         '</tr>' +
@@ -2211,11 +2234,11 @@
         '<tbody>' + lines + '</tbody>' +
         '</table>' +
         '<div style="padding:6px 8px; font-size:11px; font-weight:bold; border-top:1.5px solid #1e3a8a; border-bottom:1.5px solid #1e3a8a; background:#fff;">' +
-        'Amount (In Words): <span style="font-weight:normal;">' + wordsDisplay + '</span>' +
+        'Amount (In Words): <span style="font-weight:normal;">' + getWordsText(grandTotal) + '</span>' +
         '</div>' +
         '<table style="width:100%; border-collapse:collapse;">' +
         '<tr>' +
-        '<td style="width:58%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:6px;">' +
+        '<td style="width:60%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:6px;">' +
         '<table style="width:100%; border-collapse:collapse; border:1px solid #1e3a8a;">' +
         '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:2px 5px;">Bank Details</td></tr>' +
         '<tr><td style="width:35%; padding:3px 5px; border:1px solid #cbd5e1;"><b>A/c Holder\'s Name:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">SHIVAM CHAUHAN</td></tr>' +
@@ -2225,7 +2248,7 @@
         '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>UPI ID:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">8860880453@kotak</td></tr>' +
         '</table>' +
         '</td>' +
-        '<td style="width:42%; vertical-align:top; padding:4px;">' +
+        '<td style="width:40%; vertical-align:middle; padding:6px; background:#fafafa;">' +
         taxBoxHtml +
         '</td>' +
         '</tr>' +
@@ -2242,13 +2265,15 @@
     window.triggerDirectPrint = function(customData) {
       var data = customData || lastGeneratedBillData;
       if (!data) return;
+      if ((!data.items || data.items.length === 0) && typeof billItems !== 'undefined' && billItems.length > 0) {
+        data.items = JSON.parse(JSON.stringify(billItems));
+      }
       var container = document.getElementById("printableInvoice");
       container.innerHTML = buildReceiptHtml(data);
       container.style.display = "block";
       window.print();
       container.style.display = "none";
     };
-
     window.viewDownloadPdf = function(customData) {
       var data = customData || lastGeneratedBillData;
       if (!data) return;
