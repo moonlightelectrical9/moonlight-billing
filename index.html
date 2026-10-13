@@ -2086,23 +2086,23 @@
 
       itms.forEach(function(it, idx) {
         var qty = parseFloat(it.qty || it.quantity) || 1;
-        // Har possible rate field check karega taaki kabhi 0.00 na bane:
-        var rawRate = parseFloat(it.taxableRate || it.finalRate || it.baseRate || it.rate || it.unitPrice || it.price || 0);
-        var itemTotal = parseFloat(it.total || it.amount || 0);
-        if (rawRate === 0 && itemTotal > 0 && qty > 0) {
-          rawRate = itemTotal / qty;
-        }
-
+        var finalRate = parseFloat(it.finalRate || it.baseRate || it.rate || 0);
         var gstPerPc = parseFloat(it.gstPerPc) || 0;
-        var displayRate = b.isGst ? (rawRate - gstPerPc) : rawRate;
-        var displayAmount = itemTotal > 0 ? itemTotal : (displayRate * qty);
-
-        if (b.isGst) {
-          totalTaxable += displayAmount;
-          totalGst += gstPerPc * qty;
-        } else {
-          totalTaxable += displayAmount;
+        
+        // Agar gstPerPc nahi mila aur GST bill hai, toh calculate karein
+        if (b.isGst && gstPerPc === 0 && finalRate > 0) {
+          gstPerPc = finalRate - (finalRate / 1.18);
         }
+
+        var taxableRate = b.isGst ? (finalRate - gstPerPc) : finalRate;
+        var rowTaxableTotal = taxableRate * qty;
+        var rowGstTotal = gstPerPc * qty;
+
+        totalTaxable += rowTaxableTotal;
+        totalGst += rowGstTotal;
+
+        var displayRate = taxableRate;
+        var displayAmount = rowTaxableTotal;
 
         var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
         lines += '<tr>' +
@@ -2115,21 +2115,19 @@
           '</tr>';
       });
 
-      // A4 portrait par poora 1 page cover karne ke liye perfect filler height
-      var fillerHeight = (itms.length <= 12) ? Math.max(180, 640 - (itms.length * 30)) : 0;
-      if (fillerHeight > 0) {
-        lines += '<tr>' +
-          '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-          '<td style="border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">&nbsp;</td>' +
-          '</tr>';
-      }
+      // PDF engine jaisi exact table height setting
+      var fillerHeight = Math.max(160, 520 - (itms.length * 28));
+      lines += '<tr>' +
+        '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+        '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
+        '<td style="border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">&nbsp;</td>' +
+        '</tr>';
 
-      var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
-      var shopGstLine = (b.isGst) ? '<div style="font-weight:bold; margin-top:2px;">GSTIN/UIN: 07DBOPG3647H1ZF | State: Uttar Pradesh, Code: 09</div>' : '';
+      var totalAmt = parseFloat(b.grandTotal || b.amount || (totalTaxable + totalGst) || 0);
+      var shopGstLine = (b.isGst) ? '<div style="font-weight:bold; margin-top:2px;">GSTIN/UIN: 09BUBPC3406L1ZT | State: Uttar Pradesh, Code: 09</div>' : '';
       var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? '<div>GSTIN/UIN: ' + b.gstin + ' | State: Uttar Pradesh, Code: 09</div>' : '';
 
       var isEstimateDoc = false;
@@ -2148,32 +2146,27 @@
 
       var estimatePrintValidity = isEstimateDoc ? '<tr><td style="border:none; padding:2px 0;"><b>Estimate validity period:</b></td><td style="border:none; padding:2px 0; text-align:right;">3 Days</td></tr>' : '';
 
-      // Bulletproof Box Layout: Table collapse ki jagah solid Flexbox layout
       var taxBoxHtml = "";
       if (b.isGst) {
         var cgst = totalGst / 2;
         var sgst = totalGst / 2;
-        taxBoxHtml = '<div style="width:100%; display:flex; flex-direction:column; gap:4px;">' +
-          '<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:11px;"><span>Subtotal (Taxable):</span><span>₹ ' + totalTaxable.toFixed(2) + '</span></div>' +
-          '<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:11px;"><span>CGST (9%):</span><span>₹ ' + cgst.toFixed(2) + '</span></div>' +
-          '<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:11px;"><span>SGST (9%):</span><span>₹ ' + sgst.toFixed(2) + '</span></div>' +
-          '<div style="display:flex; justify-content:space-between; font-weight:900; font-size:15px; color:#1e3a8a; border-top:1.5px solid #1e3a8a; padding-top:4px; margin-top:2px;"><span>Total Amount:</span><span>₹ ' + totalAmt.toFixed(2) + '</span></div>' +
-          '</div>';
+        taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
+          '<tr><td style="padding:3px; font-weight:bold;">Subtotal (Taxable Value)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + totalTaxable.toFixed(2) + '</td></tr>' +
+          '<tr><td style="padding:3px; font-weight:bold;">CGST (9%)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + cgst.toFixed(2) + '</td></tr>' +
+          '<tr><td style="padding:3px; font-weight:bold;">SGST (9%)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + sgst.toFixed(2) + '</td></tr>' +
+          '<tr style="border-top:1.5px solid #1e3a8a;"><td style="padding:4px; font-weight:900;">Total Amount</td><td style="padding:4px; text-align:right; font-weight:900; font-size:13.5px; color:#1e3a8a;">₹ ' + totalAmt.toFixed(2) + '</td></tr>' +
+          '</table>';
       } else {
-        taxBoxHtml = '<div style="width:100%; display:flex; justify-content:space-between; align-items:center; padding:10px 4px;">' +
-          '<span style="font-weight:900; font-size:13px; color:#0f172a;">Total Amount:</span>' +
-          '<span style="font-weight:900; font-size:18px; color:#1e3a8a; white-space:nowrap;">₹ ' + totalAmt.toFixed(2) + '</span>' +
-          '</div>';
+        taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
+          '<tr><td style="padding:12px 4px; font-weight:900; font-size:12px;">Total Amount</td><td style="padding:12px 4px; text-align:right; font-weight:900; font-size:16px; color:#1e3a8a;">₹ ' + totalAmt.toFixed(2) + '</td></tr>' +
+          '</table>';
       }
 
       var wordsDisplay = getWordsText(totalAmt);
 
       return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
-        '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:6px; text-transform:uppercase;">' + docHeading + '</div>' +
-        '<div style="border:2px solid #1e3a8a; width:100%; min-height:960px; box-sizing:border-box; display:flex; flex-direction:column; justify-content:space-between;">' +
-        '<div>' +
-        '<table style="width:100%; border-collapse:collapse;">' +
-        '<tr>' +
+        '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + docHeading + '</div>' +
+        '<div style="border:2px solid #1e3a8a; width:100%; min-height:920px; box-sizing:border-box;">' +
         '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
         '<tr>' +
         '<td style="width:60%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
@@ -2211,8 +2204,8 @@
         '<th style="padding:6px 6px; border:1px solid #1e3a8a; text-align:left;">Description of Goods</th>' +
         '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:65px; text-align:center;">HSN/SAC</th>' +
         '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:50px; text-align:center;">Quantity</th>' +
-        '<th style="padding:6px 6px; border:1px solid #1e3a8a; width:70px; text-align:right;">Rate (₹)</th>' +
-        '<th style="padding:6px 6px; border:1px solid #1e3a8a; width:80px; text-align:right;">Amount (₹)</th>' +
+        '<th style="padding:6px 6px; border:1px solid #1e3a8a; width:80px; text-align:right;">Rate (₹)</th>' +
+        '<th style="padding:6px 6px; border:1px solid #1e3a8a; width:90px; text-align:right;">Amount (₹)</th>' +
         '</tr>' +
         '</thead>' +
         '<tbody>' + lines + '</tbody>' +
@@ -2220,8 +2213,7 @@
         '<div style="padding:6px 8px; font-size:11px; font-weight:bold; border-top:1.5px solid #1e3a8a; border-bottom:1.5px solid #1e3a8a; background:#fff;">' +
         'Amount (In Words): <span style="font-weight:normal;">' + wordsDisplay + '</span>' +
         '</div>' +
-        '</div>' +
-        '<table style="width:100%; border-collapse:collapse; margin-top:auto;">' +
+        '<table style="width:100%; border-collapse:collapse;">' +
         '<tr>' +
         '<td style="width:58%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:6px;">' +
         '<table style="width:100%; border-collapse:collapse; border:1px solid #1e3a8a;">' +
@@ -2233,7 +2225,7 @@
         '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>UPI ID:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">8860880453@kotak</td></tr>' +
         '</table>' +
         '</td>' +
-        '<td style="width:42%; vertical-align:middle; padding:8px 12px; background:#fafafa;">' +
+        '<td style="width:42%; vertical-align:top; padding:4px;">' +
         taxBoxHtml +
         '</td>' +
         '</tr>' +
