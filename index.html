@@ -2169,7 +2169,9 @@
         '<div>' +
         '<table style="width:100%; border-collapse:collapse;">' +
         '<tr>' +
-        '<td style="width:60%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">' +
+        '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
+        '<tr>' +
+        '<td style="width:60%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">SUPPLIER (BILL FROM)</div>' +
         '<div style="font-size:13px; font-weight:900;">MOONLIGHT ELECTRICALS</div>' +
         'Shop No 1, Sadbhavna Market, Opp. Cleo County Gate No 3,<br>Ghadi Chaukhandi, Sector-121, Noida - 201304 (U.P.)<br>' +
@@ -2177,18 +2179,18 @@
         'Email: moonlightelectrical9@gmail.com' +
         shopGstLine +
         '</td>' +
-        '<td style="width:40%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a;">' +
+        '<td style="width:40%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">INVOICE DETAILS</div>' +
-        '<table style="width:100%; border:none; font-size:10.5px;">' +
-        '<tr><td style="border:none; padding:2px 0;"><b>Invoice No.:</b></td><td style="border:none; padding:2px 0; text-align:right;"><b>' + b.docNo + '</b></td></tr>' +
-        '<tr><td style="border:none; padding:2px 0;"><b>Dated:</b></td><td style="border:none; padding:2px 0; text-align:right;">' + b.date + '</td></tr>' +
-        '<tr><td style="border:none; padding:2px 0;"><b>Payment Mode:</b></td><td style="border:none; padding:2px 0; text-align:right;">' + (b.paymentMode || 'Cash') + '</td></tr>' +
+        '<table style="width:100%; border:none; font-size:10.5px; border-collapse:collapse;">' +
+        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Invoice No.:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;"><b>' + b.docNo + '</b></td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Dated:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;">' + b.date + '</td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Payment Mode:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;">' + (b.paymentMode || 'Cash') + '</td></tr>' +
         estimatePrintValidity +
         '</table>' +
         '</td>' +
         '</tr>' +
         '<tr>' +
-        '<td colspan="2" style="padding:6px 8px; border-bottom:1.5px solid #1e3a8a;">' +
+        '<td colspan="2" style="padding:6px 8px; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">BUYER / CONSIGNEE (SHIP TO & BILL TO)</div>' +
         '<div style="font-size:12px; font-weight:bold;">' + b.customerName + '</div>' +
         (b.address || 'Sector-121, Noida') + '<br>' +
