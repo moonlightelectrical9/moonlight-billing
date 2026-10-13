@@ -2412,6 +2412,7 @@
           "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='triggerDirectPrint(filteredBillHistoryItem(" + idx + "))'>🖨️ Re-Print</button>" +
           "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;' onclick='shareBillOnWhatsApp(filteredBillHistoryItem(" + idx + "))'>📲 WhatsApp</button>" +
           "<button class='btn-sync' style='padding:4px 8px; font-size:11px;' onclick='viewDownloadPdf(filteredBillHistoryItem(" + idx + "))'>👁 View</button>" +
+          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; background:#ef4444; color:#fff; border-color:#dc2626; margin-left:4px;' onclick='confirmDeleteBill(\"" + r.docNo + "\")'>🗑️ Delete</button>" +
           "</td>" +
           "</tr>";
       });
@@ -2426,6 +2427,45 @@
       }
       return cachedBillHistory[idx];
     };
+
+    window.confirmDeleteBill = function(docNo) {
+  if (!docNo) return;
+  var isEst = docNo.indexOf("EST") !== -1;
+  var confirmMsg = isEst 
+    ? "Kya aap sure hain ki Estimate " + docNo + " ko delete karna chahte hain?"
+    : "DHYAN DEIN: Invoice " + docNo + " delete hone par iske saare items ka STOCK wapas inventory me add (+) ho jayega.\n\nKya aap sach me delete karna chahte hain?";
+
+  if (!confirm(confirmMsg)) return;
+
+  var reason = prompt("Delete karne ka reason likhein (optional):", "Customer Return / Cancelled");
+
+  // Loader / Feedback
+  showNotification && showNotification("Deleting " + docNo + "...", "info");
+
+  fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "deleteBill",
+        docNo: docNo,
+        reason: reason || "Cancelled"
+      })
+    })
+  .then(res => res.json())
+  .then(res => {
+    if (res.success) {
+      alert("Success: " + res.message);
+      // History reload karein taaki list se hat jaye
+      if (typeof loadBillHistory === "function") loadBillHistory();
+      if (typeof loadInventory === "function") loadInventory();
+    } else {
+      alert("Error: " + (res.error || "Delete nahi ho paya."));
+    }
+  })
+  .catch(err => {
+    alert("Server error: " + err.message);
+  });
+};
 
     window.submitStockInward = async function() {
       var name = document.getElementById("stkName").value.trim();
