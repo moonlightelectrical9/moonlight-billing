@@ -2172,15 +2172,15 @@
       if (isGst) {
         var cgst = totalGst / 2;
         var sgst = totalGst / 2;
-        taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
-          '<tr><td style="padding:4px; font-weight:bold;">Subtotal (Taxable Value)</td><td style="padding:4px; text-align:right; font-weight:bold;">₹ ' + totalTaxable.toFixed(2) + '</td></tr>' +
-          '<tr><td style="padding:4px; font-weight:bold;">CGST (9%)</td><td style="padding:4px; text-align:right; font-weight:bold;">₹ ' + cgst.toFixed(2) + '</td></tr>' +
-          '<tr><td style="padding:4px; font-weight:bold;">SGST (9%)</td><td style="padding:4px; text-align:right; font-weight:bold;">₹ ' + sgst.toFixed(2) + '</td></tr>' +
-          '<tr style="border-top:1.5px solid #1e3a8a;"><td style="padding:6px 4px; font-weight:900; font-size:12px;">Total Amount</td><td style="padding:6px 4px; text-align:right; font-weight:900; font-size:15px; color:#1e3a8a;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
+        taxBoxHtml = '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
+          '<tr><td style="padding:3px 2px; font-weight:bold; width:52%; font-size:10px;">Subtotal (Taxable)</td><td style="padding:3px 2px; text-align:right; font-weight:bold; width:48%; font-size:10px;">₹ ' + totalTaxable.toFixed(2) + '</td></tr>' +
+          '<tr><td style="padding:3px 2px; font-weight:bold; width:52%; font-size:10px;">CGST (9%)</td><td style="padding:3px 2px; text-align:right; font-weight:bold; width:48%; font-size:10px;">₹ ' + cgst.toFixed(2) + '</td></tr>' +
+          '<tr><td style="padding:3px 2px; font-weight:bold; width:52%; font-size:10px;">SGST (9%)</td><td style="padding:3px 2px; text-align:right; font-weight:bold; width:48%; font-size:10px;">₹ ' + sgst.toFixed(2) + '</td></tr>' +
+          '<tr style="border-top:1.5px solid #1e3a8a;"><td style="padding:5px 2px; font-weight:900; font-size:11px;">Total Amount</td><td style="padding:5px 2px; text-align:right; font-weight:900; font-size:13px; color:#1e3a8a;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
           '</table>';
       } else {
-        taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
-          '<tr><td style="padding:14px 6px; font-weight:900; font-size:13px; text-align:left;">Total Amount</td><td style="padding:14px 6px; text-align:right; font-weight:900; font-size:18px; color:#1e3a8a;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
+        taxBoxHtml = '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
+          '<tr><td style="padding:12px 4px; font-weight:900; font-size:12px; width:45%;">Total Amount</td><td style="padding:12px 4px; text-align:right; font-weight:900; font-size:16px; color:#1e3a8a; width:55%;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
           '</table>';
       }
 
@@ -2233,9 +2233,9 @@
         '<div style="padding:6px 8px; font-size:11px; font-weight:bold; border-top:1.5px solid #1e3a8a; border-bottom:1.5px solid #1e3a8a; background:#fff;">' +
         'Amount (In Words): <span style="font-weight:normal;">' + getWordsText(grandTotal) + '</span>' +
         '</div>' +
-        '<table style="width:100%; border-collapse:collapse;">' +
+        '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
         '<tr>' +
-        '<td style="width:58%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:6px;">' +
+        '<td style="width:58%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:4px; box-sizing:border-box;">' +
         '<table style="width:100%; border-collapse:collapse; border:1px solid #1e3a8a;">' +
         '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:2px 5px;">Bank Details</td></tr>' +
         '<tr><td style="width:35%; padding:3px 5px; border:1px solid #cbd5e1;"><b>A/c Holder\'s Name:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">SHIVAM CHAUHAN</td></tr>' +
@@ -2245,7 +2245,7 @@
         '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>UPI ID:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">8860880453@kotak</td></tr>' +
         '</table>' +
         '</td>' +
-        '<td style="width:42%; vertical-align:middle; padding:6px; background:#fafafa;">' +
+        '<td style="width:42%; vertical-align:middle; padding:4px 6px; background:#fafafa; box-sizing:border-box;">' +
         taxBoxHtml +
         '</td>' +
         '</tr>' +
