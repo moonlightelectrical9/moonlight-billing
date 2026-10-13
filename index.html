@@ -2429,43 +2429,40 @@
     };
 
     window.confirmDeleteBill = function(docNo) {
-  if (!docNo) return;
-  var isEst = docNo.indexOf("EST") !== -1;
-  var confirmMsg = isEst 
-    ? "Kya aap sure hain ki Estimate " + docNo + " ko delete karna chahte hain?"
-    : "DHYAN DEIN: Invoice " + docNo + " delete hone par iske saare items ka STOCK wapas inventory me add (+) ho jayega.\n\nKya aap sach me delete karna chahte hain?";
+      if (!docNo) return;
+      var isEst = docNo.indexOf("EST") !== -1;
+      var confirmMsg = isEst 
+        ? "Kya aap sure hain ki Estimate " + docNo + " ko delete karna chahte hain?"
+        : "DHYAN DEIN: Invoice " + docNo + " delete hone par iska STOCK inventory me wapas add (+) ho jayega.\n\nKya aap sach me delete karna chahte hain?";
 
-  if (!confirm(confirmMsg)) return;
+      if (!confirm(confirmMsg)) return;
 
-  var reason = prompt("Delete karne ka reason likhein (optional):", "Customer Return / Cancelled");
+      var reason = prompt("Delete karne ka reason likhein (optional):", "Customer Return / Cancelled");
 
-  // Loader / Feedback
-  showNotification && showNotification("Deleting " + docNo + "...", "info");
-
-  fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "deleteBill",
-        docNo: docNo,
-        reason: reason || "Cancelled"
+      fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "deleteBill",
+          docNo: docNo,
+          reason: reason || "Cancelled"
+        })
       })
-    })
-  .then(res => res.json())
-  .then(res => {
-    if (res.success) {
-      alert("Success: " + res.message);
-      // History reload karein taaki list se hat jaye
-      if (typeof loadBillHistory === "function") loadBillHistory();
-      if (typeof loadInventory === "function") loadInventory();
-    } else {
-      alert("Error: " + (res.error || "Delete nahi ho paya."));
-    }
-  })
-  .catch(err => {
-    alert("Server error: " + err.message);
-  });
-};
+      .then(function(res) { return res.json(); })
+      .then(function(res) {
+        if (res.success) {
+          alert("Success: " + (res.message || "Bill successfully delete ho gaya!"));
+          if (typeof loadBillHistory === "function") loadBillHistory();
+          if (typeof loadInventory === "function") loadInventory();
+          if (typeof filterBillHistory === "function") filterBillHistory();
+        } else {
+          alert("Error: " + (res.error || "Delete nahi ho paya."));
+        }
+      })
+      .catch(function(err) {
+        alert("Server error: " + err.message);
+      });
+    };
 
     window.submitStockInward = async function() {
       var name = document.getElementById("stkName").value.trim();
