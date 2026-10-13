@@ -2109,9 +2109,9 @@
           '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;">₹ ' + displayAmount.toFixed(2) + '</td>' +
           '</tr>';
       });
-      
-      var fillerHeight = (itms.length <= 12) ? Math.max(200, 520 - (itms.length * 26)) : 0;
-      
+
+      // Perfect height: 1 item par full-page stretch karega, 50 items par auto-adjust karega
+      var fillerHeight = (itms.length <= 12) ? Math.max(0, 580 - (itms.length * 26)) : 0;
       if (fillerHeight > 0) {
         lines += '<tr>' +
           '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
@@ -2124,8 +2124,8 @@
       }
 
       var totalAmt = parseFloat(b.grandTotal || b.amount || 0);
-      var shopGstLine = (b.isGst) ? '<div style="font-weight:bold; margin-top:2px;">GSTIN/UIN: 09BUBPC3406L1ZT | State: Uttar Pradesh, Code: 09</div>' : '';
-      var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? '<div>GSTIN/UIN: ' + b.gstin + ' | State: Delhi, Code: 07</div>' : '';
+      var shopGstLine = (b.isGst) ? '<div style="font-weight:bold; margin-top:2px;">GSTIN/UIN: 07DBOPG3647H1ZF | State: Uttar Pradesh, Code: 09</div>' : '';
+      var buyerGstLine = (b.isGst && b.gstin && b.gstin !== "-") ? '<div>GSTIN/UIN: ' + b.gstin + ' | State: Uttar Pradesh, Code: 09</div>' : '';
 
       var isEstimateDoc = false;
       if (b.docNo) {
@@ -2143,28 +2143,30 @@
 
       var estimatePrintValidity = isEstimateDoc ? '<tr><td style="border:none; padding:2px 0;"><b>Estimate validity period:</b></td><td style="border:none; padding:2px 0; text-align:right;">3 Days</td></tr>' : '';
 
+      // Bulletproof Box Layout: Table collapse ki jagah solid Flexbox layout
       var taxBoxHtml = "";
       if (b.isGst) {
         var cgst = totalGst / 2;
         var sgst = totalGst / 2;
-        taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
-          '<tr><td style="padding:4px; font-weight:bold; width:55%;">Subtotal (Taxable)</td><td style="padding:4px; text-align:right; font-weight:bold; width:45%;">₹ ' + totalTaxable.toFixed(2) + '</td></tr>' +
-          '<tr><td style="padding:4px; font-weight:bold;">CGST (9%)</td><td style="padding:4px; text-align:right; font-weight:bold;">₹ ' + cgst.toFixed(2) + '</td></tr>' +
-          '<tr><td style="padding:4px; font-weight:bold;">SGST (9%)</td><td style="padding:4px; text-align:right; font-weight:bold;">₹ ' + sgst.toFixed(2) + '</td></tr>' +
-          '<tr style="border-top:1.5px solid #1e3a8a;"><td style="padding:6px 4px; font-weight:900;">Total Amount</td><td style="padding:6px 4px; text-align:right; font-weight:900; font-size:15px; color:#1e3a8a;">₹ ' + totalAmt.toFixed(2) + '</td></tr>' +
-          '</table>';
+        taxBoxHtml = '<div style="width:100%; display:flex; flex-direction:column; gap:4px;">' +
+          '<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:11px;"><span>Subtotal (Taxable):</span><span>₹ ' + totalTaxable.toFixed(2) + '</span></div>' +
+          '<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:11px;"><span>CGST (9%):</span><span>₹ ' + cgst.toFixed(2) + '</span></div>' +
+          '<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:11px;"><span>SGST (9%):</span><span>₹ ' + sgst.toFixed(2) + '</span></div>' +
+          '<div style="display:flex; justify-content:space-between; font-weight:900; font-size:15px; color:#1e3a8a; border-top:1.5px solid #1e3a8a; padding-top:4px; margin-top:2px;"><span>Total Amount:</span><span>₹ ' + totalAmt.toFixed(2) + '</span></div>' +
+          '</div>';
       } else {
-        taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
-          '<tr><td style="padding:10px 6px; font-weight:900; font-size:13px; width:45%;">Total Amount</td>' +
-          '<td style="padding:10px 6px; text-align:right; font-weight:900; font-size:18px; color:#1e3a8a; width:55%; white-space:nowrap;">₹ ' + totalAmt.toFixed(2) + '</td></tr>' +
-          '</table>';
+        taxBoxHtml = '<div style="width:100%; display:flex; justify-content:space-between; align-items:center; padding:10px 4px;">' +
+          '<span style="font-weight:900; font-size:13px; color:#0f172a;">Total Amount:</span>' +
+          '<span style="font-weight:900; font-size:18px; color:#1e3a8a; white-space:nowrap;">₹ ' + totalAmt.toFixed(2) + '</span>' +
+          '</div>';
       }
 
       var wordsDisplay = getWordsText(totalAmt);
 
       return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
-        '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + docHeading + '</div>' +
-        '<div style="border:2px solid #1e3a8a; width:100%; min-height:920px; box-sizing:border-box; display:flex; flex-direction:column; justify-content:space-between;">' +
+        '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:6px; text-transform:uppercase;">' + docHeading + '</div>' +
+        '<div style="border:2px solid #1e3a8a; width:100%; min-height:960px; box-sizing:border-box; display:flex; flex-direction:column; justify-content:space-between;">' +
+        '<div>' +
         '<table style="width:100%; border-collapse:collapse;">' +
         '<tr>' +
         '<td style="width:60%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">' +
@@ -2211,9 +2213,10 @@
         '<div style="padding:6px 8px; font-size:11px; font-weight:bold; border-top:1.5px solid #1e3a8a; border-bottom:1.5px solid #1e3a8a; background:#fff;">' +
         'Amount (In Words): <span style="font-weight:normal;">' + wordsDisplay + '</span>' +
         '</div>' +
-        '<table style="width:100%; border-collapse:collapse;">' +
+        '</div>' +
+        '<table style="width:100%; border-collapse:collapse; margin-top:auto;">' +
         '<tr>' +
-        '<td style="width:60%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:6px;">' +
+        '<td style="width:58%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:6px;">' +
         '<table style="width:100%; border-collapse:collapse; border:1px solid #1e3a8a;">' +
         '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:2px 5px;">Bank Details</td></tr>' +
         '<tr><td style="width:35%; padding:3px 5px; border:1px solid #cbd5e1;"><b>A/c Holder\'s Name:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">SHIVAM CHAUHAN</td></tr>' +
@@ -2223,7 +2226,7 @@
         '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>UPI ID:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">8860880453@kotak</td></tr>' +
         '</table>' +
         '</td>' +
-        '<td style="width:40%; vertical-align:middle; padding:6px; background:#fafafa;">' +
+        '<td style="width:42%; vertical-align:middle; padding:8px 12px; background:#fafafa;">' +
         taxBoxHtml +
         '</td>' +
         '</tr>' +
