@@ -2439,13 +2439,17 @@
 
       var reason = prompt("Delete karne ka reason likhein (optional):", "Customer Return / Cancelled");
 
-      fetch(API_URL, {
+      var uPhone = (typeof selectedPermUserPhone !== 'undefined' && selectedPermUserPhone) ? selectedPermUserPhone :
+                   (typeof currentUser !== 'undefined' && currentUser && currentUser.phone) ? currentUser.phone : "";
+
+      fetch(SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           action: "deleteBill",
           docNo: docNo,
-          reason: reason || "Cancelled"
+          reason: reason || "Cancelled",
+          userPhone: uPhone
         })
       })
       .then(function(res) { return res.json(); })
@@ -2456,14 +2460,13 @@
           if (typeof loadInventory === "function") loadInventory();
           if (typeof filterBillHistory === "function") filterBillHistory();
         } else {
-          alert("Error: " + (res.error || "Delete nahi ho paya."));
+          alert("Error: " + (res.error || res.message || "Delete nahi ho paya."));
         }
       })
       .catch(function(err) {
         alert("Server error: " + err.message);
       });
     };
-
     window.submitStockInward = async function() {
       var name = document.getElementById("stkName").value.trim();
       var qty = parseFloat(document.getElementById("stkQty").value) || 0;
