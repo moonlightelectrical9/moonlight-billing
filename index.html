@@ -2190,6 +2190,7 @@
         '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + headerTitle + '</div>' +
         '<div style="border:2px solid #1e3a8a; width:100%; min-height:890px; box-sizing:border-box;">' +
         '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
+        '<colgroup><col style="width:60%;"><col style="width:40%;"></colgroup>' +
         '<tr>' +
         '<td style="width:60%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">SUPPLIER (BILL FROM)</div>' +
@@ -2200,11 +2201,14 @@
         shopGstLine +
         '</td>' +
         '<td style="width:40%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
-        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; margin-bottom:5px;">INVOICE DETAILS</div>' +
-        '<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:10.5px;"><b>Invoice No.:</b><b style="color:#000;">' + docNo + '</b></div>' +
-        '<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:10.5px;"><b>Dated:</b><span>' + billDate + '</span></div>' +
-        '<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:10.5px;"><b>Payment Mode:</b><span>' + payMode + '</span></div>' +
-        (isInvoice ? '' : '<div style="display:flex; justify-content:space-between; font-size:10.5px;"><b>Estimate validity period:</b><span>3 Days</span></div>') +
+        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; margin-bottom:4px;">INVOICE DETAILS</div>' +
+        '<table style="width:100%; border:none; font-size:10.5px; border-collapse:collapse; table-layout:fixed;">' +
+        '<colgroup><col style="width:48%;"><col style="width:52%;"></colgroup>' +
+        '<tr><td style="border:none; padding:2px 0; font-weight:bold;">Invoice No.:</td><td style="border:none; padding:2px 0; text-align:right; font-weight:900;">' + docNo + '</td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; font-weight:bold;">Dated:</td><td style="border:none; padding:2px 0; text-align:right;">' + billDate + '</td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; font-weight:bold;">Payment Mode:</td><td style="border:none; padding:2px 0; text-align:right;">' + payMode + '</td></tr>' +
+        estimateValidityLine +
+        '</table>' +
         '</td>' +
         '</tr>' +
         '<tr>' +
