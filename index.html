@@ -2078,11 +2078,10 @@
     };
 
     // 🖨 CONDITIONAL BILL PRINT FORMAT
-    // 🖨 CONDITIONAL BILL PRINT FORMAT
+    // 🖨 CONDITIONAL BILL PRINT FORMAT (PERFECT A4 FULL STRETCH)
     function buildReceiptHtml(b) {
       if (!b) return "";
 
-      // 1. Data fallback (kisi bhi condition mein blank nahi aayega)
       var docNo = b.docNo || b.billNo || b.doc_no || "-";
       var billDate = b.date || b.billDate || "-";
       var custName = b.customerName || b.custName || "Customer";
@@ -2103,7 +2102,7 @@
       }
 
       var headerTitle = isInvoice ? (isGst ? "TAX INVOICE" : "INVOICE") : "ESTIMATE INVOICE";
-      var estimateValidityLine = (!isInvoice) ? "<tr><td style='border:none; padding:2px 0;'><b>Estimate validity period:</b></td><td style='border:none; padding:2px 0; text-align:right;'>3 Days</td></tr>" : "";
+      var estimateValidityLine = (!isInvoice) ? "<tr><td style='border:none; padding:2px 0; font-weight:bold;'>Estimate validity period:</td><td style='border:none; padding:2px 0; text-align:right;'>3 Days</td></tr>" : "";
 
       var shopGstLine = isGst ? "<div style='font-weight:bold; margin-top:2px;'>GSTIN/UIN: 09BUBPC3406L1ZT | State: Uttar Pradesh, Code: 09</div>" : "";
       var buyerGstLine = (isGst && custGstin && custGstin !== "-") ? "<div>GSTIN/UIN: " + custGstin + " | State: Uttar Pradesh, Code: 09</div>" : "";
@@ -2154,8 +2153,8 @@
           '</tr>';
       });
 
-      // 2. Poore A4 page ko stretch karne ke liye filler height
-      var fillerHeight = (itms.length <= 12) ? Math.max(200, 560 - (itms.length * 28)) : 0;
+      // Pure A4 page full cover karne ke liye perfect filler height
+      var fillerHeight = (itms.length <= 12) ? Math.max(220, 560 - (itms.length * 28)) : 0;
       if (fillerHeight > 0) {
         lines += '<tr>' +
           '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
@@ -2169,29 +2168,28 @@
 
       var grandTotal = parseFloat(b.grandTotal || b.amount || computedTotal || 0);
 
-      // 3. Bulletproof Total Amount (kabhi cut ya blank nahi hoga)
       var taxBoxHtml = "";
       if (isGst) {
         var cgst = totalGst / 2;
         var sgst = totalGst / 2;
         taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
-          '<tr><td style="padding:3px; font-weight:bold;">Subtotal (Taxable Value)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + totalTaxable.toFixed(2) + '</td></tr>' +
-          '<tr><td style="padding:3px; font-weight:bold;">CGST (9%)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + cgst.toFixed(2) + '</td></tr>' +
-          '<tr><td style="padding:3px; font-weight:bold;">SGST (9%)</td><td style="padding:3px; text-align:right; font-weight:bold;">₹ ' + sgst.toFixed(2) + '</td></tr>' +
-          '<tr style="border-top:1.5px solid #1e3a8a;"><td style="padding:4px; font-weight:900;">Total Amount</td><td style="padding:4px; text-align:right; font-weight:900; font-size:13.5px; color:#1e3a8a;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
+          '<tr><td style="padding:4px; font-weight:bold;">Subtotal (Taxable Value)</td><td style="padding:4px; text-align:right; font-weight:bold;">₹ ' + totalTaxable.toFixed(2) + '</td></tr>' +
+          '<tr><td style="padding:4px; font-weight:bold;">CGST (9%)</td><td style="padding:4px; text-align:right; font-weight:bold;">₹ ' + cgst.toFixed(2) + '</td></tr>' +
+          '<tr><td style="padding:4px; font-weight:bold;">SGST (9%)</td><td style="padding:4px; text-align:right; font-weight:bold;">₹ ' + sgst.toFixed(2) + '</td></tr>' +
+          '<tr style="border-top:1.5px solid #1e3a8a;"><td style="padding:6px 4px; font-weight:900; font-size:12px;">Total Amount</td><td style="padding:6px 4px; text-align:right; font-weight:900; font-size:15px; color:#1e3a8a;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
           '</table>';
       } else {
-        taxBoxHtml = '<table style="width:100%; border-collapse:collapse; height:100%;">' +
-          '<tr><td style="padding:12px 4px; font-weight:900; font-size:12px; width:45%;">Total Amount</td><td style="padding:12px 4px; text-align:right; font-weight:900; font-size:16px; color:#1e3a8a; width:55%;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
+        taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
+          '<tr><td style="padding:14px 6px; font-weight:900; font-size:13px; text-align:left;">Total Amount</td><td style="padding:14px 6px; text-align:right; font-weight:900; font-size:18px; color:#1e3a8a;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
           '</table>';
       }
 
       return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
         '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + headerTitle + '</div>' +
-        '<div style="border:2px solid #1e3a8a; width:100%; min-height:920px; box-sizing:border-box;">' +
-        '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
+        '<div style="border:2px solid #1e3a8a; width:100%; min-height:930px; box-sizing:border-box;">' +
+        '<table style="width:100%; border-collapse:collapse;">' +
         '<tr>' +
-        '<td style="width:60%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
+        '<td style="width:58%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">SUPPLIER (BILL FROM)</div>' +
         '<div style="font-size:13px; font-weight:900;">MOONLIGHT ELECTRICALS</div>' +
         'Shop No 1, Sadbhavna Market, Opp. Cleo County Gate No 3,<br>Ghadi Chaukhandi, Sector-121, Noida - 201304 (U.P.)<br>' +
@@ -2199,18 +2197,18 @@
         'Email: moonlightelectrical9@gmail.com' +
         shopGstLine +
         '</td>' +
-        '<td style="width:40%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
-        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">INVOICE DETAILS</div>' +
+        '<td style="width:42%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a;">' +
+        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; margin-bottom:4px;">INVOICE DETAILS</div>' +
         '<table style="width:100%; border:none; font-size:10.5px; border-collapse:collapse;">' +
-        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Invoice No.:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;"><b>' + docNo + '</b></td></tr>' +
-        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Dated:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;">' + billDate + '</td></tr>' +
-        '<tr><td style="border:none; padding:2px 0; width:50%;"><b>Payment Mode:</b></td><td style="border:none; padding:2px 0; text-align:right; width:50%;">' + payMode + '</td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; font-weight:bold;">Invoice No.:</td><td style="border:none; padding:2px 0; text-align:right; font-weight:900;">' + docNo + '</td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; font-weight:bold;">Dated:</td><td style="border:none; padding:2px 0; text-align:right;">' + billDate + '</td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; font-weight:bold;">Payment Mode:</td><td style="border:none; padding:2px 0; text-align:right;">' + payMode + '</td></tr>' +
         estimateValidityLine +
         '</table>' +
         '</td>' +
         '</tr>' +
         '<tr>' +
-        '<td colspan="2" style="padding:6px 8px; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
+        '<td colspan="2" style="padding:6px 8px; border-bottom:1.5px solid #1e3a8a;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">BUYER / CONSIGNEE (SHIP TO & BILL TO)</div>' +
         '<div style="font-size:12px; font-weight:bold;">' + custName + '</div>' +
         custAddr + '<br>' +
@@ -2222,7 +2220,7 @@
         '<table style="width:100%; border-collapse:collapse; border-bottom:1.5px solid #1e3a8a;">' +
         '<thead>' +
         '<tr style="background:#1e3a8a; color:#fff;">' +
-        '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:50px; text-align:center; white-space:nowrap;">Sl No.</th>' +
+        '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:45px; text-align:center; white-space:nowrap;">Sl No.</th>' +
         '<th style="padding:6px 6px; border:1px solid #1e3a8a; text-align:left;">Description of Goods</th>' +
         '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:65px; text-align:center;">HSN/SAC</th>' +
         '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:50px; text-align:center;">Quantity</th>' +
@@ -2237,7 +2235,7 @@
         '</div>' +
         '<table style="width:100%; border-collapse:collapse;">' +
         '<tr>' +
-        '<td style="width:60%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:6px;">' +
+        '<td style="width:58%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:6px;">' +
         '<table style="width:100%; border-collapse:collapse; border:1px solid #1e3a8a;">' +
         '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:2px 5px;">Bank Details</td></tr>' +
         '<tr><td style="width:35%; padding:3px 5px; border:1px solid #cbd5e1;"><b>A/c Holder\'s Name:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">SHIVAM CHAUHAN</td></tr>' +
@@ -2247,7 +2245,7 @@
         '<tr><td style="padding:3px 5px; border:1px solid #cbd5e1;"><b>UPI ID:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">8860880453@kotak</td></tr>' +
         '</table>' +
         '</td>' +
-        '<td style="width:40%; vertical-align:middle; padding:6px; background:#fafafa;">' +
+        '<td style="width:42%; vertical-align:middle; padding:6px; background:#fafafa;">' +
         taxBoxHtml +
         '</td>' +
         '</tr>' +
@@ -2273,6 +2271,7 @@
       window.print();
       container.style.display = "none";
     };
+    
     window.viewDownloadPdf = function(customData) {
       var data = customData || lastGeneratedBillData;
       if (!data) return;
