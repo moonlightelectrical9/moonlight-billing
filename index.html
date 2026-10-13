@@ -2102,7 +2102,7 @@
       }
 
       var headerTitle = isInvoice ? (isGst ? "TAX INVOICE" : "INVOICE") : "ESTIMATE INVOICE";
-      var estimateValidityLine = (!isInvoice) ? "<tr><td style='border:none; padding:2px 0; font-weight:bold;'>Estimate validity period:</td><td style='border:none; padding:2px 0; text-align:right;'>3 Days</td></tr>" : "";
+      var estimateValidityLine = (!isInvoice) ? "<tr><td style='border:none; padding:2px 0;'><b>Estimate validity period:</b></td><td style='border:none; padding:2px 0; text-align:right;'>3 Days</td></tr>" : "";
 
       var shopGstLine = isGst ? "<div style='font-weight:bold; margin-top:2px;'>GSTIN/UIN: 09BUBPC3406L1ZT | State: Uttar Pradesh, Code: 09</div>" : "";
       var buyerGstLine = (isGst && custGstin && custGstin !== "-") ? "<div>GSTIN/UIN: " + custGstin + " | State: Uttar Pradesh, Code: 09</div>" : "";
@@ -2153,8 +2153,7 @@
           '</tr>';
       });
 
-      // Pure A4 page full cover karne ke liye perfect filler height
-      var fillerHeight = (itms.length <= 12) ? Math.max(220, 560 - (itms.length * 28)) : 0;
+      var fillerHeight = (itms.length <= 12) ? Math.max(160, 500 - (itms.length * 28)) : 0;
       if (fillerHeight > 0) {
         lines += '<tr>' +
           '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
@@ -2189,35 +2188,35 @@
 
       return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
         '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + headerTitle + '</div>' +
-        '<div style="border:2px solid #1e3a8a; width:100%; min-height:930px; box-sizing:border-box;">' +
-        '<table style="width:100%; border-collapse:collapse;">' +
+        '<div style="border:2px solid #1e3a8a; width:100%; min-height:890px; box-sizing:border-box;">' +
+        '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
         '<tr>' +
-        '<div style="display:flex; width:100%; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
-        '<div style="width:65%; padding:6px 8px; vertical-align:top; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
+        '<td style="width:62%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">SUPPLIER (BILL FROM)</div>' +
         '<div style="font-size:13px; font-weight:900;">MOONLIGHT ELECTRICALS</div>' +
         'Shop No 1, Sadbhavna Market, Opp. Cleo County Gate No 3,<br>Ghadi Chaukhandi, Sector-121, Noida - 201304 (U.P.)<br>' +
         'Contact: 9650897965 / 8860706865 / 8860880453<br>' +
         'Email: moonlightelectrical9@gmail.com' +
         shopGstLine +
-        '</div>' +
-        '<div style="width:35%; padding:6px 8px; box-sizing:border-box;">' +
+        '</td>' +
+        '<td style="width:38%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; margin-bottom:4px;">INVOICE DETAILS</div>' +
         '<table style="width:100%; border:none; font-size:10.5px; border-collapse:collapse;">' +
-        '<tr><td style="border:none; padding:2px 0; font-weight:bold; white-space:nowrap;">Invoice No.:</td><td style="border:none; padding:2px 0; text-align:right; font-weight:900; white-space:nowrap;">' + docNo + '</td></tr>' +
-        '<tr><td style="border:none; padding:2px 0; font-weight:bold; white-space:nowrap;">Dated:</td><td style="border:none; padding:2px 0; text-align:right; white-space:nowrap;">' + billDate + '</td></tr>' +
-        '<tr><td style="border:none; padding:2px 0; font-weight:bold; white-space:nowrap;">Payment Mode:</td><td style="border:none; padding:2px 0; text-align:right; white-space:nowrap;">' + payMode + '</td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; font-weight:bold; width:50%;">Invoice No.:</td><td style="border:none; padding:2px 0; text-align:right; font-weight:900; width:50%; white-space:nowrap;">' + docNo + '</td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; font-weight:bold; width:50%;">Dated:</td><td style="border:none; padding:2px 0; text-align:right; width:50%; white-space:nowrap;">' + billDate + '</td></tr>' +
+        '<tr><td style="border:none; padding:2px 0; font-weight:bold; width:50%;">Payment Mode:</td><td style="border:none; padding:2px 0; text-align:right; width:50%; white-space:nowrap;">' + payMode + '</td></tr>' +
         estimateValidityLine +
         '</table>' +
-        '</div>' +
-        '</div>' +
-        '<div style="width:100%; padding:6px 8px; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
+        '</td>' +
+        '</tr>' +
+        '<tr>' +
+        '<td colspan="2" style="padding:6px 8px; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">BUYER / CONSIGNEE (SHIP TO & BILL TO)</div>' +
         '<div style="font-size:12px; font-weight:bold;">' + custName + '</div>' +
         custAddr + '<br>' +
         'Contact No: ' + custPhone + buyerGstLine + '<br>' +
         'State Name: Uttar Pradesh, Code: 09' +
-        '</div>' +
+        '</td>' +
         '</tr>' +
         '</table>' +
         '<table style="width:100%; border-collapse:collapse; border-bottom:1.5px solid #1e3a8a;">' +
@@ -2236,9 +2235,9 @@
         '<div style="padding:6px 8px; font-size:11px; font-weight:bold; border-top:1.5px solid #1e3a8a; border-bottom:1.5px solid #1e3a8a; background:#fff;">' +
         'Amount (In Words): <span style="font-weight:normal;">' + getWordsText(grandTotal) + '</span>' +
         '</div>' +
-        '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
+        '<table style="width:100%; border-collapse:collapse;">' +
         '<tr>' +
-        '<td style="width:58%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:4px; box-sizing:border-box;">' +
+        '<td style="width:58%; vertical-align:top; border-right:1.5px solid #1e3a8a; padding:6px;">' +
         '<table style="width:100%; border-collapse:collapse; border:1px solid #1e3a8a;">' +
         '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:2px 5px;">Bank Details</td></tr>' +
         '<tr><td style="width:35%; padding:3px 5px; border:1px solid #cbd5e1;"><b>A/c Holder\'s Name:</b></td><td style="padding:3px 5px; border:1px solid #cbd5e1;">SHIVAM CHAUHAN</td></tr>' +
