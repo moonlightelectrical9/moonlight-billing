@@ -2191,11 +2191,11 @@
         '<div style="border:2px solid #1e3a8a; width:100%; min-height:890px; box-sizing:border-box;">' +
         '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
         '<colgroup>' +
-        '<col style="width:66%;">' +
-        '<col style="width:34%;">' +
+        '<col style="width:64%;">' +
+        '<col style="width:36%;">' +
         '</colgroup>' +
         '<tr>' +
-        '<td style="width:66%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
+        '<td style="width:64%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
         '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">SUPPLIER (BILL FROM)</div>' +
         '<div style="font-size:13px; font-weight:900;">MOONLIGHT ELECTRICALS</div>' +
         'Shop No 1, Sadbhavna Market, Opp. Cleo County Gate No 3,<br>Ghadi Chaukhandi, Sector-121, Noida - 201304 (U.P.)<br>' +
@@ -2203,18 +2203,13 @@
         'Email: moonlightelectrical9@gmail.com' +
         shopGstLine +
         '</td>' +
-        '<td style="width:34%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
-        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; margin-bottom:4px;">INVOICE DETAILS</div>' +
-        '<table style="width:100%; border:none; font-size:10.5px; border-collapse:collapse; table-layout:fixed;">' +
-        '<colgroup>' +
-        '<col style="width:40%;">' +
-        '<col style="width:60%;">' +
-        '</colgroup>' +
-        '<tr><td style="border:none; padding:2px 0; font-weight:bold;">Invoice No.:</td><td style="border:none; padding:2px 0; text-align:right; font-weight:900;">' + (b.docNo || b.billNo || docNo || '-') + '</td></tr>' +
-        '<tr><td style="border:none; padding:2px 0; font-weight:bold;">Dated:</td><td style="border:none; padding:2px 0; text-align:right;">' + (b.date || b.billDate || billDate || '-') + '</td></tr>' +
-        '<tr><td style="border:none; padding:2px 0; font-weight:bold;">Payment Mode:</td><td style="border:none; padding:2px 0; text-align:right;">' + (b.paymentMode || b.payMode || payMode || 'Cash') + '</td></tr>' +
-        estimateValidityLine +
-        '</table>' +
+        '<td style="width:36%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
+        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; margin-bottom:5px;">INVOICE DETAILS</div>' +
+        '<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:10px; line-height:1.2;"><b>Invoice No.:</b><b style="color:#000; text-align:right;">' + (b.docNo || b.billNo || docNo || '-') + '</b></div>' +
+        '<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:10px; line-height:1.2;"><b>Dated:</b><span style="text-align:right;">' + (b.date || b.billDate || billDate || '-') + '</span></div>' +
+        '<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:10px; line-height:1.2;"><b>Payment Mode:</b><span style="text-align:right;">' + (b.paymentMode || b.payMode || payMode || 'Cash') + '</span></div>' +
+        (isInvoice ? '' : '<div style="display:flex; justify-content:space-between; font-size:10px; line-height:1.2;"><b>Estimate validity:</b><span style="text-align:right;">3 Days</span></div>') +
+        '</td>' +
         '</td>' +
         '</tr>' +
         '<tr>' +
