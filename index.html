@@ -2082,7 +2082,7 @@
     function buildReceiptHtml(b) {
       if (!b) return "";
 
-      // Safe Fallbacks (PDF engine ki tarah har field ko pakdega)
+      // 1. Data fallback (kisi bhi condition mein blank nahi aayega)
       var docNo = b.docNo || b.billNo || b.doc_no || "-";
       var billDate = b.date || b.billDate || "-";
       var custName = b.customerName || b.custName || "Customer";
@@ -2097,7 +2097,6 @@
       }
       if (b.isInvoice === false) isInvoice = false;
 
-      // GST detect karein
       var isGst = false;
       if (b.isGst === true || String(b.isGst).toLowerCase() === "true" || (custGstin && custGstin !== "-")) {
         isGst = true;
@@ -2117,7 +2116,6 @@
         var qty = parseFloat(it.qty || it.quantity) || 1;
         var itemTotal = parseFloat(it.total || it.amount || 0);
 
-        // Har tarike se Rate nikaalna taaki kabhi 0.00 na aaye
         var finalRate = 0;
         if (it.finalRate !== undefined && it.finalRate !== null && parseFloat(it.finalRate) > 0) {
           finalRate = parseFloat(it.finalRate);
@@ -2156,8 +2154,8 @@
           '</tr>';
       });
 
-      // A4 page full cover karne ke liye perfect filler height
-      var fillerHeight = (itms.length <= 12) ? Math.max(160, 520 - (itms.length * 28)) : 0;
+      // 2. Poore A4 page ko stretch karne ke liye filler height
+      var fillerHeight = (itms.length <= 12) ? Math.max(200, 560 - (itms.length * 28)) : 0;
       if (fillerHeight > 0) {
         lines += '<tr>' +
           '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
@@ -2171,6 +2169,7 @@
 
       var grandTotal = parseFloat(b.grandTotal || b.amount || computedTotal || 0);
 
+      // 3. Bulletproof Total Amount (kabhi cut ya blank nahi hoga)
       var taxBoxHtml = "";
       if (isGst) {
         var cgst = totalGst / 2;
@@ -2183,13 +2182,13 @@
           '</table>';
       } else {
         taxBoxHtml = '<table style="width:100%; border-collapse:collapse; height:100%;">' +
-          '<tr><td style="padding:12px 4px; font-weight:900; font-size:12px;">Total Amount</td><td style="padding:12px 4px; text-align:right; font-weight:900; font-size:16px; color:#1e3a8a;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
+          '<tr><td style="padding:12px 4px; font-weight:900; font-size:12px; width:45%;">Total Amount</td><td style="padding:12px 4px; text-align:right; font-weight:900; font-size:16px; color:#1e3a8a; width:55%;">₹ ' + grandTotal.toFixed(2) + '</td></tr>' +
           '</table>';
       }
 
       return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
         '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + headerTitle + '</div>' +
-        '<div style="border:2px solid #1e3a8a; width:100%; min-height:900px; box-sizing:border-box;">' +
+        '<div style="border:2px solid #1e3a8a; width:100%; min-height:920px; box-sizing:border-box;">' +
         '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
         '<tr>' +
         '<td style="width:60%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
