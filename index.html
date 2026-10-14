@@ -1972,33 +1972,44 @@
     };
 
     window.openPermModal = function(phone, name, currentPerms) {
-      selectedPermUserPhone = phone;
-      document.getElementById("permUserName").innerText = name;
-      document.getElementById("permUserPhone").innerText = phone;
-      
-      var isAll = (currentPerms === "all");
-      var pList = currentPerms.split(",").map(function(s) { return s.trim(); });
+  selectedPermUserPhone = phone;
+  document.getElementById("permUserName").innerText = name;
+  document.getElementById("permUserPhone").innerText = phone;
 
-      document.getElementById("chkPermDash").checked = isAll || pList.includes("dash");
-      document.getElementById("chkPermGen").checked = isAll || pList.includes("gen");
-      document.getElementById("chkPermDraft").checked = isAll || pList.includes("draft");
-      document.getElementById("chkPermRepeat").checked = isAll || pList.includes("repeat");
-      document.getElementById("chkPermKhata").checked = isAll || pList.includes("khata");
-      document.getElementById("chkPermSearch").checked = isAll || pList.includes("search");
+  var permsStr = String(currentPerms || "");
+  var isAll = (permsStr === "all");
+  var plist = permsStr.split(",").map(function(s) { return s.trim(); });
 
-      // Exact checks (Untick will strictly remain unticked!)
-      document.getElementById("chkPermStkInward").checked = isAll || pList.includes("stk_inward");
-      document.getElementById("chkPermStkHsn").checked = isAll || pList.includes("stk_hsn");
-      document.getElementById("chkPermStkRate").checked = isAll || pList.includes("stk_rate");
-      document.getElementById("chkPermStkCorrect").checked = isAll || pList.includes("stk_correct");
-      document.getElementById("chkPermStkPur").checked = isAll || pList.includes("stk_pur");
-      document.getElementById("chkPermStkBulk").checked = isAll || plist.includes("stk_bulk");
+  function setChk(id, key) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.checked = isAll || (plist.indexOf(key) !== -1);
+    }
+  }
 
-      document.getElementById("chkPermSet").checked = isAll || pList.includes("set");
-      document.getElementById("chkPermAlertStock").checked = isAll || pList.includes("alert_stock");
+  setChk("chkPermDash", "dash");
+  setChk("chkPermGen", "gen");
+  setChk("chkPermDraft", "draft");
+  setChk("chkPermRepeat", "repeat");
+  setChk("chkPermKhata", "khata");
+  setChk("chkPermSearch", "search");
 
-      document.getElementById("permModal").style.display = "flex";
-    };
+  // Stock & Inventory Granular Checks
+  setChk("chkPermStkInward", "stk_inward");
+  setChk("chkPermStkHsn", "stk_hsn");
+  setChk("chkPermStkRate", "stk_rate");
+  setChk("chkPermStkCorrect", "stk_correct");
+  setChk("chkPermStkPur", "stk_pur");
+  setChk("chkPermStkBulk", "stk_bulk");
+
+  setChk("chkPermSet", "set");
+  setChk("chkPermAlertStock", "alert_stock");
+
+  var modal = document.getElementById("permModal");
+  if (modal) {
+    modal.style.display = "flex";
+  }
+};
 
     window.closePermModal = function() {
       document.getElementById("permModal").style.display = "none";
