@@ -3199,6 +3199,11 @@ window.uploadBulkPurchaseCSV = function() {
         alert("Network Error: " + e.toString());
       }
     };
+    // Missing GST Dropdown Handler
+    window.onGstToggleChange = function() {
+      if (typeof checkFormState === "function") checkFormState();
+      if (typeof updateTaxCalculations === "function") updateTaxCalculations();
+    };
     // Live GST Lookup & Auto-fill Handler via Secure Backend
     var gstLookupTimer = null;
 
