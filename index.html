@@ -2589,24 +2589,27 @@ window.uploadBulkPurchaseCSV = function() {
 
   reader.readAsText(file);
 };
-// 1. Current Inventory Rates Export Function
+// 1. Current Inventory Rates Export Function (With All 8 Columns)
     window.exportCurrentRatesCSV = function() {
       if (!cachedItems || cachedItems.length === 0) {
         alert("Inventory list abhi load nahi hui hai.");
         return;
       }
 
-      var headers = ["Item_Name", "Customer_Rate", "Electrician_Rate", "Wholesale_Rate", "GST_Percent"];
+      var headers = ["Item_Name", "HSN_Code", "Customer_Rate", "Electrician_Rate", "Wholesale_Rate", "Current_Stock", "Alert_Min_Qty", "GST_Percent"];
       var csvRows = [headers.join(",")];
 
       cachedItems.forEach(function(item) {
         var name = (item.name || "").replace(/"/g, '""');
+        var hsn = (item.hsn || "");
         var custRate = item.custRate !== undefined ? item.custRate : "";
         var elecRate = item.elecRate !== undefined ? item.elecRate : "";
         var wholeRate = item.famRate !== undefined ? item.famRate : (item.wholesaleRate || "");
+        var stock = item.stock !== undefined ? item.stock : (item.qty || 0);
+        var minAlert = item.minQty !== undefined ? item.minQty : 2;
         var gst = item.gst !== undefined ? item.gst : 18;
 
-        csvRows.push('"' + name + '",' + custRate + ',' + elecRate + ',' + wholeRate + ',' + gst);
+        csvRows.push('"' + name + '","' + hsn + '",' + custRate + ',' + elecRate + ',' + wholeRate + ',' + stock + ',' + minAlert + ',' + gst);
       });
 
       var blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
@@ -2619,7 +2622,7 @@ window.uploadBulkPurchaseCSV = function() {
       document.body.removeChild(link);
     };
 
-    // 2. Upload and Update Rates Only
+    // 2. Upload and Update Rates Only (Safe update)
     window.uploadBulkRatesCSV = function() {
       var fileInput = document.getElementById("bulkRateCsvInput");
       if (!fileInput || !fileInput.files || !fileInput.files[0]) {
@@ -2651,7 +2654,7 @@ window.uploadBulkPurchaseCSV = function() {
           ratesArray.push(item);
         }
 
-        if (!confirm(ratesArray.length + " items ke naye rates update karna chahte hain?")) {
+        if (!confirm(ratesArray.length + " items ke naye rates aur details update karna chahte hain?")) {
           return;
         }
 
@@ -2683,8 +2686,7 @@ window.uploadBulkPurchaseCSV = function() {
       };
 
       reader.readAsText(file);
-    };
-    window.submitStockInward = async function() {
+    };    window.submitStockInward = async function() {
       var name = document.getElementById("stkName").value.trim();
       var qty = parseFloat(document.getElementById("stkQty").value) || 0;
       if (!name || qty <= 0) { alert("Enter valid item and quantity!"); return; }
