@@ -358,6 +358,7 @@
         <label><input type="checkbox" id="chkPermStkRate"> Quick Rates Update Only</label>
         <label><input type="checkbox" id="chkPermStkCorrect"> Correct / Override Real Stock Qty</label>
         <label><input type="checkbox" id="chkPermStkPur"> Purchase Bill Entry (Mandi/HUB)</label>
+        <label><input type="checkbox" id="chkPermStkBulk"> Bulk Upload CSV (Purchases & Rates)</label>
 
         <div style="font-size:11px; color:#0284c7; text-transform:uppercase; margin-top:6px;">⚙️ Admin & Security Controls</div>
         <label><input type="checkbox" id="chkPermSet"> Settings & User Accounts</label>
@@ -1915,6 +1916,13 @@
       var c = document.getElementById("usersListContainer");
       if (!c) return;
       c.innerHTML = "<div style='padding:12px; font-weight:800; color:#0284c7;'>Loading users list...</div>";
+      var currentRole = (currentUser && currentUser.role) ? currentUser.role.toLowerCase() : "";
+    var currentPhone = (currentUser && currentUser.phone) ? currentUser.phone : "";
+    var isCurrentAdmin = (currentRole === "admin" || currentRole === "owner" || currentPhone === "8860706865");
+    
+    // Add user form container hide/show
+    var addUserBox = document.getElementById("boxAddNewStaff") || document.querySelector(".add-staff-form");
+    if (addUserBox) addUserBox.style.display = isCurrentAdmin ? "block" : "none";
       var res = await apiCall("getUsersList");
       if (res && res.users && res.users.length > 0) {
         var html = '<div class="table-wrap"><table><thead><tr><th>User Name</th><th>Mobile</th><th>Role</th><th>Status</th><th>Permissions</th><th>Actions</th></tr></thead><tbody>';
@@ -1925,13 +1933,20 @@
           var btnText = isAct ? "🔴 Deactivate" : "🟢 Activate";
 
           var actionHtml = "";
-          if (isOwner) {
-            actionHtml = '<span style="color:#d97706; font-weight:900; font-size:12px; background:#fef3c7; padding:4px 10px; border-radius:12px; border:1px solid #fde68a;">Owner</span>';
-          } else {
-            actionHtml = '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px; ' + btnColor + '" onclick="toggleUserStatus(\'' + u.phone + '\')">' + btnText + '</button>' +
-                         '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px;" onclick="openPermModal(\'' + u.phone + '\', \'' + u.name + '\', \'' + u.permissions + '\')">⚙️ Access</button>' +
-                         '<button class="btn-sync" style="padding:3px 8px; font-size:11px; color:#dc2626;" onclick="deleteUserAccount(\'' + u.phone + '\', \'' + u.name + '\')">🗑 Delete</button>';
-          }
+    var currentRole = (currentUser && currentUser.role) ? currentUser.role.toLowerCase() : "";
+    var currentPhone = (currentUser && currentUser.phone) ? currentUser.phone : "";
+    var isCurrentAdmin = (currentRole === "admin" || currentRole === "owner" || currentPhone === "8860706865");
+
+    if (isOwner) {
+      actionHtml = '<span style="color:#d97706; font-weight:900; font-size:12px; background:#fef3c7; padding:4px 10px; border-radius:12px; border:1px solid #fde68a;">Owner</span>';
+    } else if (!isCurrentAdmin) {
+      // Agar logged in user staff hai, toh use koi action button na dikhe
+      actionHtml = '<span style="color:#64748b; font-size:11px; font-weight:600;">No Access</span>';
+    } else {
+      actionHtml = '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px; ' + btnColor + '" onclick="toggleUserStatus(\'' + u.phone + '\')">' + btnText + '</button>' +
+                   '<button class="btn-sync" style="padding:3px 8px; font-size:11px; margin-right:4px;" onclick="openPermModal(\'' + u.phone + '\', \'' + u.name + '\', \'' + u.permissions + '\')">⚙️ Access</button>' +
+                   '<button class="btn-sync" style="padding:3px 8px; font-size:11px; color:#dc2626;" onclick="deleteUserAccount(\'' + u.phone + '\', \'' + u.name + '\')">🗑 Delete</button>';
+    }
 
           html += "<tr>" +
             "<td><b>" + u.name + "</b></td>" +
@@ -1977,6 +1992,7 @@
       document.getElementById("chkPermStkRate").checked = isAll || pList.includes("stk_rate");
       document.getElementById("chkPermStkCorrect").checked = isAll || pList.includes("stk_correct");
       document.getElementById("chkPermStkPur").checked = isAll || pList.includes("stk_pur");
+      document.getElementById("chkPermStkBulk").checked = isAll || plist.includes("stk_bulk");
 
       document.getElementById("chkPermSet").checked = isAll || pList.includes("set");
       document.getElementById("chkPermAlertStock").checked = isAll || pList.includes("alert_stock");
@@ -2002,12 +2018,13 @@
       if (document.getElementById("chkPermStkRate").checked) list.push("stk_rate");
       if (document.getElementById("chkPermStkCorrect").checked) list.push("stk_correct");
       if (document.getElementById("chkPermStkPur").checked) list.push("stk_pur");
+      if (document.getElementById("chkPermStkBulk").checked) list.push("stk_bulk");
 
       if (document.getElementById("chkPermSet").checked) list.push("set");
       if (document.getElementById("chkPermAlertStock").checked) list.push("alert_stock");
 
       var pStr = list.join(",");
-      if (list.length === 13) pStr = "all";
+      if (list.length === 14) pStr = "all";
       if (list.length === 0) pStr = "none";
 
       var res = await apiCall("updateUserPermissions", { phone: selectedPermUserPhone, permissions: pStr });
@@ -2042,8 +2059,20 @@
         loadUsersList();
       }
     };
+function updateBulkTabVisibility() {
+  var bTab = document.getElementById("btnStkTabBulk");
+  if (!bTab) return;
 
+  var role = (currentUser && currentUser.role) ? currentUser.role.toLowerCase() : "";
+  var phone = (currentUser && currentUser.phone) ? currentUser.phone : "";
+  var perms = (currentUser && currentUser.permissions) ? currentUser.permissions : "";
+
+  var isAllowed = (role === "admin" || role === "owner" || phone === "8860706865" || perms.indexOf("all") !== -1 || perms.indexOf("stk_bulk") !== -1);
+  bTab.style.display = isAllowed ? "inline-block" : "none";
+}
+    
     window.setStockMode = function(mode) {
+      updateBulkTabVisibility();
       ["Inward", "Hsn", "Rate", "Correct", "Purchase", "Bulk"].forEach(function(t) {
         var b = document.getElementById("btnStkTab" + t);
         if (b) b.classList.remove("filter-btn-active");
