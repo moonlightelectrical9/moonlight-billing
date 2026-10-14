@@ -3010,38 +3010,55 @@ window.uploadBulkPurchaseCSV = function() {
     }
 
     window.calculateItemTotal = function() {
-      var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
-      var baseRate = parseFloat(rVal) || 0; // Yeh aapka Inclusive Rate hai
-      var disc = parseFloat(document.getElementById("itemDisc").value) || 0;
-      var qty = parseFloat(document.getElementById("itemQty").value) || 1;
-      var finalUnitRate = Math.max(0, baseRate - disc); // Customer ka final rate per piece
+    var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
+    var baseRate = parseFloat(rVal) || 0; // Yeh aapka Inclusive Rate hai
+    var disc = parseFloat(document.getElementById("itemDisc").value) || 0;
 
-      var isGst = document.getElementById("isGstBill").value.includes("Yes");
-      var gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
-      
-      var taxablePerPc = finalUnitRate;
-      var gstPerPc = 0;
+    // --- PROFIT PROTECTION LOCK (Purchase Price + 10%) ---
+    if (typeof currentItemObj !== "undefined" && currentItemObj) {
+      var purchasePrice = parseFloat(currentItemObj.purchasePrice || 0);
+      if (purchasePrice > 0 && baseRate > 0) {
+        var minSellingFloor = purchasePrice * 1.10; // Floor: Purchase Price + 10%
+        var maxAllowedDisc = Math.floor(baseRate - minSellingFloor);
+        if (maxAllowedDisc < 0) maxAllowedDisc = 0;
 
-      if (isGst && gstPct > 0) {
-        // Reverse Calculation: Inclusive me se Tax alag nikalna
-        taxablePerPc = finalUnitRate / (1 + (gstPct / 100));
-        gstPerPc = finalUnitRate - taxablePerPc;
-        document.getElementById("itemGstAdded").value = "Inc (₹" + gstPerPc.toFixed(2) + ")";
-      } else {
-        document.getElementById("itemGstAdded").value = "₹0.00";
+        if (disc > maxAllowedDisc) {
+          disc = maxAllowedDisc;
+          document.getElementById("itemDisc").value = maxAllowedDisc;
+          alert("System Policy Alert: Maximum allowed discount on this item is ₹" + maxAllowedDisc + "/pc. Value has been adjusted.");
+        }
       }
+    }
+    // -----------------------------------------------------
 
-      var total = finalUnitRate * qty;
-      document.getElementById("itemTotal").value = total.toFixed(2);
-      
-      return { 
-        finalUnitRate: finalUnitRate, 
-        taxablePerPc: taxablePerPc,
-        gstPerPc: gstPerPc, 
-        total: total 
-      };
+    var qty = parseFloat(document.getElementById("itemQty").value) || 1;
+    var finalUnitRate = Math.max(0, baseRate - disc); // Customer ka final rate per piece
+
+    var isGst = document.getElementById("isGstBill").value.includes("Yes");
+    var gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
+
+    var taxablePerPc = finalUnitRate;
+    var gstPerPc = 0;
+
+    if (isGst && gstPct > 0) {
+      // Reverse Calculation: Inclusive me se Tax alag nikalna
+      taxablePerPc = finalUnitRate / (1 + (gstPct / 100));
+      gstPerPc = finalUnitRate - taxablePerPc;
+      document.getElementById("itemGstAdded").value = "Inc (₹" + gstPerPc.toFixed(2) + " )";
+    } else {
+      document.getElementById("itemGstAdded").value = "₹0.00";
+    }
+
+    var total = finalUnitRate * qty;
+    document.getElementById("itemTotal").value = total.toFixed(2);
+
+    return {
+      finalUnitRate: finalUnitRate,
+      taxablePerPc: taxablePerPc,
+      gstPerPc: gstPerPc,
+      total: total
     };
-
+  };
     window.addItemToBill = function() {
       var name = document.getElementById("itemSearch").value.trim();
       if (!name) return;
