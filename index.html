@@ -356,8 +356,7 @@
         <label><input type="checkbox" id="chkPermStkInward"> Inward Stock (Regular Add Inward)</label>
         <label><input type="checkbox" id="chkPermStkHsn"> Quick HSN Update Only</label>
         <label><input type="checkbox" id="chkPermStkRate"> Quick Rates Update Only</label>
-        <label><input type="checkbox" id="chkPermStkCorrect"> Correct / Override Real Stock Qty</label>
-        <button type="button" class="btn-tool" onclick="openRenameModal()" style="background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; border-radius:6px; padding:6px 12px; font-weight:700; cursor:pointer;">🔄 Rename Product</button>
+        <label><input type="checkbox" id="chkPermStkCorrect"> Correct / Override Real Stock Qty</label>        
         <label><input type="checkbox" id="chkPermStkPur"> Purchase Bill Entry (Mandi/HUB)</label>
         <label><input type="checkbox" id="chkPermStkBulk"> Bulk Upload CSV (Purchases & Rates)</label>
 
@@ -756,6 +755,7 @@
           <button class="btn-sync" id="btnStkTabHsn" onclick="setStockMode('hsn')">✏️ Quick HSN</button>
           <button class="btn-sync" id="btnStkTabRate" onclick="setStockMode('rate')">💲 Quick Rates</button>
           <button class="btn-sync" id="btnStkTabCorrect" onclick="setStockMode('correct')">🔧 Correct Qty</button>
+          <button type="button" class="btn-tool" onclick="openRenameModal()" style="background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; border-radius:6px; padding:6px 12px; font-weight:700; cursor:pointer;">🔄 Rename Product</button>
           <button class="btn-sync" id="btnStkTabPurchase" onclick="setStockMode('purchase')">📦 Purchase Bill Entry</button>
           <button class="btn-sync" id="btnStkTabBulk" onclick="setStockMode('bulk')">📤 Bulk Upload CSV</button>
         </div>
