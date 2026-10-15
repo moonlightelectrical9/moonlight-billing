@@ -891,23 +891,31 @@
 
            <!-- RENAME PRODUCT MODAL -->
 <div id="modalRenameProduct" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center;">
-  <div style="background:#fff; width:90%; max-width:500px; border-radius:10px; padding:20px; box-shadow:0 10px 25px rgba(0,0,0,0.3); font-family:sans-serif;">
+  <div style="background:#fff; width:90%; max-width:520px; border-radius:10px; padding:20px; box-shadow:0 10px 25px rgba(0,0,0,0.3); font-family:sans-serif; position:relative;">
     <h3 style="margin-top:0; color:#0f172a; display:flex; align-items:center; gap:8px;">🔄 Rename Product Everywhere</h3>
     <p style="font-size:12px; color:#64748b; margin-bottom:15px;">
       Yeh action Stock, Purchase Details, Sales (Tax_Invoices), Drafts aur Cancelled bills sabhi jagah ek sath naam replace kar dega taaki profit aur FIFO ledger match rahe.
     </p>
 
-    <div style="margin-bottom:12px;">
-  <label style="display:block; font-size:11px; font-weight:700; margin-bottom:4px; color:#334155;">OLD / CURRENT ITEM NAME *</label>
-  <input type="text" id="renameOldName" list="dlRenameOldItems" autocomplete="off" placeholder="Type or select exact old name..." style="width:100%; padding:9px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
-  <datalist id="dlRenameOldItems"></datalist>
-</div>
+    <!-- OLD ITEM DROPDOWN -->
+    <div style="margin-bottom:14px; position:relative;">
+      <label style="display:block; font-size:11px; font-weight:700; margin-bottom:4px; color:#334155;">OLD / CURRENT ITEM NAME *</label>
+      <input type="text" id="renameOldName" autocomplete="off" placeholder="Click to choose or type to search..." 
+             onfocus="handleRenameSearch(this.value)" 
+             oninput="handleRenameSearch(this.value)" 
+             style="width:100%; padding:9px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+      
+      <!-- Custom Dropdown Container -->
+      <div id="renameDropdownMenu" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:180px; overflow-y:auto; background:#fff; border:1px solid #cbd5e1; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100000;"></div>
+    </div>
 
+    <!-- NEW ITEM NAME -->
     <div style="margin-bottom:18px;">
       <label style="display:block; font-size:11px; font-weight:700; margin-bottom:4px; color:#334155;">NEW ITEM NAME *</label>
       <input type="text" id="renameNewName" placeholder="Enter new item name..." style="width:100%; padding:9px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
     </div>
 
+    <!-- BUTTONS -->
     <div style="display:flex; justify-content:flex-end; gap:10px;">
       <button type="button" onclick="closeRenameModal()" style="padding:8px 16px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer; font-weight:600;">Cancel</button>
       <button type="button" id="btnConfirmRename" onclick="submitProductRename()" style="padding:8px 18px; background:#0284c7; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Update Everywhere</button>
@@ -3353,38 +3361,116 @@ window.uploadBulkPurchaseCSV = function() {
       }, 500);
     };
     window.openRenameModal = function() {
-  var dl = document.getElementById("dlRenameOldItems");
-  if (dl) {
-    dl.innerHTML = "";
-    // Aapke app ka inventory array dhoondh kar dropdown list banayega
-    var items = [];
-    if (typeof appData !== "undefined" && appData && appData.inventory) {
-      items = appData.inventory;
-    } else if (typeof inventoryData !== "undefined" && Array.isArray(inventoryData)) {
-      items = inventoryData;
-    } else if (typeof allItems !== "undefined" && Array.isArray(allItems)) {
-      items = allItems;
-    }
-
-    if (items && items.length > 0) {
-      items.forEach(function(it) {
-        var name = (typeof it === "string") ? it : (it.name || it.itemName || it[0] || "");
-        if (name && String(name).trim() !== "") {
-          var opt = document.createElement("option");
-          opt.value = String(name).trim();
-          dl.appendChild(opt);
-        }
-      });
-    }
-  }
-
-  // Stock Inward ke search box mein agar pehle se koi item type/select ho, toh wo yahan auto-fill ho jaye
-  var inwardInput = document.querySelector("input[placeholder*='inventory']") || document.getElementById("correctName");
-  if (inwardInput && inwardInput.value) {
-    document.getElementById("renameOldName").value = inwardInput.value.trim();
-  }
-
   document.getElementById("modalRenameProduct").style.display = "flex";
+  document.getElementById("renameOldName").value = "";
+  document.getElementById("renameNewName").value = "";
+  document.getElementById("renameDropdownMenu").style.display = "none";
+};
+
+window.closeRenameModal = function() {
+  document.getElementById("modalRenameProduct").style.display = "none";
+  document.getElementById("renameDropdownMenu").style.display = "none";
+};
+
+// Item search aur dropdown populate karne ka logic
+window.handleRenameSearch = function(query) {
+  var menu = document.getElementById("renameDropdownMenu");
+  query = (query || "").toLowerCase().trim();
+
+  // Inventory array nikalna
+  var list = [];
+  if (typeof appData !== "undefined" && appData && appData.inventory) {
+    list = appData.inventory;
+  } else if (typeof inventoryData !== "undefined" && Array.isArray(inventoryData)) {
+    list = inventoryData;
+  } else if (typeof allItems !== "undefined" && Array.isArray(allItems)) {
+    list = allItems;
+  }
+
+  menu.innerHTML = "";
+  var matches = 0;
+
+  list.forEach(function(it) {
+    var name = (typeof it === "string") ? it : (it.name || it.itemName || it[0] || "");
+    name = String(name).trim();
+    if (!name) return;
+
+    if (!query || name.toLowerCase().indexOf(query) !== -1) {
+      matches++;
+      var div = document.createElement("div");
+      div.innerText = name;
+      div.style.padding = "8px 12px";
+      div.style.cursor = "pointer";
+      div.style.fontSize = "13px";
+      div.style.borderBottom = "1px solid #f1f5f9";
+      div.onmouseover = function() { this.style.background = "#f8fafc"; };
+      div.onmouseout = function() { this.style.background = "#fff"; };
+      div.onclick = function() {
+        document.getElementById("renameOldName").value = name;
+        menu.style.display = "none";
+      };
+      menu.appendChild(div);
+    }
+  });
+
+  menu.style.display = (matches > 0) ? "block" : "none";
+};
+
+// Dropdown ke bahar click hone par use hide karna
+document.addEventListener("click", function(e) {
+  var menu = document.getElementById("renameDropdownMenu");
+  var input = document.getElementById("renameOldName");
+  if (menu && input && e.target !== input && !menu.contains(e.target)) {
+    menu.style.display = "none";
+  }
+});
+
+window.submitProductRename = function() {
+  var oldName = (document.getElementById("renameOldName").value || "").trim();
+  var newName = (document.getElementById("renameNewName").value || "").trim();
+
+  if (!oldName || !newName) {
+    alert("Dono naam (Old aur New) enter karein.");
+    return;
+  }
+  if (oldName.toLowerCase() === newName.toLowerCase()) {
+    alert("Purana aur naya naam alag hona chahiye.");
+    return;
+  }
+
+  if (!confirm("Kya aap sure hain ki '" + oldName + "' ko badal kar '" + newName + "' karna hai?\nYeh sabhi Sheets (Sales, Purchase, Stock) mein update hoga.")) {
+    return;
+  }
+
+  var btn = document.getElementById("btnConfirmRename");
+  btn.disabled = true;
+  btn.innerText = "Updating...";
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "renameProduct",
+      oldName: oldName,
+      newName: newName
+    })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(resp) {
+    btn.disabled = false;
+    btn.innerText = "Update Everywhere";
+    if (resp.success) {
+      alert("✅ " + resp.message);
+      closeRenameModal();
+      location.reload();
+    } else {
+      alert("❌ " + resp.message);
+    }
+  })
+  .catch(function(err) {
+    btn.disabled = false;
+    btn.innerText = "Update Everywhere";
+    alert("❌ Error: " + err);
+  });
 };
   </script>
 </body>
