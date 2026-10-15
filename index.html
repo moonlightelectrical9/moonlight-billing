@@ -357,6 +357,7 @@
         <label><input type="checkbox" id="chkPermStkHsn"> Quick HSN Update Only</label>
         <label><input type="checkbox" id="chkPermStkRate"> Quick Rates Update Only</label>
         <label><input type="checkbox" id="chkPermStkCorrect"> Correct / Override Real Stock Qty</label>
+        <button type="button" class="btn-tool" onclick="openRenameModal()" style="background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; border-radius:6px; padding:6px 12px; font-weight:700; cursor:pointer;">🔄 Rename Product</button>
         <label><input type="checkbox" id="chkPermStkPur"> Purchase Bill Entry (Mandi/HUB)</label>
         <label><input type="checkbox" id="chkPermStkBulk"> Bulk Upload CSV (Purchases & Rates)</label>
 
@@ -887,6 +888,31 @@
               </div>
               <button class="btn-checkout" onclick="submitCorrectQty()" style="background:#dc2626; color:#fff; width:auto; padding:8px 20px; margin-top:6px;">Override & Set Correct Qty</button>
             </div>
+
+           <!-- RENAME PRODUCT MODAL -->
+<div id="modalRenameProduct" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center;">
+  <div style="background:#fff; width:90%; max-width:500px; border-radius:10px; padding:20px; box-shadow:0 10px 25px rgba(0,0,0,0.3); font-family:sans-serif;">
+    <h3 style="margin-top:0; color:#0f172a; display:flex; align-items:center; gap:8px;">🔄 Rename Product Everywhere</h3>
+    <p style="font-size:12px; color:#64748b; margin-bottom:15px;">
+      Yeh action Stock, Purchase Details, Sales (Tax_Invoices), Drafts aur Cancelled bills sabhi jagah ek sath naam replace kar dega taaki profit aur FIFO ledger match rahe.
+    </p>
+
+    <div style="margin-bottom:12px;">
+      <label style="display:block; font-size:11px; font-weight:700; margin-bottom:4px; color:#334155;">OLD / CURRENT ITEM NAME *</label>
+      <input type="text" id="renameOldName" placeholder="Type or select exact old name..." style="width:100%; padding:9px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <label style="display:block; font-size:11px; font-weight:700; margin-bottom:4px; color:#334155;">NEW ITEM NAME *</label>
+      <input type="text" id="renameNewName" placeholder="Enter new item name..." style="width:100%; padding:9px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; gap:10px;">
+      <button type="button" onclick="closeRenameModal()" style="padding:8px 16px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer; font-weight:600;">Cancel</button>
+      <button type="button" id="btnConfirmRename" onclick="submitProductRename()" style="padding:8px 18px; background:#0284c7; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Update Everywhere</button>
+    </div>
+  </div>
+</div>
 
             <!-- Mode 5: Purchase Bill Entry -->
             <div id="boxStockPurchase" style="display:none; background:#fef3c7; border:1px solid #fde68a; padding:14px; border-radius:8px;">
@@ -3325,6 +3351,63 @@ window.uploadBulkPurchaseCSV = function() {
         });
       }, 500);
     };
+    window.openRenameModal = function() {
+  document.getElementById("modalRenameProduct").style.display = "flex";
+};
+
+window.closeRenameModal = function() {
+  document.getElementById("modalRenameProduct").style.display = "none";
+  document.getElementById("renameOldName").value = "";
+  document.getElementById("renameNewName").value = "";
+};
+
+window.submitProductRename = function() {
+  var oldName = (document.getElementById("renameOldName").value || "").trim();
+  var newName = (document.getElementById("renameNewName").value || "").trim();
+
+  if (!oldName || !newName) {
+    alert("Dono naam (Old aur New) enter karein.");
+    return;
+  }
+  if (oldName.toLowerCase() === newName.toLowerCase()) {
+    alert("Purana aur naya naam alag hona chahiye.");
+    return;
+  }
+
+  if (!confirm("Kya aap sure hain ki '" + oldName + "' ko badal kar '" + newName + "' karna hai?")) {
+    return;
+  }
+
+  var btn = document.getElementById("btnConfirmRename");
+  btn.disabled = true;
+  btn.innerText = "Updating...";
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "renameProduct",
+      oldName: oldName,
+      newName: newName
+    })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(resp) {
+    btn.disabled = false;
+    btn.innerText = "Update Everywhere";
+    if (resp.success) {
+      alert("✅ " + resp.message);
+      closeRenameModal();
+      location.reload();
+    } else {
+      alert("❌ " + resp.message);
+    }
+  })
+  .catch(function(err) {
+    btn.disabled = false;
+    btn.innerText = "Update Everywhere";
+    alert("❌ Error: " + err);
+  });
+};
   </script>
 </body>
 </html>
