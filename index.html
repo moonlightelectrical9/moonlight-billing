@@ -2847,12 +2847,16 @@ window.uploadBulkPurchaseCSV = function() {
     };
 
     async function apiCall(action, payload) {
-      if (!payload) payload = {};
-      payload.action = action;
-      if (currentUser && currentUser.phone) {
-        payload.userPhone = currentUser.phone;
-      }
-      try {
+  if (!payload) payload = {};
+  payload.action = action;
+  if (currentUser && currentUser.phone) {
+    payload.userPhone = currentUser.phone;
+  }
+  // Logged-in user ka naam har action ke sath backend ko bhejne ke liye:
+  payload.operatorName = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : (typeof getActiveOperatorName === 'function' ? getActiveOperatorName() : "Varun Sharma (Owner)");
+  payload.operatorRole = (typeof currentUser !== 'undefined' && currentUser && currentUser.role) ? currentUser.role : "Owner";
+
+  try {
         var res = await fetch(SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -3420,6 +3424,29 @@ window.submitProductRename = function() {
     alert("❌ Error: " + err);
   });
 };
+    // Current Active User/Operator ka naam nikalne ka standard function
+function getActiveOperatorName() {
+  try {
+    // 1. Agar login session storage me user stored hai
+    var stored = localStorage.getItem("currentUser") || sessionStorage.getItem("currentUser") || localStorage.getItem("loggedInUser");
+    if (stored) {
+      var u = typeof stored === "string" && stored.startsWith("{") ? JSON.parse(stored) : stored;
+      if (typeof u === "object" && (u.name || u.fullName || u.username)) {
+        return (u.name || u.fullName || u.username).trim();
+      }
+      if (typeof u === "string") return u.trim();
+    }
+  } catch(e) {}
+
+  // 2. Dashboard header badge se text uthana (e.g., "Varun Sharma (Owner)")
+  var userBadges = document.querySelectorAll(".header-user, [id*='user'], [id*='owner'], .user-badge");
+  for (var i = 0; i < userBadges.length; i++) {
+    var txt = (userBadges[i].innerText || "").replace(/Logout/i, "").trim();
+    if (txt && txt.length > 2 && txt.length < 40) return txt;
+  }
+
+  return "Admin / Owner";
+}
   </script>
 </body>
 </html>
