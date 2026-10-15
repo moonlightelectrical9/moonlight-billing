@@ -898,15 +898,14 @@
     </p>
 
     <!-- OLD ITEM DROPDOWN -->
-    <div style="margin-bottom:14px; position:relative;">
+    <div class="form-col" style="margin-bottom:14px; position:relative;">
       <label style="display:block; font-size:11px; font-weight:700; margin-bottom:4px; color:#334155;">OLD / CURRENT ITEM NAME *</label>
-      <input type="text" id="renameOldName" autocomplete="off" placeholder="Click to choose or type to search..." 
-             onfocus="handleRenameSearch(this.value)" 
-             oninput="handleRenameSearch(this.value)" 
+      <input type="text" id="renameOldName" autocomplete="off" placeholder="Type or click to choose..." 
+             onfocus="handleStockClick(event, 'renameOldName', 'renameMenu')" 
+             onclick="handleStockClick(event, 'renameOldName', 'renameMenu')" 
+             oninput="onStockSearchInput('renameOldName', 'renameMenu')" 
              style="width:100%; padding:9px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;">
-      
-      <!-- Custom Dropdown Container -->
-      <div id="renameDropdownMenu" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:180px; overflow-y:auto; background:#fff; border:1px solid #cbd5e1; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100000;"></div>
+      <div class="dropdown-menu" id="renameMenu"></div>
     </div>
 
     <!-- NEW ITEM NAME -->
@@ -3364,79 +3363,62 @@ window.uploadBulkPurchaseCSV = function() {
   document.getElementById("modalRenameProduct").style.display = "flex";
   document.getElementById("renameOldName").value = "";
   document.getElementById("renameNewName").value = "";
-  document.getElementById("renameDropdownMenu").style.display = "none";
+  var m = document.getElementById("renameMenu");
+  if (m) m.style.display = "none";
 };
 
 window.closeRenameModal = function() {
   document.getElementById("modalRenameProduct").style.display = "none";
-  document.getElementById("renameDropdownMenu").style.display = "none";
+  var m = document.getElementById("renameMenu");
+  if (m) m.style.display = "none";
 };
+    
+window.submitProductRename = function() {
+  var oldName = (document.getElementById("renameOldName").value || "").trim();
+  var newName = (document.getElementById("renameNewName").value || "").trim();
 
-// Item search aur dropdown populate karne ka logic
-window.handleRenameSearch = function(query) {
-  var menu = document.getElementById("renameDropdownMenu");
-  if (!menu) return;
-  query = (query || "").toLowerCase().trim();
-
-  // 1. Aapke app ke saare inventory array variables ko auto-detect karega
-  var list = [];
-  if (typeof appData !== "undefined" && appData && (appData.inventory || appData.items || appData.stock)) {
-    list = appData.inventory || appData.items || appData.stock;
-  } else if (typeof inventoryData !== "undefined" && Array.isArray(inventoryData)) {
-    list = inventoryData;
-  } else if (typeof allStockItems !== "undefined" && Array.isArray(allStockItems)) {
-    list = allStockItems;
-  } else if (typeof allItems !== "undefined" && Array.isArray(allItems)) {
-    list = allItems;
-  } else if (typeof stockData !== "undefined" && Array.isArray(stockData)) {
-    list = stockData;
-  } else if (typeof inventoryList !== "undefined" && Array.isArray(inventoryList)) {
-    list = inventoryList;
-  } else {
-    // Fallback: Agar upar se na mile toh purane existing dropdown menus ke options se read karega
-    var existingMenu = document.getElementById("correctMenu") || document.getElementById("inwardMenu") || document.getElementById("purItemMenu");
-    if (existingMenu) {
-      var divs = existingMenu.querySelectorAll("div");
-      divs.forEach(function(d) {
-        if (d.innerText.trim()) list.push(d.innerText.trim());
-      });
-    }
+  if (!oldName || !newName) {
+    alert("Dono naam (Old aur New) enter karein.");
+    return;
+  }
+  if (oldName.toLowerCase() === newName.toLowerCase()) {
+    alert("Purana aur naya naam alag hona chahiye.");
+    return;
   }
 
-  menu.innerHTML = "";
-  var matches = 0;
+  if (!confirm("Kya aap sure hain ki '" + oldName + "' ko badal kar '" + newName + "' karna hai?\nYeh sabhi Sheets (Sales, Purchase, Stock) mein update hoga.")) {
+    return;
+  }
 
-  list.forEach(function(it) {
-    var name = "";
-    if (typeof it === "string") {
-      name = it;
-    } else if (it && typeof it === "object") {
-      name = it.name || it.itemName || it.ItemName || it.item_name || it[0] || it[1] || "";
-    }
-    name = String(name).trim();
-    if (!name) return;
+  var btn = document.getElementById("btnConfirmRename");
+  btn.disabled = true;
+  btn.innerText = "Updating...";
 
-    if (!query || name.toLowerCase().indexOf(query) !== -1) {
-      matches++;
-      var row = document.createElement("div");
-      row.innerText = name;
-      row.style.padding = "9px 12px";
-      row.style.cursor = "pointer";
-      row.style.fontSize = "13px";
-      row.style.borderBottom = "1px solid #f1f5f9";
-      row.style.color = "#1e293b";
-      row.onmouseover = function() { this.style.background = "#e2e8f0"; };
-      row.onmouseout = function() { this.style.background = "#ffffff"; };
-      row.onmousedown = function(e) {
-        e.preventDefault(); // focus loss issue rokne ke liye
-        document.getElementById("renameOldName").value = name;
-        menu.style.display = "none";
-      };
-      menu.appendChild(row);
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "renameProduct",
+      oldName: oldName,
+      newName: newName
+    })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(resp) {
+    btn.disabled = false;
+    btn.innerText = "Update Everywhere";
+    if (resp.success) {
+      alert("✅ " + resp.message);
+      closeRenameModal();
+      location.reload();
+    } else {
+      alert("❌ " + resp.message);
     }
+  })
+  .catch(function(err) {
+    btn.disabled = false;
+    btn.innerText = "Update Everywhere";
+    alert("❌ Error: " + err);
   });
-
-  menu.style.display = (matches > 0) ? "block" : "none";
 };
   </script>
 </body>
