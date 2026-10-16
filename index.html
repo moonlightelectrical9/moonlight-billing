@@ -1914,18 +1914,25 @@
     };
 
     window.deleteDraftBill = async function(draftId) {
-    if (!draftId) {
-        alert("Draft ID nahi mili!");
+    console.log("Delete clicked for ID:", draftId);
+    if (!draftId || draftId === "undefined") {
+        alert("Draft ID nahi mil pa rahi! Console check karein.");
         return;
     }
     if (confirm("Delete this draft bill permanently?")) {
-        var res = await apiCall("deleteDraftBill", { draftId: String(draftId) });
-        if (res && res.success) {
-            alert("Draft successfully delete ho gaya aur stock restore ho gaya!");
-            await loadDraftBills();
-            if (typeof loadInventory === "function") loadInventory();
-        } else {
-            alert("Delete fail hua: " + ((res && res.message) ? res.message : "Server error"));
+        try {
+            var res = await apiCall("deleteDraftBill", { draftId: String(draftId) });
+            console.log("Delete response:", res);
+            if (res && res.success) {
+                alert("Draft successfully delete ho gaya!");
+                await loadDraftBills();
+                if (typeof loadInventory === "function") loadInventory();
+            } else {
+                alert("Delete fail hua: " + ((res && res.message) ? res.message : JSON.stringify(res)));
+            }
+        } catch (err) {
+            console.error("API Error:", err);
+            alert("Network/Server Error: " + err.message);
         }
     }
 };
@@ -2589,36 +2596,73 @@ window.sendKhataReminder = async function(docNo, name, phone, amount) {
     loadKhataRecords();
 };
 
-window.markPaid = async function(docNo) {
-    var mode = prompt("Payment kis mode me receive hui hai?\n1. Cash\n2. Online / UPI\n\n(Type 'Cash' ya 'UPI'):", "Cash");
-    if (!mode) {
-        alert("Payment mode select nahi kiya, action cancel kar diya gaya.");
-        return;
-    }
+window.markPaid = function(docNo) {
+  var modalId = "khataPayModeModal";
+  var oldModal = document.getElementById(modalId);
+  if (oldModal) oldModal.remove();
 
-    var payMode = "Cash";
-    var mLower = mode.trim().toLowerCase();
-    if (mLower === "2" || mLower.indexOf("upi") !== -1 || mLower.indexOf("online") !== -1) {
-        payMode = "UPI/Online";
-    } else {
-        payMode = "Cash";
-    }
+  var modalHtml = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:999999; backdrop-filter:blur(2px);">
+      <div style="background:#ffffff; border-radius:14px; padding:24px 20px; width:340px; box-shadow:0 15px 30px rgba(0,0,0,0.3); text-align:center; font-family:inherit;">
+        <div style="font-size:32px; margin-bottom:8px;">💳</div>
+        <h3 style="margin:0 0 6px 0; color:#1e293b; font-size:18px; font-weight:700;">Payment Kaise Aayi?</h3>
+        <p style="color:#64748b; font-size:13px; margin:0 0 20px 0;">Bill No: <span style="font-weight:bold; color:#0f172a;">${docNo}</span></p>
+        
+        <div style="display:flex; gap:12px; justify-content:center; margin-bottom:18px;">
+          <button id="btnPayCash" style="flex:1; padding:12px 10px; background:#16a34a; color:#ffffff; border:none; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; box-shadow:0 2px 8px rgba(22,163,74,0.35);">
+            💵 Cash
+          </button>
+          <button id="btnPayUpi" style="flex:1; padding:12px 10px; background:#2563eb; color:#ffffff; border:none; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; box-shadow:0 2px 8px rgba(37,99,235,0.35);">
+            📱 UPI / Online
+          </button>
+        </div>
 
-    var op = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : "Varun Sharma (Owner)";
-    
-    var res = await apiCall("markKhataPaid", { 
-        docNo: docNo, 
-        operator: op, 
+        <button id="btnPayCancel" style="background:transparent; border:none; color:#ef4444; font-size:13px; font-weight:500; cursor:pointer; text-decoration:underline;">
+          Cancel
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+  document.getElementById("btnPayCash").onclick = function() {
+    executePaymentUpdate(docNo, "Cash");
+  };
+
+  document.getElementById("btnPayUpi").onclick = function() {
+    executePaymentUpdate(docNo, "UPI / Online");
+  };
+
+  document.getElementById("btnPayCancel").onclick = function() {
+    var m = document.getElementById(modalId);
+    if (m) m.remove();
+  };
+
+  async function executePaymentUpdate(targetDocNo, selectedMode) {
+    var m = document.getElementById(modalId);
+    if (m) m.remove();
+
+    try {
+      var op = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : "Varun Sharma (Owner)";
+
+      var res = await apiCall("markKhataPaid", {
+        docNo: targetDocNo,
+        operator: op,
         updatedBy: op,
-        paymentMode: payMode 
-    });
+        paymentMode: selectedMode
+      });
 
-    if (res && (res.success || res.status === "success")) {
-        alert("Bill " + docNo + " successfully marked as Paid via " + payMode + "!");
+      if (res && (res.success || res.status === "success")) {
+        alert("Bill " + targetDocNo + " successfully marked as Paid via " + selectedMode + "!");
         if (typeof loadKhataRecords === "function") loadKhataRecords();
-    } else {
+      } else {
         alert("Failed to mark as paid: " + ((res && res.message) ? res.message : "Error"));
+      }
+    } catch(err) {
+      alert("Network Error: " + err.message);
     }
+  }
 };
     async function loadBillHistory() {
       var c = document.getElementById("historyTableContainer");
