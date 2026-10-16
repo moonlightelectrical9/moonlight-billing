@@ -2176,14 +2176,17 @@ function updateBulkTabVisibility() {
     window.submitRateOnly = async function() {
       var name = document.getElementById("rateOnlyName").value.trim();
       if (!name) { alert("Select item!"); return; }
-      var res = await apiCall("updateRateOnly", {
+    var op = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : "Varun Sharma (Owner)";
+    var res = await apiCall("updateRateOnly", {
         data: {
-          name: name,
-          custRate: document.getElementById("rateOnlyCust").value,
-          elecRate: document.getElementById("rateOnlyElec").value,
-          famRate: document.getElementById("rateOnlyFam").value
-        }
-      });
+            name: name,
+            custRate: document.getElementById("rateOnlyCust").value,
+            elecRate: document.getElementById("rateOnlyElec").value,
+            famRate: document.getElementById("rateOnlyFam").value,
+            operator: op
+        },
+        operator: op
+    });
       if (res && res.success) {
         alert("Rates updated successfully for " + name + "!");
         refreshAppData();
@@ -2799,7 +2802,7 @@ window.uploadBulkPurchaseCSV = function() {
       var name = document.getElementById("hsnOnlyName").value.trim();
       var hsn = document.getElementById("hsnOnlyCode").value.trim();
       if (!name || !hsn) { alert("Enter item and HSN code!"); return; }
-      var op = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? (currentUser.name + (currentUser.role ? " (" + currentUser.role + ")" : "")) : "Varun Sharma (Owner)";
+      var op = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : "Varun Sharma (Owner)";
     var res = await apiCall("updateHsnOnly", { data: { name: name, hsn: hsn, operator: op }, operator: op });
       if (res && res.success) {
         alert("HSN code updated successfully for " + name + "!");
@@ -2814,7 +2817,7 @@ window.uploadBulkPurchaseCSV = function() {
       var name = document.getElementById("correctName").value.trim();
       var qty = parseFloat(document.getElementById("correctQty").value) || 0;
       if (!name) { alert("Select item!"); return; }
-      var op = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? (currentUser.name + (currentUser.role ? " (" + currentUser.role + ")" : "")) : "Varun Sharma (Owner)";
+      var op = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : "Varun Sharma (Owner)";
     var res = await apiCall("correctStockQty", { data: { name: name, correctQty: qty, operator: op }, operator: op });
       if (res && res.success) {
         alert("Real stock count overridden successfully for " + name + "! Set to: " + qty);
