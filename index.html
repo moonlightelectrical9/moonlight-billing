@@ -3221,6 +3221,7 @@ window.uploadBulkPurchaseCSV = function() {
         items: billItems,
         grandTotal: totalAmt,
         resumedDraftId: activeResumedDraftId
+        operatorName: (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? (currentUser.name + (currentUser.role ? " (" + currentUser.role + ")" : "")) : "Varun Sharma (Owner)"
       };
 
       try {
