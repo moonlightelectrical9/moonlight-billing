@@ -1914,12 +1914,21 @@
     };
 
     window.deleteDraftBill = async function(draftId) {
-      if (confirm("Delete this draft bill permanently?")) {
-        await apiCall("deleteDraftBill", { draftId: draftId });
-        loadDraftBills();
-        if (typeof loadInventory === "function") loadInventory();
-      }
-    };
+    if (!draftId) {
+        alert("Draft ID nahi mili!");
+        return;
+    }
+    if (confirm("Delete this draft bill permanently?")) {
+        var res = await apiCall("deleteDraftBill", { draftId: String(draftId) });
+        if (res && res.success) {
+            alert("Draft successfully delete ho gaya aur stock restore ho gaya!");
+            await loadDraftBills();
+            if (typeof loadInventory === "function") loadInventory();
+        } else {
+            alert("Delete fail hua: " + ((res && res.message) ? res.message : "Server error"));
+        }
+    }
+};
 
     function clearBillingForm() {
       activeResumedDraftId = null;
