@@ -1817,6 +1817,26 @@
         paymentMode: document.getElementById("paymentMode").value
       };
 
+      // --- STOCK VALIDATION CHECK FOR DRAFT ---
+    for (var k = 0; k < billItems.length; k++) {
+        var itm = billItems[k];
+        var itmName = itm.name || itm.itemName || "";
+        var reqQty = parseFloat(itm.qty || 0);
+
+        // cachedInventory me se current stock check karein
+        var invItem = (window.cachedInventory || []).find(function(inv) {
+            return (inv.name || inv.item || "").toLowerCase().trim() === itmName.toLowerCase().trim();
+        });
+
+        if (invItem) {
+            var availStock = parseFloat(invItem.qty || invItem.stock || invItem.currentStock || 0);
+            if (reqQty > availStock) {
+                alert("Stock Error: " + itmName + " ki current QTY " + availStock + " hai, but aap " + reqQty + " ka draft save kar rahe ho!");
+                return; // Execution yahin ruk jayega
+            }
+        }
+    }
+    // ----------------------------------------
       var btn = document.getElementById("btnSaveDraft");
       btn.innerText = "⏳ Saving...";
       btn.disabled = true;
@@ -2556,11 +2576,34 @@ window.sendKhataReminder = async function(docNo, name, phone, amount) {
 };
 
 window.markPaid = async function(docNo) {
-    if (!confirm("Mark " + docNo + " as Paid?")) return;
+    var mode = prompt("Payment kis mode me receive hui hai?\n1. Cash\n2. Online / UPI\n\n(Type 'Cash' ya 'UPI'):", "Cash");
+    if (!mode) {
+        alert("Payment mode select nahi kiya, action cancel kar diya gaya.");
+        return;
+    }
+
+    var payMode = "Cash";
+    var mLower = mode.trim().toLowerCase();
+    if (mLower === "2" || mLower.indexOf("upi") !== -1 || mLower.indexOf("online") !== -1) {
+        payMode = "UPI/Online";
+    } else {
+        payMode = "Cash";
+    }
+
     var op = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : "Varun Sharma (Owner)";
-    var res = await apiCall("markKhataPaid", { docNo: docNo, operator: op, updatedBy: op });
-    if (res && res.success) {
-        loadKhataRecords();
+    
+    var res = await apiCall("markKhataPaid", { 
+        docNo: docNo, 
+        operator: op, 
+        updatedBy: op,
+        paymentMode: payMode 
+    });
+
+    if (res && (res.success || res.status === "success")) {
+        alert("Bill " + docNo + " successfully marked as Paid via " + payMode + "!");
+        if (typeof loadKhataRecords === "function") loadKhataRecords();
+    } else {
+        alert("Failed to mark as paid: " + ((res && res.message) ? res.message : "Error"));
     }
 };
     async function loadBillHistory() {
