@@ -2799,7 +2799,8 @@ window.uploadBulkPurchaseCSV = function() {
       var name = document.getElementById("hsnOnlyName").value.trim();
       var hsn = document.getElementById("hsnOnlyCode").value.trim();
       if (!name || !hsn) { alert("Enter item and HSN code!"); return; }
-      var res = await apiCall("updateHsnOnly", { data: { name: name, hsn: hsn } });
+      var op = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? (currentUser.name + (currentUser.role ? " (" + currentUser.role + ")" : "")) : "Varun Sharma (Owner)";
+    var res = await apiCall("updateHsnOnly", { data: { name: name, hsn: hsn, operator: op }, operator: op });
       if (res && res.success) {
         alert("HSN code updated successfully for " + name + "!");
         refreshAppData();
@@ -2813,7 +2814,8 @@ window.uploadBulkPurchaseCSV = function() {
       var name = document.getElementById("correctName").value.trim();
       var qty = parseFloat(document.getElementById("correctQty").value) || 0;
       if (!name) { alert("Select item!"); return; }
-      var res = await apiCall("correctStockQty", { data: { name: name, correctQty: qty } });
+      var op = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? (currentUser.name + (currentUser.role ? " (" + currentUser.role + ")" : "")) : "Varun Sharma (Owner)";
+    var res = await apiCall("correctStockQty", { data: { name: name, correctQty: qty, operator: op }, operator: op });
       if (res && res.success) {
         alert("Real stock count overridden successfully for " + name + "! Set to: " + qty);
         refreshAppData();
