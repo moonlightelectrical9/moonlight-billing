@@ -2441,61 +2441,133 @@ function updateBulkTabVisibility() {
       }
     }
 
-    async function loadKhataRecords() {
-      var c = document.getElementById("khataListContainer");
-      c.innerHTML = "Fetching pending udhar records...";
-      var res = await apiCall("getKhataRecords");
-      if (res && res.records) {
-        var totalPending = 0, count = 0;
-        res.records.forEach(function(r) {
-          if (r.status.toLowerCase().indexOf("paid") === -1) {
-            totalPending += parseFloat(r.amount) || 0;
-            count++;
-          }
-        });
-        document.getElementById("lblTotalPendingUdhar").innerText = "₹" + totalPending.toFixed(2);
-        document.getElementById("lblTotalPendingCount").innerText = count + " Pending Bills";
+    window.khataFilterStatus = "ALL";
+window.cachedKhataRecords = [];
 
-        var html = '<div class="table-wrap"><table><thead><tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Reminder Tracking</th><th>Updated By</th><th>Actions</th></tr></thead><tbody>';
-        res.records.forEach(function(r) {
-          var isPending = r.status.toLowerCase().indexOf("paid") === -1;
-          var statusColor = isPending ? '#d97706' : '#059669';
-          var statusText = isPending ? 'Pending' : 'Paid';
-          var remHtml = '<small>Sent: ' + (r.remCount || 0) + ' times<br>Last: ' + (r.remDate || '-') + '</small>';
-          var actHtml = isPending ? '<button class="btn-sync" style="padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;" onclick="sendKhataReminder(\'' + r.docNo + '\', \'' + r.customerName + '\', \'' + r.phone + '\', ' + r.amount + ')">📲 Reminder</button><button class="btn-add" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="markPaid(\'' + r.docNo + '\')">✓ Mark as Paid</button>' : '<span style="color:#059669; font-weight:800;">✓ Settled</span>';
+window.renderKhataTable = function() {
+    var c = document.getElementById("khataListContainer");
+    if (!c) return;
+    var list = window.cachedKhataRecords || [];
+    
+    // Filter logic
+    var filtered = list.filter(function(r) {
+        var isPending = r.status.toLowerCase().indexOf("paid") === -1;
+        if (window.khataFilterStatus === "PENDING") return isPending;
+        if (window.khataFilterStatus === "PAID") return !isPending;
+        return true;
+    });
 
-          html += "<tr>" +
-            "<td><b>" + r.docNo + "</b></td>" +
-            "<td>" + r.date + "</td>" +
-            "<td>" + r.customerName + "</td>" +
-            "<td>" + (r.phone || '-') + "</td>" +
-            "<td><b>₹" + parseFloat(r.amount || 0).toFixed(2) + "</b></td>" +
-            "<td><b style='color:" + statusColor + "'>" + statusText + "</b></td>" +
-            "<td>" + remHtml + "</td>" +
-            "<td><span style='font-size:11px; font-weight:700; color:#334155;'>" + (r.updatedBy || '-') + "</span></td>" +
-            "<td>" + actHtml + "</td>" +
-            "</tr>";
+    var html = '<div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">' +
+        '<span style="font-weight: 700; font-size: 13px; color: #475569;">Filter Records:</span>' +
+        '<select onchange="window.khataFilterStatus = this.value; renderKhataTable();" style="padding: 6px 12px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-weight: 700; background: #fff; cursor: pointer;">' +
+            '<option value="ALL"' + (window.khataFilterStatus === "ALL" ? " selected" : "") + '>All Bills (' + list.length + ')</option>' +
+            '<option value="PENDING"' + (window.khataFilterStatus === "PENDING" ? " selected" : "") + '>Pending Only</option>' +
+            '<option value="PAID"' + (window.khataFilterStatus === "PAID" ? " selected" : "") + '>Paid Only</option>' +
+        '</select>' +
+    '</div>' +
+    '<div class="table-wrap"><table><thead><tr>' +
+        '<th>Invoice No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Reminder Tracking</th><th>Updated By</th><th>Actions</th>' +
+    '</tr></thead><tbody>';
+
+    if (filtered.length === 0) {
+        html += '<tr><td colspan="9" style="text-align: center; padding: 18px; color: #64748b; font-weight: 700;">No records found for selected filter.</td></tr>';
+    } else {
+        filtered.forEach(function(r) {
+            var isPending = r.status.toLowerCase().indexOf("paid") === -1;
+            var statusColor = isPending ? '#d97706' : '#059669';
+            var statusText = isPending ? 'Pending' : 'Paid';
+            var remHtml = '<small>Sent: ' + (r.remCount || 0) + ' times<br>Last: ' + (r.remDate || '-') + '</small>';
+            var userWhoUpdated = r.updatedBy || r.operator || '-';
+
+            // Action Dropdown
+            var actHtml = '';
+            if (isPending) {
+                actHtml = '<select onchange="handleKhataAction(this, \'' + r.docNo + '\', \'' + (r.customerName || r.name || '') + '\', \'' + (r.phone || '') + '\', ' + (parseFloat(r.amount) || 0) + ')" style="padding: 5px 8px; border-radius: 6px; border: 1.5px solid #0284c7; font-weight: 700; font-size: 12px; background: #f0f9ff; color: #0369a1; cursor: pointer;">' +
+                    '<option value="" selected disabled>Choose Action ▼</option>' +
+                    '<option value="remind">📱 Send Reminder</option>' +
+                    '<option value="paid">✅ Mark as Paid</option>' +
+                '</select>';
+            } else {
+                actHtml = '<span style="color: #059669; font-weight: 800; font-size: 12px;">✓ Settled</span>';
+            }
+
+            html += '<tr>' +
+                '<td><b>' + (r.docNo || '-') + '</b></td>' +
+                '<td>' + (r.date || '-') + '</td>' +
+                '<td>' + (r.customerName || r.name || '-') + '</td>' +
+                '<td>' + (r.phone || '-') + '</td>' +
+                '<td><b>₹' + parseFloat(r.amount || 0).toFixed(2) + '</b></td>' +
+                '<td><b style="color:' + statusColor + '">' + statusText + '</b></td>' +
+                '<td>' + remHtml + '</td>' +
+                '<td><span style="font-size:11px; font-weight:700; color:#334155;">' + userWhoUpdated + '</span></td>' +
+                '<td>' + actHtml + '</td>' +
+            '</tr>';
         });
-        html += '</tbody></table></div>';
-        c.innerHTML = html;
-      }
     }
 
-    window.sendKhataReminder = async function(docNo, name, phone, amount) {
-      var upi = (bankSettings && bankSettings.upi) ? bankSettings.upi : "8860880453@kotak";
-      var payUrl = "https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=" + encodeURIComponent(upi) + "&am=" + amount;
-      var msg = "*Greetings from Moon Light Electricals!*\n\nHi " + name + ",\nThis is a reminder that payment for Bill *" + docNo + "* is pending.\n\n• *Pending Amount:* ₹" + parseFloat(amount).toFixed(2) + "\n• *Due To:* Moon Light Electricals\n\n👉 *Pay via UPI (GPay/PhonePe):*\n" + payUrl + "\n\nThank you!";
-      window.open("https://wa.me/91" + phone + "?text=" + encodeURIComponent(msg), '_blank');
-      await apiCall("recordKhataReminder", { docNo: docNo });
-      loadKhataRecords();
-    };
+    html += '</tbody></table></div>';
+    c.innerHTML = html;
+};
 
-    window.markPaid = async function(docNo) {
-      if (!confirm("Mark " + docNo + " as Paid?")) return;
-      var res = await apiCall("markKhataPaid", { docNo: docNo });
-      if (res && res.success) loadKhataRecords();
-    };
+// Dropdown handler
+window.handleKhataAction = function(sel, docNo, name, phone, amount) {
+    var val = sel.value;
+    if (val === "remind") {
+        sendKhataReminder(docNo, name, phone, amount);
+    } else if (val === "paid") {
+        markPaid(docNo);
+    }
+    sel.value = ""; // Reset dropdown after choice
+};
 
+async function loadKhataRecords() {
+    var c = document.getElementById("khataListContainer");
+    if (c) c.innerHTML = "Fetching pending udhar records...";
+    var res = await apiCall("getKhataRecords");
+    if (res && res.records) {
+        window.cachedKhataRecords = res.records;
+        var totalPending = 0, count = 0;
+        res.records.forEach(function(r) {
+            if (r.status.toLowerCase().indexOf("paid") === -1) {
+                totalPending += parseFloat(r.amount) || 0;
+                count++;
+            }
+        });
+        var lblPending = document.getElementById("lblTotalPendingUdhar");
+        var lblCount = document.getElementById("lblTotalPendingCount");
+        if (lblPending) lblPending.innerText = "₹" + totalPending.toFixed(2);
+        if (lblCount) lblCount.innerText = count + " Pending Bills";
+
+        renderKhataTable();
+    }
+}
+    window.handleKhataAction = function(sel, docNo, name, phone, amount) {
+    var val = sel.value;
+    if (val === "remind") {
+        sendKhataReminder(docNo, name, phone, amount);
+    } else if (val === "paid") {
+        markPaid(docNo);
+    }
+    sel.value = "";
+};
+
+window.sendKhataReminder = async function(docNo, name, phone, amount) {
+    var upi = (bankSettings && bankSettings.upi) ? bankSettings.upi : "8860880453@kotak";
+    var payUrl = "https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=" + encodeURIComponent(upi) + "&am=" + amount;
+    var msg = "*Greetings from Moon Light Electricals!*\n\nHi " + name + ",\nThis is a reminder that payment for Bill *" + docNo + "* is pending.\n\n*Pending Amount:* ₹" + parseFloat(amount).toFixed(2) + "\n*Due To:* Moon Light Electricals\n\nPay securely using UPI by clicking here:\n" + payUrl + "\n\nThank you!";
+    window.open("https://wa.me/91" + phone + "?text=" + encodeURIComponent(msg), '_blank');
+    await apiCall("recordKhataReminder", { docNo: docNo });
+    loadKhataRecords();
+};
+
+window.markPaid = async function(docNo) {
+    if (!confirm("Mark " + docNo + " as Paid?")) return;
+    var op = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : "Varun Sharma (Owner)";
+    var res = await apiCall("markKhataPaid", { docNo: docNo, operator: op, updatedBy: op });
+    if (res && res.success) {
+        loadKhataRecords();
+    }
+};
     async function loadBillHistory() {
       var c = document.getElementById("historyTableContainer");
       c.innerHTML = "Fetching invoices list...";
