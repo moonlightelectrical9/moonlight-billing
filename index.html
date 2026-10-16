@@ -1851,9 +1851,10 @@
         alert("Bill saved to Draft successfully! Counter is now clear for next customer.");
         clearBillingForm();
         loadDraftBills();
-      } else {
-        alert("Could not save draft. Try again!");
-      }
+    } else {
+        var errMsg = (res && res.message) ? res.message : "Could not save draft. Try again!";
+        alert(errMsg);
+    }
     };
 
     async function loadDraftBills() {
