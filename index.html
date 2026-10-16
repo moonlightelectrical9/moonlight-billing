@@ -1818,21 +1818,23 @@
       };
 
       // --- STOCK VALIDATION CHECK FOR DRAFT ---
+    var invList = window.cachedInventory || window.inventoryData || window.itemsList || [];
     for (var k = 0; k < billItems.length; k++) {
         var itm = billItems[k];
-        var itmName = itm.name || itm.itemName || "";
+        var itmName = String(itm.name || itm.itemName || itm.item || "").toLowerCase().trim();
         var reqQty = parseFloat(itm.qty || 0);
 
-        // cachedInventory me se current stock check karein
-        var invItem = (window.cachedInventory || []).find(function(inv) {
-            return (inv.name || inv.item || "").toLowerCase().trim() === itmName.toLowerCase().trim();
+        var invItem = invList.find(function(inv) {
+            var n = String(inv.Item_Name || inv.name || inv.item || inv.itemName || "").toLowerCase().trim();
+            return n === itmName;
         });
 
         if (invItem) {
-            var availStock = parseFloat(invItem.qty || invItem.stock || invItem.currentStock || 0);
+            // Sheet ka exact Column F: Current_Stock target karein
+            var availStock = parseFloat(invItem.Current_Stock !== undefined ? invItem.Current_Stock : (invItem.stock || invItem.qty || invItem.currentStock || 0));
             if (reqQty > availStock) {
-                alert("Stock Error: " + itmName + " ki current QTY " + availStock + " hai, but aap " + reqQty + " ka draft save kar rahe ho!");
-                return; // Execution yahin ruk jayega
+                alert("Stock Error: " + (itm.name || itm.itemName) + " ki current QTY " + availStock + " hai, but aap " + reqQty + " ka draft save kar rahe ho!");
+                return; // Draft save yahin ruk jayega
             }
         }
     }
@@ -3338,6 +3340,27 @@ window.uploadBulkPurchaseCSV = function() {
         resumedDraftId: activeResumedDraftId,
         operatorName: (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? (currentUser.name + (currentUser.role ? " (" + currentUser.role + ")" : "")) : "Varun Sharma (Owner)"
       };
+      // --- YAHAN PASTE KAREIN (STOCK VALIDATION CHECK) ---
+    var invList = window.cachedInventory || window.inventoryData || window.itemsList || [];
+    for (var k = 0; k < billItems.length; k++) {
+        var itm = billItems[k];
+        var itmName = String(itm.name || itm.itemName || itm.item || "").toLowerCase().trim();
+        var reqQty = parseFloat(itm.qty || 0);
+
+        var invItem = invList.find(function(inv) {
+            var n = String(inv.Item_Name || inv.name || inv.item || inv.itemName || "").toLowerCase().trim();
+            return n === itmName;
+        });
+
+        if (invItem) {
+            var availStock = parseFloat(invItem.Current_Stock !== undefined ? invItem.Current_Stock : (invItem.stock || invItem.qty || invItem.currentStock || 0));
+            if (reqQty > availStock) {
+                alert("Stock Error: " + (itm.name || itm.itemName) + " ki current QTY " + availStock + " hai, but aap " + reqQty + " ka bill kaat rahe ho!");
+                return; // Bill generate hona yahin ruk jayega aur API call nahi hogi
+            }
+        }
+    }
+    // --------------------------------------------------
 
       try {
         var res = await apiCall("processBillOrEstimate", payload);
