@@ -1595,7 +1595,9 @@
         if (elDAsset) elDAsset.innerText = "₹" + dAsset.toFixed(2);
         if (elDSales) elDSales.innerText = "₹" + dSales.toFixed(2);
         if (elDProfit) elDProfit.innerText = "₹" + dProfit.toFixed(2);
-        if (elRealAsset) elRealAsset.innerText = "₹" + (cAsset + dAsset).toFixed(2);
+        var cAssetFixed = Math.round(cAsset * 100) / 100;
+        var dAssetFixed = Math.round(dAsset * 100) / 100;
+        if (elRealAsset) elRealAsset.innerText = "₹" + (cAssetFixed + dAssetFixed).toFixed(2);
 
         if (elDBadge) {
           var dCount = (dRaw.draftItemsSummary ? dRaw.draftItemsSummary.length : 0);
