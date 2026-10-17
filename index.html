@@ -574,33 +574,41 @@
             </table>
           </div>
         </div>
-            <!-- TAB E: CREDIT LEDGER (PENDING UDHAR OVERVIEW) -->
+           <!-- TAB E: CREDIT LEDGER (TOP PENDING UDHAR OVERVIEW) -->
     <div style="background:#fffaf0; border:1px solid #fed7aa; border-radius:8px; padding:14px; margin-bottom:18px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
         <div style="font-size:12px; font-weight:800; color:#c2410c; text-transform:uppercase;">
-          📕 TAB E: CREDIT LEDGER OVERVIEW (PENDING UDHAR TRACKING)
+          📕 TAB E: CREDIT LEDGER OVERVIEW (TOP PENDING UDHAR)
         </div>
-        <span id="creditPendingCountBadge" style="background:#ea580c; color:#ffffff; font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px;">0 Pending Bills</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span id="creditPendingCountBadge" style="background:#ea580c; color:#ffffff; font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px;">0 Pending Bills</span>
+          <button onclick="var cNav = document.querySelectorAll('a, li, button'); for(var i=0; i<cNav.length; i++){ if(cNav[i].innerText && cNav[i].innerText.toLowerCase().indexOf('credit ledger') !== -1) { cNav[i].click(); break; } }" style="background:#ea580c; color:#ffffff; border:none; padding:6px 12px; border-radius:6px; font-weight:700; font-size:11px; cursor:pointer;">
+            Open Full Ledger ➔
+          </button>
+        </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
-        <div style="background:#ffffff; border:1px solid #fed7aa; padding:12px; border-radius:6px;">
-          <small style="color:#c2410c; font-weight:800;">💰 TOTAL PENDING UDHAR</small>
-          <div style="font-size:22px; font-weight:900; color:#dc2626; margin-top:5px;" id="dashTotalPendingUdhar">₹0.00</div>
-          <small style="color:#64748b; font-size:11px;">Market mein phasa hua kul udhar</small>
-        </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; background:#ffffff; border:1px solid #fed7aa; padding:10px 14px; border-radius:6px; margin-bottom:12px;">
+        <span style="color:#c2410c; font-weight:800; font-size:13px;">💰 TOTAL PENDING UDHAR (MARKET)</span>
+        <span style="font-size:22px; font-weight:900; color:#dc2626;" id="dashTotalPendingUdhar">₹0.00</span>
+      </div>
 
-        <div style="background:#ffffff; border:1px solid #fed7aa; padding:12px; border-radius:6px;">
-          <small style="color:#15803d; font-weight:800;">✅ RECEIVED FROM UDHAR</small>
-          <div style="font-size:22px; font-weight:900; color:#15803d; margin-top:5px;" id="dashTotalSettledUdhar">₹0.00</div>
-          <small style="color:#64748b; font-size:11px;">Wapas recover ho chuka udhar</small>
-        </div>
-
-        <div style="background:#ffffff; border:1px solid #fed7aa; padding:12px; border-radius:6px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-          <button onclick="var cNav = document.querySelectorAll('a, li, button'); for(var i=0; i<cNav.length; i++){ if(cNav[i].innerText && cNav[i].innerText.toLowerCase().indexOf('credit ledger') !== -1) { cNav[i].click(); break; } }" style="background:#ea580c; color:#ffffff; border:none; padding:10px 16px; border-radius:6px; font-weight:700; font-size:13px; cursor:pointer; box-shadow:0 2px 6px rgba(234,88,12,0.3);">
-  Open Credit Ledger ➔
-</button>
-        </div>
+      <!-- Mini Top 6 Pending Udhar Table -->
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left; background:#ffffff; border:1px solid #fed7aa; border-radius:6px;">
+          <thead>
+            <tr style="background:#ffedd5; color:#9a3412;">
+              <th style="padding:6px 10px;">#</th>
+              <th style="padding:6px 10px;">Customer Name</th>
+              <th style="padding:6px 10px;">Phone</th>
+              <th style="padding:6px 10px;">Doc No</th>
+              <th style="padding:6px 10px; text-align:right;">Pending Amount</th>
+            </tr>
+          </thead>
+          <tbody id="dashTopCreditTableBody">
+            <tr><td colspan="5" style="text-align:center; padding:10px; color:#9ca3af;">Koi Pending Udhar Maujood Nahi Hai</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -1658,33 +1666,51 @@
             elDTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:10px; color:#9ca3af;">Koi On-Hold Draft Maujood Nahi Hai</td></tr>`;
           }
         }
-      // TAB E: Populate Credit Ledger Overview
+      // TAB E: Populate Credit Ledger Overview (Top 6 Pending)
     try {
       var kList = (window.dashData && window.dashData.creditRecords) || [];
       var totPendingUdhar = 0;
-      var totSettledUdhar = 0;
-      var pendingCount = 0;
+      var pendingList = [];
 
       kList.forEach(function(k) {
         var bal = parseFloat(k.amount || 0);
-        var st = String(k.status || '').toLowerCase();
-        if (st === 'pending' || bal > 0) {
+        var st = String(k.status || '').toLowerCase().trim();
+        if (st === 'pending' && bal > 0) {
           totPendingUdhar += bal;
-          pendingCount++;
-        } else {
-          totSettledUdhar += bal;
+          pendingList.push(k);
         }
       });
 
+      // Sort by highest pending amount first (descending)
+      pendingList.sort(function(a, b) {
+        return (parseFloat(b.amount) || 0) - (parseFloat(a.amount) || 0);
+      });
+
       var elUdharDue = document.getElementById("dashTotalPendingUdhar");
-      var elUdharPaid = document.getElementById("dashTotalSettledUdhar");
       var elUdharBadge = document.getElementById("creditPendingCountBadge");
+      var elCreditTbody = document.getElementById("dashTopCreditTableBody");
 
       if (elUdharDue) elUdharDue.innerText = "₹" + totPendingUdhar.toFixed(2);
-      if (elUdharPaid) elUdharPaid.innerText = "₹" + totSettledUdhar.toFixed(2);
-      if (elUdharBadge) elUdharBadge.innerText = pendingCount + " Pending Bills";
+      if (elUdharBadge) elUdharBadge.innerText = pendingList.length + " Pending Bills";
+
+      if (elCreditTbody) {
+        if (pendingList.length > 0) {
+          var top6 = pendingList.slice(0, 6);
+          elCreditTbody.innerHTML = top6.map(function(c, idx) {
+            return '<tr style="border-bottom:1px solid #ffedd5;">' +
+              '<td style="padding:6px 10px; color:#64748b;">' + (idx + 1) + '</td>' +
+              '<td style="padding:6px 10px; font-weight:700; color:#1e293b;">' + (c.name || '-') + '</td>' +
+              '<td style="padding:6px 10px; color:#64748b;">' + (c.phone || '-') + '</td>' +
+              '<td style="padding:6px 10px; color:#ea580c; font-weight:600;">' + (c.id || '-') + '</td>' +
+              '<td style="padding:6px 10px; text-align:right; font-weight:800; color:#dc2626;">₹' + (parseFloat(c.amount) || 0).toFixed(2) + '</td>' +
+            '</tr>';
+          }).join('');
+        } else {
+          elCreditTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:10px; color:#15803d; font-weight:600;">Sabhi Udhar Clear Hain (Zero Due)</td></tr>';
+        }
+      }
     } catch(e) {
-      console.warn("Error calculating Tab E:", e);
+      console.warn("Error calculating Tab E Top 6:", e);
     }
 
       var dayBox = document.getElementById("boxDayWiseContainer");
