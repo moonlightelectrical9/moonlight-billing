@@ -1772,8 +1772,11 @@
       '<td>' + s.qty + '</td>' +
       '<td><b style="color:#b45309;">₹' + parseFloat(s.total || 0).toFixed(2) + '</b></td>' +
       '<td>' + modeDisplay + '</td>' +
-      '</tr>';
+    '</tr>';
   });
+  out += '</tbody></table>';
+  return out;
+}
 
     window.drillDownToMonth = function(year, monthIdx) {
       applyDashMode('month');
