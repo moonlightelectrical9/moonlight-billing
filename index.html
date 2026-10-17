@@ -521,6 +521,59 @@
                 </div>
               </div>
             </div>
+            <!-- Tab D: On-Hold / Draft Bills Overview -->
+        <div style="background:#fffaf5; border:1px solid #fed7aa; border-radius:8px; padding:14px; margin-bottom:18px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+            <div style="font-size:12px; font-weight:800; color:#9a3412; text-transform:uppercase;">
+              📦 TAB D: ON-HOLD / DRAFT BILLS OVERVIEW (RESERVED STOCK & PROJECTED PROFIT)
+            </div>
+            <span id="draftCountBadge" style="background:#ea580c; color:#ffffff; font-size:11px; font-weight:700; padding:3px 10px; border-radius:12px;">0 Drafts On-Hold</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
+            <div style="background:#ffffff; border:1px solid #ffedd5; padding:12px; border-radius:6px;">
+              <small style="color:#c2410c; font-weight:800;">📦 HOLD STOCK ASSET (COST)</small>
+              <div style="font-size:22px; font-weight:900; color:#9a3412; margin-top:4px;" id="dashDraftAsset">₹0.00</div>
+              <small style="color:#9ca3af; font-size:11px;">Drafts ne jo godown/counter se roka hua hai</small>
+            </div>
+
+            <div style="background:#ffffff; border:1px solid #ffedd5; padding:12px; border-radius:6px;">
+              <small style="color:#c2410c; font-weight:800;">🏷️ EXPECTED DRAFT SALES</small>
+              <div style="font-size:22px; font-weight:900; color:#ea580c; margin-top:4px;" id="dashDraftSales">₹0.00</div>
+              <small style="color:#9ca3af; font-size:11px;">Drafts bill banne par banne wali sale</small>
+            </div>
+
+            <div style="background:#ffffff; border:1px solid #ffedd5; padding:12px; border-radius:6px;">
+              <small style="color:#15803d; font-weight:800;">📈 EXPECTED DRAFT PROFIT</small>
+              <div style="font-size:22px; font-weight:900; color:#16a34a; margin-top:4px;" id="dashDraftProfit">₹0.00</div>
+              <small style="color:#9ca3af; font-size:11px;">In on-hold bills ka anumanit munafa</small>
+            </div>
+          </div>
+
+          <div style="margin-top:10px; background:#ffedd5; border-left:4px solid #ea580c; padding:8px 12px; border-radius:4px; font-size:12px; color:#7c2d12;">
+            💡 <b>Actual Total Shop Asset:</b> Available Closing Stock (TAB C) + Hold Stock (TAB D) = 
+            <span id="dashRealTotalAsset" style="font-weight:900; color:#0f172a;">₹0.00</span>
+          </div>
+
+          <!-- Mini Draft Table -->
+          <div style="margin-top:12px; overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left; background:#ffffff; border:1px solid #fed7aa; border-radius:6px;">
+              <thead>
+                <tr style="background:#fed7aa; color:#7c2d12; font-weight:700;">
+                  <th style="padding:6px 10px;">Draft No</th>
+                  <th style="padding:6px 10px;">Date</th>
+                  <th style="padding:6px 10px;">Customer</th>
+                  <th style="padding:6px 10px;">Items</th>
+                  <th style="padding:6px 10px;">Bill Value</th>
+                  <th style="padding:6px 10px;">Projected Profit</th>
+                </tr>
+              </thead>
+              <tbody id="dashDraftTableBody">
+                <tr><td colspan="6" style="text-align:center; padding:10px; color:#9ca3af;">Koi On-Hold Draft Maujood Nahi Hai</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
             <!-- Day-Wise Breakdown List for Week & Month (With Drill-Down) -->
             <div id="boxDayWiseContainer" style="display:none; background:#ffffff; border:1.5px solid var(--border); border-radius:8px; padding:14px;">
@@ -1525,6 +1578,48 @@
 
       document.getElementById("dashProfitTotal").innerText = "₹" + profitSale.toFixed(2);
       document.getElementById("dashStockAsset").innerText = "₹" + (window.dashData.closingStockAsset || 0).toFixed(2);
+      // TAB D: Populate Drafts On-Hold & Actual Total Asset
+        var dRaw = window.dashData || {};
+        var dAsset = parseFloat(dRaw.draftStockAsset || 0);
+        var dSales = parseFloat(dRaw.draftExpectedSales || 0);
+        var dProfit = parseFloat(dRaw.draftExpectedProfit || 0);
+        var cAsset = parseFloat(dRaw.closingStockAsset || 0);
+
+        var elDAsset = document.getElementById("dashDraftAsset");
+        var elDSales = document.getElementById("dashDraftSales");
+        var elDProfit = document.getElementById("dashDraftProfit");
+        var elDBadge = document.getElementById("draftCountBadge");
+        var elRealAsset = document.getElementById("dashRealTotalAsset");
+        var elDTbody = document.getElementById("dashDraftTableBody");
+
+        if (elDAsset) elDAsset.innerText = "₹" + dAsset.toFixed(2);
+        if (elDSales) elDSales.innerText = "₹" + dSales.toFixed(2);
+        if (elDProfit) elDProfit.innerText = "₹" + dProfit.toFixed(2);
+        if (elRealAsset) elRealAsset.innerText = "₹" + (cAsset + dAsset).toFixed(2);
+
+        if (elDBadge) {
+          var dCount = (dRaw.draftItemsSummary ? dRaw.draftItemsSummary.length : 0);
+          elDBadge.innerText = dCount + " Drafts On-Hold";
+        }
+
+        if (elDTbody) {
+          if (dRaw.draftItemsSummary && dRaw.draftItemsSummary.length > 0) {
+            elDTbody.innerHTML = dRaw.draftItemsSummary.map(function(d) {
+              return `
+                <tr style="border-bottom:1px solid #ffedd5;">
+                  <td style="padding:6px 10px; font-weight:700; color:#ea580c;">${d.draftId}</td>
+                  <td style="padding:6px 10px; color:#64748b;">${d.date}</td>
+                  <td style="padding:6px 10px; font-weight:600;">${d.customer} (${d.phone})</td>
+                  <td style="padding:6px 10px;">${d.itemCount} Pcs</td>
+                  <td style="padding:6px 10px; font-weight:700; color:#0f172a;">₹${d.saleAmount.toFixed(2)}</td>
+                  <td style="padding:6px 10px; font-weight:700; color:#16a34a;">+₹${d.profitAmount.toFixed(2)}</td>
+                </tr>
+              `;
+            }).join('');
+          } else {
+            elDTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:10px; color:#9ca3af;">Koi On-Hold Draft Maujood Nahi Hai</td></tr>`;
+          }
+        }
 
       var dayBox = document.getElementById("boxDayWiseContainer");
       if (activeDashMode === "year") {
