@@ -2725,12 +2725,17 @@ window.markPaid = function(docNo) {
 
   var modalHtml = `
     <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:999999; backdrop-filter:blur(2px);">
-      <div style="background:#ffffff; border-radius:14px; padding:24px 20px; width:340px; box-shadow:0 15px 30px rgba(0,0,0,0.3); text-align:center; font-family:inherit;">
+      <div style="background:#ffffff; border-radius:14px; padding:24px 20px; width:340px; box-shadow:0 15px 30px rgba(0,0,0,0.35); text-align:center; font-family:inherit;">
         <div style="font-size:32px; margin-bottom:8px;">💳</div>
-        <h3 style="margin:0 0 6px 0; color:#1e293b; font-size:18px; font-weight:700;">Payment Kaise Aayi?</h3>
-        <p style="color:#64748b; font-size:13px; margin:0 0 20px 0;">Bill No: <span style="font-weight:bold; color:#0f172a;">${docNo}</span></p>
-        
-        <div style="display:flex; gap:12px; justify-content:center; margin-bottom:18px;">
+        <h3 style="margin:0 0 6px 0; color:#1e293b; font-weight:700;">Payment Entry</h3>
+        <p style="color:#64748b; font-size:13px; margin:0 0 16px 0;">Bill No: <span style="font-weight:bold; color:#0f172a;">${docNo}</span></p>
+
+        <div style="text-align:left; margin-bottom:16px;">
+          <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:4px;">RECEIVED AMOUNT (₹):</label>
+          <input type="number" id="inpKhataReceivedAmt" placeholder="Enter Amount" style="width:100%; padding:10px 12px; font-size:16px; font-weight:700; color:#15803d; border:1.5px solid #cbd5e1; border-radius:8px; box-sizing:border-box; outline:none;" />
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:center; margin-bottom:16px;">
           <button id="btnPayCash" style="flex:1; padding:12px 10px; background:#16a34a; color:#ffffff; border:none; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; box-shadow:0 2px 8px rgba(22,163,74,0.35);">
             💵 Cash
           </button>
@@ -2739,7 +2744,7 @@ window.markPaid = function(docNo) {
           </button>
         </div>
 
-        <button id="btnPayCancel" style="background:transparent; border:none; color:#ef4444; font-size:13px; font-weight:500; cursor:pointer; text-decoration:underline;">
+        <button id="btnPayCancel" style="background:transparent; border:none; color:#ef4444; font-size:13px; font-weight:600; cursor:pointer; text-decoration:underline;">
           Cancel
         </button>
       </div>
@@ -2749,11 +2754,21 @@ window.markPaid = function(docNo) {
   document.body.insertAdjacentHTML("beforeend", modalHtml);
 
   document.getElementById("btnPayCash").onclick = function() {
-    executePaymentUpdate(docNo, "Cash");
+    var amt = parseFloat(document.getElementById("inpKhataReceivedAmt").value);
+    if (!amt || amt <= 0) {
+      alert("Kripya valid received amount daalein!");
+      return;
+    }
+    executePaymentUpdate(docNo, "Cash", amt);
   };
 
   document.getElementById("btnPayUpi").onclick = function() {
-    executePaymentUpdate(docNo, "UPI / Online");
+    var amt = parseFloat(document.getElementById("inpKhataReceivedAmt").value);
+    if (!amt || amt <= 0) {
+      alert("Kripya valid received amount daalein!");
+      return;
+    }
+    executePaymentUpdate(docNo, "UPI / Online", amt);
   };
 
   document.getElementById("btnPayCancel").onclick = function() {
@@ -2761,7 +2776,7 @@ window.markPaid = function(docNo) {
     if (m) m.remove();
   };
 
-  async function executePaymentUpdate(targetDocNo, selectedMode) {
+  async function executePaymentUpdate(targetDocNo, selectedMode, receivedAmount) {
     var m = document.getElementById(modalId);
     if (m) m.remove();
 
@@ -2772,11 +2787,12 @@ window.markPaid = function(docNo) {
         docNo: targetDocNo,
         operator: op,
         updatedBy: op,
-        paymentMode: selectedMode
+        paymentMode: selectedMode,
+        amountReceived: receivedAmount
       });
 
       if (res && (res.success || res.status === "success")) {
-        alert("Bill " + targetDocNo + " successfully marked as Paid via " + selectedMode + "!");
+        alert("Bill " + targetDocNo + " successfully updated via " + selectedMode + " (₹" + receivedAmount.toFixed(2) + ")!");
         if (typeof loadKhataRecords === "function") loadKhataRecords();
       } else {
         alert("Failed to mark as paid: " + ((res && res.message) ? res.message : "Error"));
