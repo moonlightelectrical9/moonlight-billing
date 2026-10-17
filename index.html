@@ -3018,11 +3018,17 @@ window.submitReturnProcess = async function(idx) {
     });
 
     if (res && res.success) {
-      var msg = "Items return ho gaye!\n- Stock wapas add ho gaya.";
+      var msg = "✅ Items successfully return ho gaye!\n";
+      msg += "📦 Stock inventory mein wapas add ho gaya.\n\n";
+
       if (res.creditAdjusted) {
-        msg += "\n- Udhar adjust ho gaya (New Due: ₹" + res.newDue.toFixed(2) + ")";
+        msg += "📋 Udhar (Pay Later) Adjust Ho Gaya:\n";
+        msg += "- New Pending Due: ₹" + (res.newDue || 0).toFixed(2) + "\n";
+        if (res.cashRefund > 0) {
+          msg += "\n💵 CUSTOMER KO WAPAS DEIN (CASH REFUND): ₹" + res.cashRefund.toFixed(2);
+        }
       } else {
-        msg += "\n- Refund/Adjustable Amount: ₹" + res.totalRefund.toFixed(2);
+        msg += "💵 CUSTOMER KO WAPAS DEIN (CASH REFUND): ₹" + (res.cashRefund || res.totalReturnAmt || 0).toFixed(2);
       }
       alert(msg);
       if (typeof loadBillHistory === "function") loadBillHistory();
