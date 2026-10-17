@@ -3547,6 +3547,7 @@ amount: totalAmt,
 date: payload.billDate,
 items: JSON.parse(JSON.stringify(billItems)),
 pdfUrl: res.pdfUrl || ""
+  };
           document.getElementById("lblSuccessDocNo").innerText = "Doc No: " + res.docNo + " | Amount: ₹" + totalAmt.toFixed(2);
           document.getElementById("checkoutSuccessModal").style.display = "flex";
           loadDraftBills();
