@@ -1749,20 +1749,31 @@
       var out = '<table style="width:100%; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:12px;">' +
         '<thead style="background:#fef3c7; color:#b45309;"><tr><th>#</th><th>Doc No</th><th>Customer</th><th>Item Sold</th><th>Rate</th><th>Qty</th><th>Amount (₹)</th><th>Mode</th></tr></thead><tbody>';
       items.forEach(function(s, idx) {
-        out += '<tr>' +
-          '<td>' + (idx + 1) + '</td>' +
-          '<td><b>' + s.docNo + '</b></td>' +
-          '<td>' + s.custName + (s.phone ? ' (' + s.phone + ')' : '') + '</td>' +
-          '<td><b>' + s.name + '</b></td>' +
-          '<td>₹' + parseFloat(s.rate || 0).toFixed(2) + '</td>' +
-          '<td>' + s.qty + '</td>' +
-          '<td><b style="color:#b45309;">₹' + parseFloat(s.total || 0).toFixed(2) + '</b></td>' +
-          '<td>' + (s.mode || 'Cash') + '</td>' +
-          '</tr>';
-      });
-      out += '</tbody></table>';
-      return out;
+    var rawMode = String(s.mode || 'Cash').trim();
+    var amtPaid = (s.amountPaid !== undefined && s.amountPaid !== '') ? parseFloat(s.amountPaid) : null;
+    var balDue = (s.balanceDue !== undefined && s.balanceDue !== '') ? parseFloat(s.balanceDue) : null;
+    
+    var modeDisplay = rawMode;
+    if (rawMode.toLowerCase().indexOf("later") !== -1 || rawMode.toLowerCase().indexOf("credit") !== -1 || rawMode.toLowerCase().indexOf("udhar") !== -1) {
+      modeDisplay = '<span style="color:#dc2626; font-weight:700;">Pay Later (Udhar)</span>';
+    } else if (balDue !== null && balDue > 0) {
+      var pAmt = amtPaid !== null ? amtPaid : 0;
+      modeDisplay = '<b>' + rawMode + '</b><br><small style="color:#15803d; font-weight:700;">Paid: ₹' + pAmt.toFixed(2) + '</small><br><small style="color:#dc2626; font-weight:700;">Due: ₹' + balDue.toFixed(2) + '</small>';
+    } else {
+      modeDisplay = '<span style="color:#15803d; font-weight:600;">' + rawMode + '</span>';
     }
+
+    out += '<tr>' +
+      '<td>' + (idx + 1) + '</td>' +
+      '<td><b>' + s.docNo + '</b></td>' +
+      '<td>' + s.custName + (s.phone ? ' (' + s.phone + ')' : '') + '</td>' +
+      '<td><b>' + s.name + '</b></td>' +
+      '<td>₹' + parseFloat(s.rate || 0).toFixed(2) + '</td>' +
+      '<td>' + s.qty + '</td>' +
+      '<td><b style="color:#b45309;">₹' + parseFloat(s.total || 0).toFixed(2) + '</b></td>' +
+      '<td>' + modeDisplay + '</td>' +
+      '</tr>';
+  });
 
     window.drillDownToMonth = function(year, monthIdx) {
       applyDashMode('month');
