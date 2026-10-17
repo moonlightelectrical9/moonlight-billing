@@ -3491,15 +3491,17 @@ window.uploadBulkPurchaseCSV = function() {
         rateType: document.getElementById("rateType").value,
         isGst: isGstSelected,
         paymentMode: document.getElementById("paymentMode").value,
-        customerName: document.getElementById("custName").value.trim(),
-        phone: document.getElementById("custPhone").value.trim(),
-        address: document.getElementById("custAddress").value.trim(),
-        gstin: document.getElementById("custGstin").value.trim(),
-        items: billItems,
-        grandTotal: totalAmt,
-        resumedDraftId: activeResumedDraftId,
-        operatorName: (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? (currentUser.name + (currentUser.role ? " (" + currentUser.role + ")" : "")) : "Varun Sharma (Owner)"
-      };
+customerName: document.getElementById("custName").value.trim(),
+phone: document.getElementById("custPhone").value.trim(),
+address: document.getElementById("custAddress").value.trim(),
+gstin: document.getElementById("custGstin").value.trim(),
+items: billItems,
+grandTotal: totalAmt,
+amountPaid: (document.getElementById("paymentMode").value === "Pay Later") ? 0 : (parseFloat(document.getElementById("receivedAmt").value) >= 0 ? parseFloat(document.getElementById("receivedAmt").value) : totalAmt),
+balanceDue: (document.getElementById("paymentMode").value === "Pay Later") ? totalAmt : Math.max(0, totalAmt - (parseFloat(document.getElementById("receivedAmt").value) || 0)),
+resumedDraftId: activeResumedDraftId,
+operatorName: (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? (currentUser.name + (currentUser.role ? " (" + currentUser.role + ")" : "")) : "Varun Sharma (Owner)"
+};
       // --- YAHAN PASTE KAREIN (STOCK VALIDATION CHECK) ---
     var invList = window.cachedInventory || window.inventoryData || window.itemsList || [];
     for (var k = 0; k < billItems.length; k++) {
@@ -3536,14 +3538,15 @@ window.uploadBulkPurchaseCSV = function() {
             address: payload.address,
             gstin: payload.gstin,
             paymentMode: payload.paymentMode,
-            isInvoice: !payload.billMode.includes("Estimate"),
-            isGst: isGstSelected,
-            grandTotal: totalAmt,
-            amount: totalAmt,
-            date: payload.billDate,
-            items: JSON.parse(JSON.stringify(billItems)),
-            pdfUrl: res.pdfUrl || ""
-          };
+amountPaid: payload.amountPaid,
+balanceDue: payload.balanceDue,
+isInvoice: !payload.billMode.includes("Estimate"),
+isGst: isGstSelected,
+grandTotal: totalAmt,
+amount: totalAmt,
+date: payload.billDate,
+items: JSON.parse(JSON.stringify(billItems)),
+pdfUrl: res.pdfUrl || ""
           document.getElementById("lblSuccessDocNo").innerText = "Doc No: " + res.docNo + " | Amount: ₹" + totalAmt.toFixed(2);
           document.getElementById("checkoutSuccessModal").style.display = "flex";
           loadDraftBills();
