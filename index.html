@@ -3784,14 +3784,11 @@ function onPaymentModeChange() {
 
 // Balance Due auto-calculate karne ka function
 function calculateBalanceDue() {
-  var totalEl = document.getElementById("grandTotal") || document.getElementById("netTotal") || document.getElementById("finalTotal");
-  var grandTotal = 0;
-  if (totalEl) {
-    grandTotal = parseFloat(totalEl.innerText.replace(/[^0-9.]/g, "")) || 0;
-  }
-  if (!grandTotal && typeof calculateGrandTotal === "function") {
-    grandTotal = calculateGrandTotal();
-  }
+  var totalEl = document.getElementById("lblGrandTotal") || document.getElementById("grandTotal") || document.getElementById("netTotal");
+    var grandTotal = 0;
+    if (totalEl) {
+      grandTotal = parseFloat(totalEl.innerText.replace(/[^0-9.]/g, "")) || 0;
+    }
 
   var inputReceived = document.getElementById("receivedAmt");
   var receivedVal = inputReceived ? (parseFloat(inputReceived.value) || 0) : 0;
