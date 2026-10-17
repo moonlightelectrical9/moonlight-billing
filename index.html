@@ -2428,24 +2428,42 @@ function updateBulkTabVisibility() {
 
       var grandTotal = parseFloat(b.grandTotal || b.amount || computedTotal || 0);
 
-      var taxBoxHtml = "";
-      if (isGst) {
-        var cgst = totalGst / 2;
-        var sgst = totalGst / 2;
-        taxBoxHtml = '<div style="width:100%; box-sizing:border-box; padding:4px;">' +
-          '<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:10.5px; font-weight:bold;"><span>Subtotal (Taxable):</span><span>₹ ' + totalTaxable.toFixed(2) + '</span></div>' +
-          '<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:10.5px; font-weight:bold;"><span>CGST (9%):</span><span>₹ ' + cgst.toFixed(2) + '</span></div>' +
-          '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>SGST (9%):</span><span>₹ ' + sgst.toFixed(2) + '</span></div>' +
-          '<div style="display:flex; justify-content:space-between; align-items:center; border-top:1.5px solid #1e3a8a; padding-top:5px; margin-top:2px; font-size:13px; font-weight:900; color:#1e3a8a;">' +
-            '<span>Total Amount:</span><span>₹ ' + grandTotal.toFixed(2) + '</span>' +
-          '</div>' +
-          '</div>';
-      } else {
-        taxBoxHtml = '<div style="width:100%; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box;">' +
-          '<span style="font-weight:900; font-size:13px; color:#0f172a; white-space:nowrap;">Total Amount:</span>' +
-          '<span style="font-weight:900; font-size:18px; color:#1e3a8a; white-space:nowrap; margin-left:10px;">₹ ' + grandTotal.toFixed(2) + '</span>' +
-          '</div>';
-      }
+      var printAmtPaid = (b.paymentMode === "Pay Later") ? 0 : (b.amountPaid !== undefined ? parseFloat(b.amountPaid) : grandTotal);
+  var printBalDue = (b.paymentMode === "Pay Later") ? grandTotal : (b.balanceDue !== undefined ? parseFloat(b.balanceDue) : Math.max(0, grandTotal - printAmtPaid));
+
+  var printBreakdownHtml = '';
+  if (printBalDue > 0) {
+    printBreakdownHtml = 
+      '<div style="display:flex; justify-content:space-between; margin-top:4px; padding-top:3px; border-top:1px dashed #cbd5e1; font-size:11px; font-weight:bold; color:#15803d;">' +
+        '<span>Amount Received:</span><span>₹ ' + printAmtPaid.toFixed(2) + '</span>' +
+      '</div>' +
+      '<div style="display:flex; justify-content:space-between; margin-top:2px; font-size:12px; font-weight:900; color:#dc2626;">' +
+        '<span>Balance Due:</span><span>₹ ' + printBalDue.toFixed(2) + '</span>' +
+      '</div>';
+  }
+
+  var taxBoxHtml = "";
+  if (isGst) {
+    var cgst = totalGst / 2;
+    var sgst = totalGst / 2;
+    taxBoxHtml = '<div style="width:100%; box-sizing:border-box; padding:4px;">' +
+      '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>Subtotal (Taxable):</span><span>' + totalTaxable.toFixed(2) + '</span></div>' +
+      '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>CGST (9%):</span><span>' + cgst.toFixed(2) + '</span></div>' +
+      '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>SGST (9%):</span><span>' + sgst.toFixed(2) + '</span></div>' +
+      '<div style="display:flex; justify-content:space-between; align-items:center; border-top:1.5px solid #1e3a8a; padding-top:6px; margin-top:2px; font-size:13px; font-weight:900; color:#1e3a8a;">' +
+      '<span>Total Amount:</span><span>₹ ' + grandTotal.toFixed(2) + '</span>' +
+      '</div>' +
+      printBreakdownHtml +
+      '</div>';
+  } else {
+    taxBoxHtml = '<div style="width:100%; box-sizing:border-box;">' +
+      '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+        '<span style="font-weight:900; font-size:13px; color:#0f172a; white-space:nowrap;">Total Amount:</span>' +
+        '<span style="font-weight:900; font-size:16px; color:#1e3a8a; white-space:nowrap; margin-left:10px;">₹ ' + grandTotal.toFixed(2) + '</span>' +
+      '</div>' +
+      printBreakdownHtml +
+      '</div>';
+  }
 
       return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
         '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + headerTitle + '</div>' +
