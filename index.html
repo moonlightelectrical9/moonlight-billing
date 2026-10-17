@@ -597,9 +597,9 @@
         </div>
 
         <div style="background:#ffffff; border:1px solid #fed7aa; padding:12px; border-radius:6px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-          <button onclick="if (typeof openMenuSection === 'function') openMenuSection('creditLedger');" style="background:#ea580c; color:#ffffff; border:none; padding:10px 16px; border-radius:6px; font-weight:700; font-size:13px; cursor:pointer; box-shadow:0 2px 6px rgba(234,88,12,0.3);">
-            Open Credit Ledger ➔
-          </button>
+          <button onclick="var cNav = document.querySelectorAll('a, li, button'); for(var i=0; i<cNav.length; i++){ if(cNav[i].innerText && cNav[i].innerText.toLowerCase().indexOf('credit ledger') !== -1) { cNav[i].click(); break; } }" style="background:#ea580c; color:#ffffff; border:none; padding:10px 16px; border-radius:6px; font-weight:700; font-size:13px; cursor:pointer; box-shadow:0 2px 6px rgba(234,88,12,0.3);">
+  Open Credit Ledger ➔
+</button>
         </div>
       </div>
     </div>
