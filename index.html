@@ -4084,17 +4084,16 @@ function onPaymentModeChange() {
     grandTotal = calculateGrandTotal();
   }
 
-  if (mode === "Cash" || mode === "UPI / Online") {
+  if (mode === "Cash" || mode === "UPI / Online" || mode === "Pay Later") {
     if (colReceived) colReceived.style.display = "block";
-    if (inputReceived) inputReceived.value = grandTotal;
-  } else if (mode === "Pay Later") {
-    if (colReceived) colReceived.style.display = "block";
-    if (inputReceived) inputReceived.value = 0;
+    if (inputReceived) inputReceived.value = "";
   } else {
     if (colReceived) colReceived.style.display = "none";
     if (inputReceived) inputReceived.value = "";
   }
-  calculateBalanceDue();
+
+  if (typeof calculateBalanceDue === "function") calculateBalanceDue();
+  if (typeof checkFormState === "function") checkFormState();
 }
 
 // Balance Due auto-calculate karne ka function
