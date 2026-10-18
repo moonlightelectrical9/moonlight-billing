@@ -2670,21 +2670,35 @@ function updateBulkTabVisibility() {
     };
 
     window.shareBillOnWhatsApp = function(customData) {
-      var d = customData || lastGeneratedBillData;
-      if (!d) return;
+  var d = customData || lastGeneratedBillData;
+  if (!d) return;
 
-      var docWord = (d.docNo && d.docNo.includes("EST")) ? "Estimate" : "Invoice";
-      var totalAmt = parseFloat(d.grandTotal || d.amount || 0).toFixed(2);
-      
-      var fileLink = (d.pdfUrl && d.pdfUrl.startsWith("http")) 
-        ? d.pdfUrl 
-        : ("https://drive.google.com/drive/u/0/search?q=" + encodeURIComponent(d.docNo));
-      var pdfSection = "\n\n📄 *Download PDF Document:*\n" + fileLink;
+  var docWord = (d.docNo && d.docNo.includes("EST")) ? "Estimate" : "Invoice";
+  var totalAmt = parseFloat(d.grandTotal || d.amount || 0).toFixed(2);
+  
+  // Agar items available hain toh unki updated list message me jod dein
+  var itemsSummary = "";
+  if (Array.isArray(d.items) && d.items.length > 0) {
+    itemsSummary = "\n*Items Summary:*\n" + d.items.map(function(it, idx) {
+      return (idx + 1) + ". " + it.name + " (" + (it.qty || 1) + "x) - ₹" + parseFloat(it.total || 0).toFixed(2);
+    }).join("\n") + "\n";
+  }
 
-      var msg = "Hi " + d.customerName + ",\n\nGreetings from *Moon Light Electricals*!\n\nYour *" + docWord + "* (*" + d.docNo + "*) has been generated successfully.\n\n*Billing Summary:*\n  • Date: " + d.date + "\n  • Total Amount: *₹" + totalAmt + "*\n  • Payment Mode: " + (d.paymentMode || 'Cash / Online') + pdfSection + "\n\nThank you for choosing us!\n*MOON LIGHT ELECTRICALS*\nShop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n📞 9650897965 / 8860706865 / 8860880453";
+  var pdfSection = "";
+  if (d.pdfUrl && d.pdfUrl.startsWith("http")) {
+    pdfSection = "\n\n📄 *Download PDF Document:*\n" + d.pdfUrl;
+  }
 
-      window.open("https://wa.me/91" + d.phone + "?text=" + encodeURIComponent(msg), '_blank');
-    };
+  var msg = "Hi " + (d.customerName || "Customer") + ",\n\nGreetings from *Moon Light Electricals*!\nYour *" + docWord + "* (*" + d.docNo + "*) billing details:\n" +
+            itemsSummary +
+            "\n• Date: " + (d.date || "") +
+            "\n• Total Amount: *₹" + totalAmt + "*" +
+            "\n• Payment Mode: " + (d.paymentMode || "Cash") + 
+            pdfSection + 
+            "\n\nThank you for choosing Moon Light Electricals!";
+
+  window.open("https://wa.me/91" + d.phone + "?text=" + encodeURIComponent(msg), '_blank');
+};
 
     window.closeSuccessAndNextBill = function() {
       document.getElementById("checkoutSuccessModal").style.display = "none";
@@ -3012,10 +3026,11 @@ window.submitReturnProcess = async function(idx) {
   if (overlay) overlay.style.display = "none";
 
   try {
-    var res = await apiCall("partialReturn", {
-      docNo: b.docNo,
-      returns: returnItems
-    });
+  var res = await apiCall("partialReturn", {
+    docNo: b.docNo,
+    returns: returnItems,
+    oldPdfUrl: b.billLink || b.pdfUrl || ""
+  });
 
     if (res && res.success) {
       var msg = "✅ Items successfully return ho gaye!\n";
@@ -3031,6 +3046,8 @@ window.submitReturnProcess = async function(idx) {
         msg += "💵 CUSTOMER KO WAPAS DEIN (CASH REFUND): ₹" + (res.cashRefund || res.totalReturnAmt || 0).toFixed(2);
       }
       alert(msg);
+      b.pdfUrl = "";
+      b.billLink = "";
       if (typeof loadBillHistory === "function") loadBillHistory();
       if (typeof loadKhataRecords === "function") loadKhataRecords();
     } else {
