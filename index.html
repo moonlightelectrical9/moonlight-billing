@@ -2671,28 +2671,24 @@ function updateBulkTabVisibility() {
 
   var docWord = (d.docNo && d.docNo.includes("EST")) ? "Estimate" : "Invoice";
   var totalAmt = parseFloat(d.grandTotal || d.amount || 0).toFixed(2);
-  
-  // Agar items available hain toh unki updated list message me jod dein
-  var itemsSummary = "";
-  if (Array.isArray(d.items) && d.items.length > 0) {
-    itemsSummary = "\n*Items Summary:*\n" + d.items.map(function(it, idx) {
-      return (idx + 1) + ". " + it.name + " (" + (it.qty || 1) + "x) - ₹" + parseFloat(it.total || 0).toFixed(2);
-    }).join("\n") + "\n";
-  }
 
   var pdfSection = "";
-var validPdfUrl = d.pdfUrl || d.billLink || "";
-if (validPdfUrl && validPdfUrl.startsWith("http")) {
-  pdfSection = "\n\n📄 *Download Updated PDF Document:*\n" + validPdfUrl;
-}
+  var validPdfUrl = d.pdfUrl || d.billLink || "";
+  if (validPdfUrl && validPdfUrl.startsWith("http")) {
+    pdfSection = "\n\n📄 *Download Updated PDF Document:*\n" + validPdfUrl;
+  }
 
-  var msg = "Hi " + (d.customerName || "Customer") + ",\n\nGreetings from *Moon Light Electricals*!\nYour *" + docWord + "* (*" + d.docNo + "*) billing details:\n" +
-            itemsSummary +
-            "\n• Date: " + (d.date || "") +
-            "\n• Total Amount: *₹" + totalAmt + "*" +
-            "\n• Payment Mode: " + (d.paymentMode || "Cash") + 
-            pdfSection + 
-            "\n\nThank you for choosing Moon Light Electricals!";
+  var msg = "Hi " + (d.customerName || "Customer") + ",\n\n" +
+            "Greetings from *Moon Light Electricals*!\n" +
+            "Your *" + docWord + "* (*" + d.docNo + "*) billing details:\n\n" +
+            "• Date: " + (d.date || "") + "\n" +
+            "• Total Amount: *₹" + totalAmt + "*\n" +
+            "• Payment Mode: " + (d.paymentMode || "Cash") + 
+            pdfSection + "\n\n" +
+            "Thank you for choosing\n" +
+            "*MOON LIGHT ELECTRICALS*\n" +
+            "Shop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n" +
+            "📞 9650897965 / 8860706865 / 8860880453";
 
   window.open("https://wa.me/91" + d.phone + "?text=" + encodeURIComponent(msg), '_blank');
 };
