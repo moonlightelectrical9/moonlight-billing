@@ -2660,12 +2660,9 @@ function updateBulkTabVisibility() {
     window.viewDownloadPdf = function(customData) {
       var data = customData || lastGeneratedBillData;
       if (!data) return;
-      if (data.pdfUrl && data.pdfUrl.startsWith("http")) {
-        window.open(data.pdfUrl, '_blank');
-      } else {
-        var w = window.open("", "_blank");
-        w.document.write("<html><head><title>" + data.docNo + "</title></head><body>" + buildReceiptHtml(data) + "</body></html>");
-        w.document.close();
+      var w = window.open("", "_blank");
+  w.document.write("<html><head><title>" + data.docNo + "</title></head><body>" + buildReceiptHtml(data) + "</body></html>");
+  w.document.close();
       }
     };
 
