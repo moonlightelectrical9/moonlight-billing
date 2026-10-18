@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -2502,7 +2502,44 @@ function updateBulkTabVisibility() {
       var estimateValidityLine = (!isInvoice) ? "<tr><td style='border:none; padding:2px 0;'><b>Estimate validity period:</b></td><td style='border:none; padding:2px 0; text-align:right;'>3 Days</td></tr>" : "";
 
       var shopGstLine = isGst ? "<div style='font-weight:bold; margin-top:2px;'>GSTIN/UIN: 09BUBPC3406L1ZT | State: Uttar Pradesh, Code: 09</div>" : "";
-      var buyerStateMap = { "07": "Delhi", "06": "Haryana", "08": "Rajasthan", "09": "Uttar Pradesh", "10": "Bihar" };
+      var buyerStateMap = {
+    "01": "Jammu & Kashmir",
+    "02": "Himachal Pradesh",
+    "03": "Punjab",
+    "04": "Chandigarh",
+    "05": "Uttarakhand",
+    "06": "Haryana",
+    "07": "Delhi",
+    "08": "Rajasthan",
+    "09": "Uttar Pradesh",
+    "10": "Bihar",
+    "11": "Sikkim",
+    "12": "Arunachal Pradesh",
+    "13": "Nagaland",
+    "14": "Manipur",
+    "15": "Mizoram",
+    "16": "Tripura",
+    "17": "Meghalaya",
+    "18": "Assam",
+    "19": "West Bengal",
+    "20": "Jharkhand",
+    "21": "Odisha",
+    "22": "Chhattisgarh",
+    "23": "Madhya Pradesh",
+    "24": "Gujarat",
+    "26": "Dadra & Nagar Haveli and Daman & Diu",
+    "27": "Maharashtra",
+    "29": "Karnataka",
+    "30": "Goa",
+    "31": "Lakshadweep",
+    "32": "Kerala",
+    "33": "Tamil Nadu",
+    "34": "Puducherry",
+    "35": "Andaman & Nicobar Islands",
+    "36": "Telangana",
+    "37": "Andhra Pradesh",
+    "38": "Ladakh"
+  };
       var buyerStateCode = (custGstin && custGstin.length >= 2) ? custGstin.substring(0, 2) : "09";
       var buyerStateName = buyerStateMap[buyerStateCode] || (buyerStateCode === "09" ? "Uttar Pradesh" : "Other State");
       var isInterState = (isGst && custGstin && custGstin !== "-" && buyerStateCode !== "09");
