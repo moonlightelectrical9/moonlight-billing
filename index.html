@@ -2662,8 +2662,7 @@ function updateBulkTabVisibility() {
       if (!data) return;
       var w = window.open("", "_blank");
   w.document.write("<html><head><title>" + data.docNo + "</title></head><body>" + buildReceiptHtml(data) + "</body></html>");
-  w.document.close();
-      }
+  w.document.close();      
     };
 
     window.shareBillOnWhatsApp = function(customData) {
