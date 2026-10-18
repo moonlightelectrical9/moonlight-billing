@@ -2463,8 +2463,12 @@ function updateBulkTabVisibility() {
       var estimateValidityLine = (!isInvoice) ? "<tr><td style='border:none; padding:2px 0;'><b>Estimate validity period:</b></td><td style='border:none; padding:2px 0; text-align:right;'>3 Days</td></tr>" : "";
 
       var shopGstLine = isGst ? "<div style='font-weight:bold; margin-top:2px;'>GSTIN/UIN: 09BUBPC3406L1ZT | State: Uttar Pradesh, Code: 09</div>" : "";
-      var buyerGstLine = (isGst && custGstin && custGstin !== "-") ? "<div>GSTIN/UIN: " + custGstin + " | State: Uttar Pradesh, Code: 09</div>" : "";
-
+      var buyerStateMap = { "07": "Delhi", "06": "Haryana", "08": "Rajasthan", "09": "Uttar Pradesh", "10": "Bihar" };
+      var buyerStateCode = (custGstin && custGstin.length >= 2) ? custGstin.substring(0, 2) : "09";
+      var buyerStateName = buyerStateMap[buyerStateCode] || (buyerStateCode === "09" ? "Uttar Pradesh" : "Other State");
+      var isInterState = (isGst && custGstin && custGstin !== "-" && buyerStateCode !== "09");
+      
+      var buyerGstLine = (isGst && custGstin && custGstin !== "-") ? "<div>GSTIN/UIN: " + custGstin + " | State: " + buyerStateName + ", Code: " + buyerStateCode + "</div>" : "";
       var lines = "";
       var itms = b.items || [];
       var totalTaxable = 0, totalGst = 0, computedTotal = 0;
@@ -2541,14 +2545,21 @@ function updateBulkTabVisibility() {
 
   var taxBoxHtml = "";
   if (isGst) {
-    var cgst = totalGst / 2;
-    var sgst = totalGst / 2;
+    var taxRowsHtml = "";
+    if (isInterState) {
+      taxRowsHtml = '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>IGST (18%):</span><span>₹' + totalGst.toFixed(2) + '</span></div>';
+    } else {
+      var cgst = totalGst / 2;
+      var sgst = totalGst / 2;
+      taxRowsHtml = '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>CGST (9%):</span><span>₹' + cgst.toFixed(2) + '</span></div>' +
+                    '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>SGST (9%):</span><span>₹' + sgst.toFixed(2) + '</span></div>';
+    }
+
     taxBoxHtml = '<div style="width:100%; box-sizing:border-box; padding:4px;">' +
-      '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>Subtotal (Taxable):</span><span>' + totalTaxable.toFixed(2) + '</span></div>' +
-      '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>CGST (9%):</span><span>' + cgst.toFixed(2) + '</span></div>' +
-      '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>SGST (9%):</span><span>' + sgst.toFixed(2) + '</span></div>' +
+      '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>Subtotal (Taxable):</span><span>₹' + totalTaxable.toFixed(2) + '</span></div>' +
+      taxRowsHtml +
       '<div style="display:flex; justify-content:space-between; align-items:center; border-top:1.5px solid #1e3a8a; padding-top:6px; margin-top:2px; font-size:13px; font-weight:900; color:#1e3a8a;">' +
-      '<span>Total Amount:</span><span>₹ ' + grandTotal.toFixed(2) + '</span>' +
+      '<span>Total Amount:</span><span>₹' + grandTotal.toFixed(2) + '</span>' +
       '</div>' +
       printBreakdownHtml +
       '</div>';
