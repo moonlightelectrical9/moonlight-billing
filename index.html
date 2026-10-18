@@ -2681,9 +2681,10 @@ function updateBulkTabVisibility() {
   }
 
   var pdfSection = "";
-  if (d.pdfUrl && d.pdfUrl.startsWith("http")) {
-    pdfSection = "\n\n📄 *Download PDF Document:*\n" + d.pdfUrl;
-  }
+var validPdfUrl = d.pdfUrl || d.billLink || "";
+if (validPdfUrl && validPdfUrl.startsWith("http")) {
+  pdfSection = "\n\n📄 *Download Updated PDF Document:*\n" + validPdfUrl;
+}
 
   var msg = "Hi " + (d.customerName || "Customer") + ",\n\nGreetings from *Moon Light Electricals*!\nYour *" + docWord + "* (*" + d.docNo + "*) billing details:\n" +
             itemsSummary +
@@ -3042,8 +3043,13 @@ window.submitReturnProcess = async function(idx) {
         msg += "💵 CUSTOMER KO WAPAS DEIN (CASH REFUND): ₹" + (res.cashRefund || res.totalReturnAmt || 0).toFixed(2);
       }
       alert(msg);
-      b.pdfUrl = "";
-      b.billLink = "";
+      if (res && res.newPdfUrl) {
+        b.pdfUrl = res.newPdfUrl;
+        b.billLink = res.newPdfUrl;
+      } else {
+        b.pdfUrl = "";
+        b.billLink = "";
+      }
       if (typeof loadBillHistory === "function") loadBillHistory();
       if (typeof loadKhataRecords === "function") loadKhataRecords();
     } else {
