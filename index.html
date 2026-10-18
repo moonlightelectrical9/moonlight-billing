@@ -703,6 +703,32 @@
         </div>
       </div>
             </div>
+            <!-- Ship To Different Address Toggle -->
+      <div style="margin-top: 10px; margin-bottom: 8px;">
+        <label style="font-size: 12px; font-weight: bold; cursor: pointer; color: #1e3a8a; display: inline-flex; align-items: center; gap: 6px;">
+          <input type="checkbox" id="diffShipAddressCheck" onchange="toggleShipAddressFields(this.checked)" style="width: 16px; height: 16px; cursor: pointer;">
+          Ship To Different Address (Delivery address alag hai?)
+        </label>
+      </div>
+
+      <!-- Shipping / Delivery Fields (Default Hide Rahega) -->
+      <div id="shippingFieldsContainer" style="display: none; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+        <div style="font-size: 11px; font-weight: 800; color: #1e3a8a; margin-bottom: 8px; letter-spacing: 0.5px;">DELIVERY / SITE (SHIP TO) DETAILS:</div>
+        <div class="grid-row row-2" style="margin-bottom: 8px;">
+          <div class="form-col">
+            <label style="font-size: 11px; font-weight: bold;">SITE / RECEIVER NAME</label>
+            <input type="text" id="shipName" placeholder="Receiver / Site Person Name">
+          </div>
+          <div class="form-col">
+            <label style="font-size: 11px; font-weight: bold;">SITE CONTACT NUMBER</label>
+            <input type="tel" id="shipPhone" placeholder="10-digit mobile number">
+          </div>
+        </div>
+        <div class="form-col">
+          <label style="font-size: 11px; font-weight: bold;">DELIVERY SITE ADDRESS</label>
+          <input type="text" id="shipAddress" placeholder="Site / Delivery Location (e.g. Cleo County, Sector-121, Noida)">
+        </div>
+      </div>
 
             <div style="border-bottom: 1px dashed var(--border); margin: 14px 0;"></div>
 
@@ -2150,8 +2176,21 @@
       document.getElementById("isGstBill").value = "";
       document.getElementById("paymentMode").value = "";
       document.getElementById("bannerResumedDraft").style.display = "none";
+      if (document.getElementById("diffShipAddressCheck")) {
+      document.getElementById("diffShipAddressCheck").checked = false;
+      toggleShipAddressFields(false);
+    }
+    if (document.getElementById("shipName")) document.getElementById("shipName").value = "";
+    if (document.getElementById("shipPhone")) document.getElementById("shipPhone").value = "";
+    if (document.getElementById("shipAddress")) document.getElementById("shipAddress").value = "";
       checkFormState();
     }
+    function toggleShipAddressFields(isChecked) {
+    var container = document.getElementById("shippingFieldsContainer");
+    if (container) {
+      container.style.display = isChecked ? "block" : "none";
+    }
+  }
 
     async function loadRepeatCustomers() {
       var c = document.getElementById("repeatCustTableContainer");
@@ -2572,7 +2611,40 @@ function updateBulkTabVisibility() {
       printBreakdownHtml +
       '</div>';
   }
+var hasDiffShip = (b.hasDiffShip === true || b.hasDiffShip === "true") && (b.shipAddress || b.shipName);
+  var buyerSectionHtml = "";
 
+  if (hasDiffShip) {
+    buyerSectionHtml = 
+      '<tr>' +
+        '<td style="width:64%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
+          '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">BUYER (BILL TO)</div>' +
+          '<div style="font-size:12px; font-weight:bold;">' + custName + '</div>' +
+          custAddr + '<br>' +
+          'Contact: ' + custPhone + '<br>' +
+          buyerGstLine +
+        '</td>' +
+        '<td style="width:36%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
+          '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">CONSIGNEE (SHIP TO)</div>' +
+          '<div style="font-size:12px; font-weight:bold;">' + (b.shipName || custName) + '</div>' +
+          (b.shipAddress || custAddr) + '<br>' +
+          (b.shipPhone ? ('Contact: ' + b.shipPhone + '<br>') : '') +
+          '<div>State: Uttar Pradesh, Code: 09</div>' +
+        '</td>' +
+      '</tr>';
+  } else {
+    buyerSectionHtml = 
+      '<tr>' +
+        '<td colspan="2" style="padding:6px 8px; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
+          '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">BUYER / CONSIGNEE (SHIP TO & BILL TO)</div>' +
+          '<div style="font-size:12px; font-weight:bold;">' + custName + '</div>' +
+          custAddr + '<br>' +
+          'Contact: ' + custPhone + '<br>' +
+          buyerGstLine +
+        '</td>' +
+      '</tr>';
+  }
+      
       return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
         '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + headerTitle + '</div>' +
         '<div style="border:2px solid #1e3a8a; width:100%; min-height:890px; box-sizing:border-box;">' +
@@ -2599,15 +2671,7 @@ function updateBulkTabVisibility() {
         '</td>' +
         '</td>' +
         '</tr>' +
-        '<tr>' +
-        '<td colspan="2" style="padding:6px 8px; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
-        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">BUYER / CONSIGNEE (SHIP TO & BILL TO)</div>' +
-        '<div style="font-size:12px; font-weight:bold;">' + custName + '</div>' +
-        custAddr + '<br>' +
-        'Contact No: ' + custPhone + buyerGstLine + '<br>' +
-        'State Name: Uttar Pradesh, Code: 09' +
-        '</td>' +
-        '</tr>' +
+        buyerSectionHtml +
         '</table>' +
         '<table style="width:100%; border-collapse:collapse; border-bottom:1.5px solid #1e3a8a;">' +
         '<thead>' +
