@@ -724,10 +724,51 @@
             <input type="tel" id="shipPhone" placeholder="10-digit mobile number">
           </div>
         </div>
-        <div class="form-col">
-          <label style="font-size: 11px; font-weight: bold;">DELIVERY SITE ADDRESS</label>
-          <input type="text" id="shipAddress" placeholder="Site / Delivery Location (e.g. Cleo County, Sector-121, Noida)">
-        </div>
+       <div class="form-col" style="margin-bottom: 8px;">
+  <label style="font-size: 11px; font-weight: bold;">DELIVERY SITE ADDRESS</label>
+  <input type="text" id="shipAddress" placeholder="Site / Delivery Location (e.g. Cleo County, Sector-121, Noida)">
+</div>
+<div class="form-col">
+  <label style="font-size: 11px; font-weight: bold; color: #1e3a8a;">DELIVERY STATE / PLACE OF SUPPLY</label>
+  <select id="shipStateSelect" style="width: 100%; height: 34px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 12px; font-weight: 600; color: #0f172a; background-color: #fff;">
+  <option value="09 - Uttar Pradesh" selected>09 - Uttar Pradesh</option>
+  <option value="01 - Jammu and Kashmir">01 - Jammu and Kashmir</option>
+  <option value="02 - Himachal Pradesh">02 - Himachal Pradesh</option>
+  <option value="03 - Punjab">03 - Punjab</option>
+  <option value="04 - Chandigarh">04 - Chandigarh</option>
+  <option value="05 - Uttarakhand">05 - Uttarakhand</option>
+  <option value="06 - Haryana">06 - Haryana</option>
+  <option value="07 - Delhi">07 - Delhi</option>
+  <option value="08 - Rajasthan">08 - Rajasthan</option>
+  <option value="10 - Bihar">10 - Bihar</option>
+  <option value="11 - Sikkim">11 - Sikkim</option>
+  <option value="12 - Arunachal Pradesh">12 - Arunachal Pradesh</option>
+  <option value="13 - Nagaland">13 - Nagaland</option>
+  <option value="14 - Manipur">14 - Manipur</option>
+  <option value="15 - Mizoram">15 - Mizoram</option>
+  <option value="16 - Tripura">16 - Tripura</option>
+  <option value="17 - Meghalaya">17 - Meghalaya</option>
+  <option value="18 - Assam">18 - Assam</option>
+  <option value="19 - West Bengal">19 - West Bengal</option>
+  <option value="20 - Jharkhand">20 - Jharkhand</option>
+  <option value="21 - Odisha">21 - Odisha</option>
+  <option value="22 - Chhattisgarh">22 - Chhattisgarh</option>
+  <option value="23 - Madhya Pradesh">23 - Madhya Pradesh</option>
+  <option value="24 - Gujarat">24 - Gujarat</option>
+  <option value="26 - Dadra and Nagar Haveli and Daman and Diu">26 - Dadra and Nagar Haveli and Daman and Diu</option>
+  <option value="27 - Maharashtra">27 - Maharashtra</option>
+  <option value="29 - Karnataka">29 - Karnataka</option>
+  <option value="30 - Goa">30 - Goa</option>
+  <option value="31 - Lakshadweep">31 - Lakshadweep</option>
+  <option value="32 - Kerala">32 - Kerala</option>
+  <option value="33 - Tamil Nadu">33 - Tamil Nadu</option>
+  <option value="34 - Puducherry">34 - Puducherry</option>
+  <option value="35 - Andaman and Nicobar Islands">35 - Andaman and Nicobar Islands</option>
+  <option value="36 - Telangana">36 - Telangana</option>
+  <option value="37 - Andhra Pradesh">37 - Andhra Pradesh</option>
+  <option value="38 - Ladakh">38 - Ladakh</option>
+</select>
+</div>
       </div>
 
             <div style="border-bottom: 1px dashed var(--border); margin: 14px 0;"></div>
@@ -3836,6 +3877,11 @@ window.uploadBulkPurchaseCSV = function() {
 
       var isGstSelected = document.getElementById("isGstBill").value.includes("Yes");
       var totalAmt = billItems.reduce(function(acc, c) { return acc + c.total; }, 0);
+      var isShipDiff = document.getElementById("diffShipAddressCheck") ? document.getElementById("diffShipAddressCheck").checked : false;
+      var finalShipName = isShipDiff && document.getElementById("shipName") && document.getElementById("shipName").value.trim() ? document.getElementById("shipName").value.trim() : document.getElementById("custName").value.trim();
+      var finalShipPhone = isShipDiff && document.getElementById("shipPhone") && document.getElementById("shipPhone").value.trim() ? document.getElementById("shipPhone").value.trim() : document.getElementById("custPhone").value.trim();
+      var finalShipAddr = isShipDiff && document.getElementById("shipAddress") && document.getElementById("shipAddress").value.trim() ? document.getElementById("shipAddress").value.trim() : document.getElementById("custAddress").value.trim();
+      var finalShipState = isShipDiff && document.getElementById("shipStateSelect") ? document.getElementById("shipStateSelect").value : "09 - Uttar Pradesh";
 
       var payload = {
         billMode: document.getElementById("billMode").value.includes("Estimate") ? "Estimate" : "Invoice",
@@ -3843,10 +3889,15 @@ window.uploadBulkPurchaseCSV = function() {
         rateType: document.getElementById("rateType").value,
         isGst: isGstSelected,
         paymentMode: document.getElementById("paymentMode").value,
-customerName: document.getElementById("custName").value.trim(),
-phone: document.getElementById("custPhone").value.trim(),
-address: document.getElementById("custAddress").value.trim(),
-gstin: document.getElementById("custGstin").value.trim(),
+        customerName: document.getElementById("custName").value.trim(),
+        phone: document.getElementById("custPhone").value.trim(),
+        address: document.getElementById("custAddress").value.trim(),
+       gstin: document.getElementById("custGstin").value.trim(),
+        isShipDiff: isShipDiff,
+shipName: finalShipName,
+shipPhone: finalShipPhone,
+shipAddress: finalShipAddr,
+shipState: finalShipState,
 items: billItems,
 grandTotal: totalAmt,
 amountPaid: (document.getElementById("paymentMode").value === "Pay Later") ? 0 : (parseFloat(document.getElementById("receivedAmt").value) >= 0 ? parseFloat(document.getElementById("receivedAmt").value) : totalAmt),
