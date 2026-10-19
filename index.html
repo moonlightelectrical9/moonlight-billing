@@ -833,26 +833,41 @@
               </table>
             </div>
 
-            <div class="summary-bar">
-              <div style="font-size:13.5px; font-weight:800; color:#b45309;">
-                <span>📦 Total Items: <b id="lblTotalItemCount">0</b></span> | 
-                <span>🔢 Total Units (Qty): <b id="lblTotalUnitsCount">0 Pcs</b></span>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-weight:900;">Grand Total:</span>
-                <span style="font-size:24px; font-weight:900; color:#000;" id="lblGrandTotal">₹0.00</span>
-              </div>
-            </div>
-            <!-- Received Amount & Balance Box (Placed under Grand Total) -->
-            <div id="colReceivedAmt" style="display:none; background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:12px 16px; margin-bottom:14px;">
+            <!-- Combined Financial Summary Card (Grand Total + Received + Pending in 1 Clean Column) -->
+            <div style="background:#fffbeb; border:1.5px solid #fde68a; border-radius:8px; padding:12px 18px; margin-bottom:14px;">
               <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                <div style="flex:1; min-width:240px; display:flex; flex-direction:column; gap:4px;">
-                  <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">
-                    AMOUNT RECEIVED (₹) <span id="lblReceivedStar" style="color:#dc2626;">*</span>
-                  </label>
-                  <input type="number" id="receivedAmt" placeholder="Enter amount or 0" step="any" oninput="calculateBalanceDue(); checkFormState()" style="font-size:16px; font-weight:800; color:#1e293b; max-width:320px; border:1.5px solid #94a3b8; padding:8px 12px; border-radius:6px;">
+                
+                <!-- Left: Items & Units Counter -->
+                <div style="font-size:13px; font-weight:800; color:#b45309;">
+                  <span>📦 Total Items: <b id="lblTotalItemCount">0</b></span> &nbsp;|&nbsp; 
+                  <span>🔢 Total Units (Qty): <b id="lblTotalUnitsCount">0 Pcs</b></span>
                 </div>
-                <div id="balanceDueText" style="font-size:13px; font-weight:800; display:none;"></div>
+
+                <!-- Right: 3-Row Perfectly Aligned Stack -->
+                <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+                  
+                  <!-- Row 1: Grand Total -->
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:12px; font-weight:800; color:#475569; text-transform:uppercase;">Grand Total (₹):</span>
+                    <span style="font-size:22px; font-weight:900; color:#0f172a; min-width:180px; text-align:right;" id="lblGrandTotal">₹0.00</span>
+                  </div>
+
+                  <!-- Row 2: Amount Received (Appears when payment mode selected) -->
+                  <div id="colReceivedAmt" style="display:none; align-items:center; gap:10px;">
+                    <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">
+                      Amount Received (₹) <span id="lblReceivedStar" style="color:#dc2626;">*</span> :
+                    </label>
+                    <input type="number" id="receivedAmt" placeholder="0.00" step="any" oninput="calculateBalanceDue(); checkFormState()" style="font-size:15px; font-weight:800; color:#0f172a; width:180px; text-align:right; border:1.5px solid #94a3b8; padding:6px 10px; border-radius:6px; background:#fff;">
+                  </div>
+
+                  <!-- Row 3: Pending Balance Box + Status Badge -->
+                  <div id="rowPendingAmt" style="display:none; align-items:center; gap:10px;">
+                    <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">Pending Amount (₹) :</label>
+                    <input type="text" id="inpPendingAmt" value="₹0.00" readonly style="font-size:15px; font-weight:900; width:180px; text-align:right; border:1.5px solid #cbd5e1; padding:6px 10px; border-radius:6px; background:#f1f5f9; color:#0f172a;">
+                    <div id="balanceDueText" style="font-size:12px; font-weight:800;"></div>
+                  </div>
+
+                </div>
               </div>
             </div>
 
@@ -4212,57 +4227,60 @@ function getActiveOperatorName() {
 function onPaymentModeChange() {
   var mode = document.getElementById("paymentMode").value;
   var colReceived = document.getElementById("colReceivedAmt");
+  var rowPending = document.getElementById("rowPendingAmt");
   var inputReceived = document.getElementById("receivedAmt");
-  
-  // Total nikalna (agar window.netTotal ya grand total element ho)
-  var totalEl = document.getElementById("grandTotal") || document.getElementById("netTotal") || document.getElementById("finalTotal");
+
+  if (mode === "Cash" || mode === "UPI / Online" || mode === "Pay Later") {
+    if (colReceived) colReceived.style.display = "flex";
+    if (rowPending) rowPending.style.display = "flex";
+    if (inputReceived) inputReceived.value = "";
+  } else {
+    if (colReceived) colReceived.style.display = "none";
+    if (rowPending) rowPending.style.display = "none";
+    if (inputReceived) inputReceived.value = "";
+  }
+
+  calculateBalanceDue();
+  checkFormState();
+}
+
+function calculateBalanceDue() {
+  var totalEl = document.getElementById("lblGrandTotal");
   var grandTotal = 0;
   if (totalEl) {
     grandTotal = parseFloat(totalEl.innerText.replace(/[^0-9.]/g, "")) || 0;
   }
-  if (!grandTotal && typeof calculateGrandTotal === "function") {
-    grandTotal = calculateGrandTotal();
-  }
-
-  if (mode === "Cash" || mode === "UPI / Online" || mode === "Pay Later") {
-    if (colReceived) colReceived.style.display = "block";
-    if (inputReceived) inputReceived.value = "";
-  } else {
-    if (colReceived) colReceived.style.display = "none";
-    if (inputReceived) inputReceived.value = "";
-  }
-
-  if (typeof calculateBalanceDue === "function") calculateBalanceDue();
-  if (typeof checkFormState === "function") checkFormState();
-}
-
-// Balance Due auto-calculate karne ka function
-function calculateBalanceDue() {
-  var totalEl = document.getElementById("lblGrandTotal") || document.getElementById("grandTotal") || document.getElementById("netTotal");
-    var grandTotal = 0;
-    if (totalEl) {
-      grandTotal = parseFloat(totalEl.innerText.replace(/[^0-9.]/g, "")) || 0;
-    }
 
   var inputReceived = document.getElementById("receivedAmt");
   var receivedVal = inputReceived ? (parseFloat(inputReceived.value) || 0) : 0;
   var balBox = document.getElementById("balanceDueText");
+  var pendingInput = document.getElementById("inpPendingAmt");
 
   var balanceDue = grandTotal - receivedVal;
 
+  if (pendingInput) {
+    pendingInput.value = "₹" + Math.max(0, balanceDue).toFixed(2);
+    if (balanceDue > 0.01) {
+      pendingInput.style.borderColor = "#f87171";
+      pendingInput.style.background = "#fee2e2";
+      pendingInput.style.color = "#dc2626";
+    } else {
+      pendingInput.style.borderColor = "#86efac";
+      pendingInput.style.background = "#f0fdf4";
+      pendingInput.style.color = "#16a34a";
+    }
+  }
+
   if (balBox) {
     if (balanceDue > 0.01) {
-      balBox.style.display = "block";
       balBox.style.color = "#dc2626";
-      balBox.innerHTML = "⚠️ Balance Due: ₹" + balanceDue.toFixed(2) + " (Pay Later / On Delivery)";
+      balBox.innerHTML = "⚠️ Due";
     } else if (balanceDue < -0.01) {
-      balBox.style.display = "block";
       balBox.style.color = "#ea580c";
-      balBox.innerHTML = "ℹ️ Extra Received: ₹" + Math.abs(balanceDue).toFixed(2);
+      balBox.innerHTML = "ℹ️ Extra: ₹" + Math.abs(balanceDue).toFixed(2);
     } else {
-      balBox.style.display = "block";
       balBox.style.color = "#16a34a";
-      balBox.innerHTML = "✅ Fully Paid (₹0 Due)";
+      balBox.innerHTML = "✅ Paid";
     }
   }
 }
