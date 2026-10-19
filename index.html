@@ -642,7 +642,7 @@
               </div>
               <div class="form-col">
                 <label>MODE <span>*</span></label>
-                <select id="billMode" onchange="checkFormState()">
+                <select id="billMode" onchange="onBillModeChange(); checkFormState()">
                   <option value="">-- Select Mode --</option>
                   <option value="Final Bill (Tax_Invoices)">Final Bill (Tax_Invoices)</option>
                   <option value="Estimate (Estimates)">Estimate (Estimates)</option>
@@ -665,7 +665,7 @@
                   <option value="Yes (GST Invoice)">Yes (GST Invoice)</option>
                 </select>
               </div>
-              <div class="form-col">
+              <div class="form-col" id="colPaymentMode">
   <label>PAYMENT MODE <span>*</span></label>
   <select id="paymentMode" onchange="onPaymentModeChange(); checkFormState()">
     <option value="">-- Select Payment --</option>
@@ -3923,19 +3923,25 @@ window.uploadBulkPurchaseCSV = function() {
     };
 
     function checkFormState() {
-    var bMode = document.getElementById("billMode").value;
-    var rType = document.getElementById("rateType").value;
-    var gstMode = document.getElementById("isGstBill").value;
-    var pMode = document.getElementById("paymentMode").value;
-    var recAmtVal = document.getElementById("receivedAmt") ? document.getElementById("receivedAmt").value.trim() : "";
+  var bMode = document.getElementById("billMode").value;
+  var rType = document.getElementById("rateType").value;
+  var gstMode = document.getElementById("isGstBill").value;
+  var pMode = document.getElementById("paymentMode").value;
+  var isEstimate = (bMode.indexOf("Estimate") !== -1);
 
-    var ok = bMode && rType && gstMode && pMode &&
-             (recAmtVal !== "") &&
-             document.getElementById("custName").value.trim() &&
-             document.getElementById("custPhone").value.trim().length >= 10 &&
-             billItems.length > 0;
-    document.getElementById("btnSubmitBill").disabled = !ok;
-  }
+  var recAmtVal = document.getElementById("receivedAmt") ? document.getElementById("receivedAmt").value.trim() : "";
+
+  // Agar Estimate hai to payment zaroori nahi, agar Final bill hai to payment mode & received amount zaroori hai
+  var paymentOk = isEstimate ? true : (pMode && pMode !== "" && recAmtVal !== "");
+
+  var ok = bMode && rType && gstMode && paymentOk &&
+           document.getElementById("custName").value.trim() &&
+           document.getElementById("custPhone").value.trim().length >= 10 &&
+           billItems.length > 0;
+
+  var btn = document.getElementById("btnSubmitBill");
+  if (btn) btn.disabled = !ok;
+}
 
     window.submitBillToBackend = async function() {
       var btn = document.getElementById("btnSubmitBill");
@@ -4225,12 +4231,14 @@ function getActiveOperatorName() {
 }
     // Payment Mode change hone par Received Amount aur Balance Due control
 function onPaymentModeChange() {
+  var bMode = document.getElementById("billMode").value;
+  var isEstimate = (bMode.indexOf("Estimate") !== -1);
   var mode = document.getElementById("paymentMode").value;
   var colReceived = document.getElementById("colReceivedAmt");
   var rowPending = document.getElementById("rowPendingAmt");
   var inputReceived = document.getElementById("receivedAmt");
 
-  if (mode === "Cash" || mode === "UPI / Online" || mode === "Pay Later") {
+  if (!isEstimate && (mode === "Cash" || mode === "UPI / Online" || mode === "Pay Later")) {
     if (colReceived) colReceived.style.display = "flex";
     if (rowPending) rowPending.style.display = "flex";
     if (inputReceived) inputReceived.value = "";
@@ -4283,6 +4291,22 @@ function calculateBalanceDue() {
       balBox.innerHTML = "✅ Paid";
     }
   }
+}
+    function onBillModeChange() {
+  var bMode = document.getElementById("billMode").value;
+  var isEstimate = (bMode.indexOf("Estimate") !== -1);
+  var colPay = document.getElementById("colPaymentMode");
+  var paySelect = document.getElementById("paymentMode");
+
+  if (isEstimate) {
+    if (colPay) colPay.style.display = "none";
+    if (paySelect) paySelect.value = "Estimate / N/A";
+  } else {
+    if (colPay) colPay.style.display = "flex";
+    if (paySelect && paySelect.value === "Estimate / N/A") paySelect.value = "";
+  }
+
+  onPaymentModeChange();
 }
   </script>
 </body>
