@@ -3842,8 +3842,11 @@ window.uploadBulkPurchaseCSV = function() {
       var rType = document.getElementById("rateType").value;
       var gstMode = document.getElementById("isGstBill").value;
       var pMode = document.getElementById("paymentMode").value;
-      if (!bMode || !rType || !gstMode || !pMode) {
-        alert("Please select Mode, Rate Type, GST Bill?, and Payment mode before adding items!");
+      var isEstimate = (bMode.indexOf("Estimate") !== -1);
+
+      // Agar Estimate hai toh Payment mode check nahi hoga, Final bill me zaroori hoga
+      if (!bMode || !rType || !gstMode || (!isEstimate && !pMode)) {
+        alert("Please select Mode, Rate Type, GST Bill?" + (!isEstimate ? ", and Payment mode" : "") + " before adding items!");
         return;
       }
 
@@ -3961,7 +3964,7 @@ window.uploadBulkPurchaseCSV = function() {
         billDate: document.getElementById("billDate").value,
         rateType: document.getElementById("rateType").value,
         isGst: isGstSelected,
-        paymentMode: document.getElementById("paymentMode").value,
+        paymentMode: document.getElementById("billMode").value.includes("Estimate") ? "Estimate / N/A" : document.getElementById("paymentMode").value,
         customerName: document.getElementById("custName").value.trim(),
         phone: document.getElementById("custPhone").value.trim(),
         address: document.getElementById("custAddress").value.trim(),
