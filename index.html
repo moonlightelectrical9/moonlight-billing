@@ -2515,8 +2515,7 @@ function updateBulkTabVisibility() {
       }
     };
 
-    // 🖨 CONDITIONAL BILL PRINT FORMAT
-    // 🖨 CONDITIONAL BILL PRINT FORMAT (PERFECT A4 FULL STRETCH)
+    // 🖨 CONDITIONAL BILL PRINT FORMAT (PERFECT A4 FULL STRETCH - MATCHING BACKEND)
     function buildReceiptHtml(b) {
       if (!b) return "";
 
@@ -2540,52 +2539,58 @@ function updateBulkTabVisibility() {
       }
 
       var headerTitle = isInvoice ? (isGst ? "TAX INVOICE" : "INVOICE") : "ESTIMATE INVOICE";
+      var docWord = isInvoice ? "Invoice" : "Estimate";
       var estimateValidityLine = (!isInvoice) ? "<tr><td style='border:none; padding:2px 0;'><b>Estimate validity period:</b></td><td style='border:none; padding:2px 0; text-align:right;'>3 Days</td></tr>" : "";
 
       var shopGstLine = isGst ? "<div style='font-weight:bold; margin-top:2px;'>GSTIN/UIN: 09BUBPC3406L1ZT | State: Uttar Pradesh, Code: 09</div>" : "";
-      var buyerStateMap = {
-    "01": "Jammu & Kashmir",
-    "02": "Himachal Pradesh",
-    "03": "Punjab",
-    "04": "Chandigarh",
-    "05": "Uttarakhand",
-    "06": "Haryana",
-    "07": "Delhi",
-    "08": "Rajasthan",
-    "09": "Uttar Pradesh",
-    "10": "Bihar",
-    "11": "Sikkim",
-    "12": "Arunachal Pradesh",
-    "13": "Nagaland",
-    "14": "Manipur",
-    "15": "Mizoram",
-    "16": "Tripura",
-    "17": "Meghalaya",
-    "18": "Assam",
-    "19": "West Bengal",
-    "20": "Jharkhand",
-    "21": "Odisha",
-    "22": "Chhattisgarh",
-    "23": "Madhya Pradesh",
-    "24": "Gujarat",
-    "26": "Dadra & Nagar Haveli and Daman & Diu",
-    "27": "Maharashtra",
-    "29": "Karnataka",
-    "30": "Goa",
-    "31": "Lakshadweep",
-    "32": "Kerala",
-    "33": "Tamil Nadu",
-    "34": "Puducherry",
-    "35": "Andaman & Nicobar Islands",
-    "36": "Telangana",
-    "37": "Andhra Pradesh",
-    "38": "Ladakh"
-  };
-      var buyerStateCode = (custGstin && custGstin.length >= 2) ? custGstin.substring(0, 2) : "09";
-      var buyerStateName = buyerStateMap[buyerStateCode] || (buyerStateCode === "09" ? "Uttar Pradesh" : "Other State");
-      var isInterState = (isGst && custGstin && custGstin !== "-" && buyerStateCode !== "09");
-      
-      var buyerGstLine = (isGst && custGstin && custGstin !== "-") ? "<div>GSTIN/UIN: " + custGstin + " | State: " + buyerStateName + ", Code: " + buyerStateCode + "</div>" : "";
+
+      var stateMap = {
+        "01": "Jammu & Kashmir", "02": "Himachal Pradesh", "03": "Punjab", "04": "Chandigarh",
+        "05": "Uttarakhand", "06": "Haryana", "07": "Delhi", "08": "Rajasthan", "09": "Uttar Pradesh",
+        "10": "Bihar", "11": "Sikkim", "12": "Arunachal Pradesh", "13": "Nagaland", "14": "Manipur",
+        "15": "Mizoram", "16": "Tripura", "17": "Meghalaya", "18": "Assam", "19": "West Bengal",
+        "20": "Jharkhand", "21": "Odisha", "22": "Chhattisgarh", "23": "Madhya Pradesh", "24": "Gujarat",
+        "26": "Dadra & Nagar Haveli and Daman & Diu", "27": "Maharashtra", "29": "Karnataka",
+        "30": "Goa", "31": "Lakshadweep", "32": "Kerala", "33": "Tamil Nadu", "34": "Puducherry",
+        "35": "Andaman & Nicobar Islands", "36": "Telangana", "37": "Andhra Pradesh", "38": "Ladakh"
+      };
+
+      var buyerStateName = 'Uttar Pradesh';
+      var buyerStateCode = '09';
+      var buyerGstLine = "";
+
+      if (isGst && custGstin && custGstin.trim() !== "" && custGstin !== "-") {
+        var codePrefix = custGstin.trim().substring(0, 2);
+        buyerStateCode = codePrefix;
+        buyerStateName = stateMap[codePrefix] || 'Other State';
+        buyerGstLine = '<div>GSTIN/UIN: ' + custGstin + ' | State: ' + buyerStateName + ', Code: ' + buyerStateCode + '</div>';
+      }
+
+      // Check Place of Supply / Delivery State for Inter-State
+      var placeOfSupplyCode = '09';
+      var shipStateVal = b.shipState || (document.getElementById("shipStateSelect") ? document.getElementById("shipStateSelect").value : "");
+      var hasDiffShip = (b.isShipDiff === true || b.hasDiffShip === true || String(b.isShipDiff) === "true") && (b.shipAddress || b.shipName);
+
+      if (hasDiffShip && shipStateVal) {
+        var matchCode = String(shipStateVal).match(/^\d{2}/);
+        if (matchCode) {
+          placeOfSupplyCode = matchCode[0];
+        } else if (String(shipStateVal).toLowerCase().indexOf('delhi') !== -1) {
+          placeOfSupplyCode = '07';
+        } else if (String(shipStateVal).toLowerCase().indexOf('jammu') !== -1) {
+          placeOfSupplyCode = '01';
+        } else {
+          placeOfSupplyCode = '99';
+        }
+      } else {
+        placeOfSupplyCode = buyerStateCode;
+      }
+
+      var isInterState = (placeOfSupplyCode !== '09');
+
+      var bStateText = (isGst && !buyerGstLine) ? 'State Name: Uttar Pradesh, Code: 09' : '';
+      var sStateText = isGst ? (shipStateVal ? ('State / Place of Supply: ' + shipStateVal) : 'State / Place of Supply: 09 - Uttar Pradesh') : '';
+
       var lines = "";
       var itms = b.items || [];
       var totalTaxable = 0, totalGst = 0, computedTotal = 0;
@@ -2627,12 +2632,12 @@ function updateBulkTabVisibility() {
           '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;"><b>' + (it.name || it.itemName || '-') + '</b>' + snStr + '</td>' +
           '<td style="padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + (it.hsn || '-') + '</td>' +
           '<td style="padding:6px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + qty + '</td>' +
-          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;">₹ ' + displayRate.toFixed(2) + '</td>' +
-          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;">₹ ' + displayAmount.toFixed(2) + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;">Rs. ' + displayRate.toFixed(2) + '</td>' +
+          '<td style="padding:6px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;">Rs. ' + displayAmount.toFixed(2) + '</td>' +
           '</tr>';
       });
 
-      var fillerHeight = (itms.length <= 12) ? Math.max(160, 500 - (itms.length * 28)) : 0;
+      var fillerHeight = (itms.length <= 12) ? Math.max(0, 460 - (itms.length * 26)) : 0;
       if (fillerHeight > 0) {
         lines += '<tr>' +
           '<td style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
@@ -2647,106 +2652,94 @@ function updateBulkTabVisibility() {
       var grandTotal = parseFloat(b.grandTotal || b.amount || computedTotal || 0);
 
       var printAmtPaid = (b.paymentMode === "Pay Later") ? 0 : (b.amountPaid !== undefined ? parseFloat(b.amountPaid) : grandTotal);
-  var printBalDue = (b.paymentMode === "Pay Later") ? grandTotal : (b.balanceDue !== undefined ? parseFloat(b.balanceDue) : Math.max(0, grandTotal - printAmtPaid));
+      var printBalDue = (b.paymentMode === "Pay Later") ? grandTotal : (b.balanceDue !== undefined ? parseFloat(b.balanceDue) : Math.max(0, grandTotal - printAmtPaid));
 
-  var printBreakdownHtml = '';
-  if (printBalDue > 0) {
-    printBreakdownHtml = 
-      '<div style="display:flex; justify-content:space-between; margin-top:4px; padding-top:3px; border-top:1px dashed #cbd5e1; font-size:11px; font-weight:bold; color:#15803d;">' +
-        '<span>Amount Received:</span><span>₹ ' + printAmtPaid.toFixed(2) + '</span>' +
-      '</div>' +
-      '<div style="display:flex; justify-content:space-between; margin-top:2px; font-size:12px; font-weight:900; color:#dc2626;">' +
-        '<span>Balance Due:</span><span>₹ ' + printBalDue.toFixed(2) + '</span>' +
-      '</div>';
-  }
+      var printBreakdownHtml = '';
+      if (printBalDue > 0) {
+        printBreakdownHtml = 
+          '<tr><td style="padding:3px 4px; font-weight:bold; color:#15803d; border-top:1px dashed #cbd5e1;">Amount Received:</td><td style="padding:3px 4px; text-align:right; font-weight:bold; color:#15803d; border-top:1px dashed #cbd5e1;">Rs. ' + printAmtPaid.toFixed(2) + '</td></tr>' +
+          '<tr><td style="padding:3px 4px; font-weight:900; color:#dc2626;">Balance Due:</td><td style="padding:3px 4px; text-align:right; font-weight:900; color:#dc2626;">Rs. ' + printBalDue.toFixed(2) + '</td></tr>';
+      }
 
-  var taxBoxHtml = "";
-  if (isGst) {
-    var taxRowsHtml = "";
-    if (isInterState) {
-      taxRowsHtml = '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>IGST (18%):</span><span>₹' + totalGst.toFixed(2) + '</span></div>';
-    } else {
-      var cgst = totalGst / 2;
-      var sgst = totalGst / 2;
-      taxRowsHtml = '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>CGST (9%):</span><span>₹' + cgst.toFixed(2) + '</span></div>' +
-                    '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>SGST (9%):</span><span>₹' + sgst.toFixed(2) + '</span></div>';
-    }
+      var taxBoxHtml = "";
+      if (isGst) {
+        var taxRowsHtml = "";
+        if (isInterState) {
+          taxRowsHtml = '<tr><td style="padding:3px; font-weight:bold;">IGST (18%)</td><td style="padding:3px; text-align:right; font-weight:bold;">Rs. ' + totalGst.toFixed(2) + '</td></tr>';
+        } else {
+          var cgst = totalGst / 2;
+          var sgst = totalGst / 2;
+          taxRowsHtml = '<tr><td style="padding:3px; font-weight:bold;">CGST (9%)</td><td style="padding:3px; text-align:right; font-weight:bold;">Rs. ' + cgst.toFixed(2) + '</td></tr>' +
+                        '<tr><td style="padding:3px; font-weight:bold;">SGST (9%)</td><td style="padding:3px; text-align:right; font-weight:bold;">Rs. ' + sgst.toFixed(2) + '</td></tr>';
+        }
 
-    taxBoxHtml = '<div style="width:100%; box-sizing:border-box; padding:4px;">' +
-      '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; font-weight:bold;"><span>Subtotal (Taxable):</span><span>₹' + totalTaxable.toFixed(2) + '</span></div>' +
-      taxRowsHtml +
-      '<div style="display:flex; justify-content:space-between; align-items:center; border-top:1.5px solid #1e3a8a; padding-top:6px; margin-top:2px; font-size:13px; font-weight:900; color:#1e3a8a;">' +
-      '<span>Total Amount:</span><span>₹' + grandTotal.toFixed(2) + '</span>' +
-      '</div>' +
-      printBreakdownHtml +
-      '</div>';
-  } else {
-    taxBoxHtml = '<div style="width:100%; box-sizing:border-box;">' +
-      '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-        '<span style="font-weight:900; font-size:13px; color:#0f172a; white-space:nowrap;">Total Amount:</span>' +
-        '<span style="font-weight:900; font-size:16px; color:#1e3a8a; white-space:nowrap; margin-left:10px;">₹ ' + grandTotal.toFixed(2) + '</span>' +
-      '</div>' +
-      printBreakdownHtml +
-      '</div>';
-  }
-var hasDiffShip = (b.hasDiffShip === true || b.hasDiffShip === "true") && (b.shipAddress || b.shipName);
-  var buyerSectionHtml = "";
+        taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
+          '<tr><td style="padding:3px; font-weight:bold;">Subtotal (Taxable Value)</td><td style="padding:3px; text-align:right; font-weight:bold;">Rs. ' + totalTaxable.toFixed(2) + '</td></tr>' +
+          taxRowsHtml +
+          '<tr><td style="border-top:1.5px solid #1e3a8a; padding:4px; font-weight:900;">Total Amount</td><td style="border-top:1.5px solid #1e3a8a; padding:4px; text-align:right; font-weight:900; font-size:13.5px; color:#1e3a8a;">Rs. ' + grandTotal.toFixed(2) + '</td></tr>' +
+          printBreakdownHtml +
+          '</table>';
+      } else {
+        taxBoxHtml = '<table style="width:100%; border-collapse:collapse;">' +
+          '<tr><td style="padding:8px 6px; font-weight:bold; font-size:12px;">Subtotal:</td><td style="padding:8px 6px; text-align:right; font-weight:bold; font-size:12px;">Rs. ' + grandTotal.toFixed(2) + '</td></tr>' +
+          '<tr><td style="border-top:1.5px solid #1e3a8a; padding:8px 6px; font-weight:900; font-size:13.5px; color:#1e3a8a;">Total Amount:</td><td style="border-top:1.5px solid #1e3a8a; padding:8px 6px; text-align:right; font-weight:900; font-size:13.5px; color:#1e3a8a;">Rs. ' + grandTotal.toFixed(2) + '</td></tr>' +
+          printBreakdownHtml +
+          '</table>';
+      }
 
-  if (hasDiffShip) {
-    buyerSectionHtml = 
-      '<tr>' +
-        '<td style="width:64%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
-          '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">BUYER (BILL TO)</div>' +
-          '<div style="font-size:12px; font-weight:bold;">' + custName + '</div>' +
-          custAddr + '<br>' +
-          'Contact: ' + custPhone + '<br>' +
-          buyerGstLine +
-        '</td>' +
-        '<td style="width:36%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
-          '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">CONSIGNEE (SHIP TO)</div>' +
-          '<div style="font-size:12px; font-weight:bold;">' + (b.shipName || custName) + '</div>' +
-          (b.shipAddress || custAddr) + '<br>' +
-          (b.shipPhone ? ('Contact: ' + b.shipPhone + '<br>') : '') +
-          '<div>State: Uttar Pradesh, Code: 09</div>' +
-        '</td>' +
-      '</tr>';
-  } else {
-    buyerSectionHtml = 
-      '<tr>' +
-        '<td colspan="2" style="padding:6px 8px; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
-          '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">BUYER / CONSIGNEE (SHIP TO & BILL TO)</div>' +
-          '<div style="font-size:12px; font-weight:bold;">' + custName + '</div>' +
-          custAddr + '<br>' +
-          'Contact: ' + custPhone + '<br>' +
-          buyerGstLine +
-        '</td>' +
-      '</tr>';
-  }
-      
-      return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
-        '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase;">' + headerTitle + '</div>' +
-        '<div style="border:2px solid #1e3a8a; width:100%; min-height:890px; box-sizing:border-box;">' +
-        '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
-        '<colgroup>' +
-        '<col style="width:64%;">' +
-        '<col style="width:36%;">' +
-        '</colgroup>' +
+      var buyerSectionHtml = "";
+      if (hasDiffShip) {
+        buyerSectionHtml = 
+          '<tr>' +
+            '<td style="width:52%; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; padding:6px 8px; box-sizing:border-box;">' +
+              '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; text-transform:uppercase;">BILL TO (BUYER DETAILS)</div>' +
+              '<div style="font-size:12px; font-weight:bold;">' + custName + '</div>' +
+              custAddr + '<br>' +
+              'Contact No: ' + custPhone + (buyerGstLine ? '<br>' + buyerGstLine : '') +
+              (bStateText ? '<br>' + bStateText : '') +
+            '</td>' +
+            '<td style="width:48%; border-right:none; vertical-align:top; border-bottom:1.5px solid #1e3a8a; padding:6px 8px; box-sizing:border-box;">' +
+              '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; text-transform:uppercase;">SHIP TO (DELIVERY SITE DETAILS)</div>' +
+              '<div style="font-size:12px; font-weight:bold;">' + (b.shipName || custName) + '</div>' +
+              (b.shipAddress || custAddr) + '<br>' +
+              'Site Contact: ' + (b.shipPhone || custPhone) +
+              (sStateText ? '<br>' + sStateText : '') +
+            '</td>' +
+          '</tr>';
+      } else {
+        buyerSectionHtml = 
+          '<tr>' +
+            '<td colspan="2" style="border-right:none; border-bottom:1.5px solid #1e3a8a; padding:6px 8px; box-sizing:border-box;">' +
+              '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; text-transform:uppercase;">BUYER / CONSIGNEE (SHIP TO & BILL TO)</div>' +
+              '<div style="font-size:12px; font-weight:bold;">' + custName + '</div>' +
+              custAddr + '<br>' +
+              'Contact No: ' + custPhone + (buyerGstLine ? '<br>' + buyerGstLine : '') +
+              (bStateText ? '<br>' + bStateText : '') +
+            '</td>' +
+          '</tr>';
+      }
+
+      return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:11px; color:#000; line-height:1.35; background:#fff; box-sizing:border-box;">' +
+        '<div style="text-align:center; font-size:16px; font-weight:900; color:#1e3a8a; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">' + headerTitle + '</div>' +
+        '<div style="border:2px solid #1e3a8a; width:100%; box-sizing:border-box;">' +
+        '<table style="width:100%; border-collapse:collapse;">' +
         '<tr>' +
-        '<td style="width:64%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
-        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px;">SUPPLIER (BILL FROM)</div>' +
+        '<td style="width:60%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; border-right:1.5px solid #1e3a8a; box-sizing:border-box;">' +
+        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; text-transform:uppercase; margin-bottom:3px;">SUPPLIER (BILL FROM)</div>' +
         '<div style="font-size:13px; font-weight:900;">MOONLIGHT ELECTRICALS</div>' +
         'Shop No 1, Sadbhavna Market, Opp. Cleo County Gate No 3,<br>Ghadi Chaukhandi, Sector-121, Noida - 201304 (U.P.)<br>' +
         'Contact: 9650897965 / 8860706865 / 8860880453<br>' +
-        'Email: moonlightelectrical9@gmail.com' +
+        'Email: moonlightelectricals0@gmail.com' +
         shopGstLine +
         '</td>' +
-        '<td style="width:36%; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
-        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; margin-bottom:5px;">INVOICE DETAILS</div>' +
-        '<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:10px; line-height:1.2;"><b>Invoice No.:</b><b style="color:#000; text-align:right;">' + (b.docNo || b.billNo || docNo || '-') + '</b></div>' +
-        '<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:10px; line-height:1.2;"><b>Dated:</b><span style="text-align:right;">' + (b.date || b.billDate || billDate || '-') + '</span></div>' +
-        '<div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:10px; line-height:1.2;"><b>Payment Mode:</b><span style="text-align:right;">' + (b.paymentMode || b.payMode || payMode || 'Cash') + '</span></div>' +
-        (isInvoice ? '' : '<div style="display:flex; justify-content:space-between; font-size:10px; line-height:1.2;"><b>Estimate validity:</b><span style="text-align:right;">3 Days</span></div>') +
-        '</td>' +
+        '<td style="width:40%; border-right:none; padding:6px 8px; vertical-align:top; border-bottom:1.5px solid #1e3a8a; box-sizing:border-box;">' +
+        '<div style="font-weight:bold; color:#1e3a8a; font-size:11px; text-transform:uppercase; margin-bottom:3px;">INVOICE DETAILS</div>' +
+        '<table style="width:100%; border:none; font-size:10.5px;">' +
+        '<tr><td style="border:none; padding:2px 0;"><b>' + docWord + ' No.:</b></td><td style="border:none; padding:2px 0; text-align:right;"><b>' + docNo + '</b></td></tr>' +
+        '<tr><td style="border:none; padding:2px 0;"><b>Dated:</b></td><td style="border:none; padding:2px 0; text-align:right;">' + billDate + '</td></tr>' +
+        '<tr><td style="border:none; padding:2px 0;"><b>Payment Mode:</b></td><td style="border:none; padding:2px 0; text-align:right;"><b>' + payMode + '</b></td></tr>' +
+        estimateValidityLine +
+        '</table>' +
         '</td>' +
         '</tr>' +
         buyerSectionHtml +
@@ -2754,36 +2747,32 @@ var hasDiffShip = (b.hasDiffShip === true || b.hasDiffShip === "true") && (b.shi
         '<table style="width:100%; border-collapse:collapse; border-bottom:1.5px solid #1e3a8a;">' +
         '<thead>' +
         '<tr style="background:#1e3a8a; color:#fff;">' +
-        '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:45px; text-align:center; white-space:nowrap;">Sl No.</th>' +
-        '<th style="padding:6px 6px; border:1px solid #1e3a8a; text-align:left;">Description of Goods</th>' +
-        '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:65px; text-align:center;">HSN/SAC</th>' +
-        '<th style="padding:6px 4px; border:1px solid #1e3a8a; width:50px; text-align:center;">Quantity</th>' +
-        '<th style="padding:6px 6px; border:1px solid #1e3a8a; width:80px; text-align:right;">Rate (₹)</th>' +
-        '<th style="padding:6px 6px; border:1px solid #1e3a8a; width:90px; text-align:right;">Amount (₹)</th>' +
+        '<th style="width:50px; text-align:center; padding:6px 4px; border:1px solid #1e3a8a; font-size:11px; text-transform:uppercase; white-space:nowrap;">Sl No.</th>' +
+        '<th style="text-align:left; padding:6px 4px; border:1px solid #1e3a8a; font-size:11px; text-transform:uppercase;">Description of Goods</th>' +
+        '<th style="width:65px; text-align:center; padding:6px 4px; border:1px solid #1e3a8a; font-size:11px; text-transform:uppercase;">HSN/SAC</th>' +
+        '<th style="width:50px; text-align:center; padding:6px 4px; border:1px solid #1e3a8a; font-size:11px; text-transform:uppercase;">Quantity</th>' +
+        '<th style="width:70px; text-align:right; padding:6px 4px; border:1px solid #1e3a8a; font-size:11px; text-transform:uppercase;">Rate (Rs.)</th>' +
+        '<th style="width:80px; text-align:right; padding:6px 4px; border:1px solid #1e3a8a; font-size:11px; text-transform:uppercase;">Amount (Rs.)</th>' +
         '</tr>' +
         '</thead>' +
         '<tbody>' + lines + '</tbody>' +
         '</table>' +
         '<div style="padding:6px 8px; font-size:11px; font-weight:bold; border-top:1.5px solid #1e3a8a; border-bottom:1.5px solid #1e3a8a; background:#fff;">' +
-        'Amount (In Words): <span style="font-weight:normal;">' + getWordsText(grandTotal) + '</span>' +
+        'Amount (In Words): ' + getWordsText(grandTotal) +
         '</div>' +
-        '<table style="width:100%; border-collapse:collapse; table-layout:fixed;">' +
-        '<colgroup>' +
-        '<col style="width:55%;">' +
-        '<col style="width:45%;">' +
-        '</colgroup>' +
+        '<table style="width:100%; border-collapse:collapse; margin:0; padding:0;">' +
         '<tr>' +
-        '<td style="width:55%; vertical-align:top; border-right:1.5px solid #1e3a8a; border-bottom:none; padding:4px 6px; box-sizing:border-box;">' +
-        '<table style="width:100%; border-collapse:collapse; border:1px solid #1e3a8a;">' +
-        '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:2px 4px; font-size:10px;">Bank Details</td></tr>' +
-        '<tr><td style="width:38%; padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;"><b>A/c Holder\'s Name:</b></td><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;">SHIVAM CHAUHAN</td></tr>' +
-        '<tr><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;"><b>Bank Name:</b></td><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;">Kotak Mahindra Bank</td></tr>' +
-        '<tr><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;"><b>A/c No.:</b></td><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;">6413488039</td></tr>' +
-        '<tr><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;"><b>Branch & IFS Code:</b></td><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;">Sector 18, Noida & KKBK0000181</td></tr>' +
-        '<tr><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;"><b>UPI ID:</b></td><td style="padding:2.5px 4px; border:1px solid #cbd5e1; font-size:9.5px;">8860880453@kotak</td></tr>' +
+        '<td style="width:58%; vertical-align:top; padding:4px 6px;">' +
+        '<table style="width:100%; border-collapse:collapse; border:1px solid #1e3a8a; margin:0;">' +
+        '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:3px 5px; font-size:10.5px;">Bank Details</td></tr>' +
+        '<tr><td style="width:38%; padding:3px 5px; font-size:10px; border:1px solid #cbd5e1;"><b>A/c Holder\'s Name:</b></td><td style="padding:3px 5px; font-size:10px; border:1px solid #cbd5e1;">SHIVAM CHAUHAN</td></tr>' +
+        '<tr><td style="padding:3px 5px; font-size:10px; border:1px solid #cbd5e1;"><b>Bank Name:</b></td><td style="padding:3px 5px; font-size:10px; border:1px solid #cbd5e1;">Kotak Mahindra Bank</td></tr>' +
+        '<tr><td style="padding:3px 5px; font-size:10px; border:1px solid #cbd5e1;"><b>A/c No.:</b></td><td style="padding:3px 5px; font-size:10px; border:1px solid #cbd5e1;">6413488039</td></tr>' +
+        '<tr><td style="padding:3px 5px; font-size:10px; border:1px solid #cbd5e1;"><b>Branch & IFS Code:</b></td><td style="padding:3px 5px; font-size:10px; border:1px solid #cbd5e1;">Sector 18, Noida & KKBK0000181</td></tr>' +
+        '<tr><td style="padding:3px 5px; font-size:10px; border:1px solid #cbd5e1;"><b>UPI ID:</b></td><td style="padding:3px 5px; font-size:10px; border:1px solid #cbd5e1;">8860880453@kotak</td></tr>' +
         '</table>' +
         '</td>' +
-        '<td style="width:45%; vertical-align:middle; padding:8px 12px; background:#fafafa; box-sizing:border-box;">' +
+        '<td style="width:42%; vertical-align:top; padding:4px 8px; border-left:1.5px solid #1e3a8a; background:#fafafa;">' +
         taxBoxHtml +
         '</td>' +
         '</tr>' +
@@ -2796,7 +2785,6 @@ var hasDiffShip = (b.hasDiffShip === true || b.hasDiffShip === "true") && (b.shi
         '</div>' +
         '</div>';
     }
-
     window.triggerDirectPrint = function(customData) {
       var data = customData || lastGeneratedBillData;
       if (!data) return;
