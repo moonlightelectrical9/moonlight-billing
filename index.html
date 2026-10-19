@@ -3838,15 +3838,15 @@ window.uploadBulkPurchaseCSV = function() {
       var name = document.getElementById("itemSearch").value.trim();
       if (!name) return;
 
-      var bMode = document.getElementById("billMode").value;
+      var bMode = (document.getElementById("billMode").value || "").toLowerCase();
       var rType = document.getElementById("rateType").value;
       var gstMode = document.getElementById("isGstBill").value;
-      var pMode = document.getElementById("paymentMode").value;
-      var isEstimate = (bMode.indexOf("Estimate") !== -1);
+      var pMode = document.getElementById("paymentMode") ? document.getElementById("paymentMode").value : "";
+      var isEstimate = bMode.includes("estimate");
 
-      // Agar Estimate hai toh Payment mode check nahi hoga, Final bill me zaroori hoga
+      // Agar Estimate hai toh Payment mode check nahi hoga
       if (!bMode || !rType || !gstMode || (!isEstimate && !pMode)) {
-        alert("Please select Mode, Rate Type, GST Bill?" + (!isEstimate ? ", and Payment mode" : "") + " before adding items!");
+        alert("Please select Mode, Rate Type, and GST Bill?" + (!isEstimate ? ", and Payment mode" : "") + " before adding items!");
         return;
       }
 
