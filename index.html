@@ -674,13 +674,6 @@
     <option value="Pay Later">Pay Later</option>
   </select>
 </div>
-
-<!-- Naya: Received Amount & Balance Box (Partial Payment & Delivery Balance) -->
-<div class="form-col" id="colReceivedAmt" style="display:none;">
-  <label>AMOUNT RECEIVED (₹) <span id="lblReceivedStar">*</span></label>
-  <input type="number" id="receivedAmt" placeholder="Enter amount or 0" step="any" oninput="calculateBalanceDue(); checkFormState()" style="font-weight:700; color:#1e293b;">
-  <div id="balanceDueText" style="font-size:11px; margin-top:4px; font-weight:700; display:none;"></div>
-</div>
             </div>
 
             <div class="grid-row row-2">
@@ -850,6 +843,18 @@
                 <span style="font-size:24px; font-weight:900; color:#000;" id="lblGrandTotal">₹0.00</span>
               </div>
             </div>
+            <!-- Received Amount & Balance Box (Placed under Grand Total) -->
+            <div id="colReceivedAmt" style="display:none; background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:12px 16px; margin-bottom:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div style="flex:1; min-width:240px; display:flex; flex-direction:column; gap:4px;">
+                  <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">
+                    AMOUNT RECEIVED (₹) <span id="lblReceivedStar" style="color:#dc2626;">*</span>
+                  </label>
+                  <input type="number" id="receivedAmt" placeholder="Enter amount or 0" step="any" oninput="calculateBalanceDue(); checkFormState()" style="font-size:16px; font-weight:800; color:#1e293b; max-width:320px; border:1.5px solid #94a3b8; padding:8px 12px; border-radius:6px;">
+                </div>
+                <div id="balanceDueText" style="font-size:13px; font-weight:800; display:none;"></div>
+              </div>
+            </div>
 
             <div style="display:grid; grid-template-columns: 1fr 2fr; gap:10px;">
               <button type="button" class="btn-sync" id="btnSaveDraft" onclick="saveCurrentBillAsDraft()" style="height:48px; background:#eff6ff; color:#1d4ed8; border:1.5px solid #3b82f6; font-size:13.5px; font-weight:900; justify-content:center;">
@@ -861,6 +866,7 @@
             </div>
           </div>
         </div>
+        
 
         <!-- VIEW 2.2: DRAFT BILLS DIRECTORY -->
         <div id="viewDraftBills" style="display: none;">
