@@ -2687,18 +2687,22 @@ function updateBulkTabVisibility() {
       var printAmtPaid = (b.paymentMode === "Pay Later") ? 0 : (b.amountPaid !== undefined ? parseFloat(b.amountPaid) : grandTotal);
       var printBalDue = (b.paymentMode === "Pay Later") ? grandTotal : (b.balanceDue !== undefined ? parseFloat(b.balanceDue) : Math.max(0, grandTotal - printAmtPaid));
 
-      var printBreakdownHtml = '';
-      if (printBalDue > 0) {
-        printBreakdownHtml = 
-          '<tr>' +
-            '<td style="padding:2px 4px; font-weight:bold; font-size:10.5px; color:#15803d; border-top:1px dashed #cbd5e1; white-space:nowrap;">Amount Received:</td>' +
-            '<td style="padding:2px 4px; text-align:right; font-weight:bold; font-size:10.5px; color:#15803d; border-top:1px dashed #cbd5e1; white-space:nowrap;">' + printAmtPaid.toFixed(2) + '</td>' +
-          '</tr>' +
-          '<tr>' +
-            '<td style="padding:2px 4px; font-weight:900; font-size:11px; color:#dc2626; white-space:nowrap;">Balance Due:</td>' +
-            '<td style="padding:2px 4px; text-align:right; font-weight:900; font-size:11px; color:#dc2626; white-space:nowrap;">' + printBalDue.toFixed(2) + '</td>' +
-          '</tr>';
-      }
+      var isEstimatePrint = (typeof isEstimate !== "undefined" && isEstimate) || 
+                      (b && b.docNo && String(b.docNo).indexOf("EST") !== -1) || 
+                      (b && b.billMode && String(b.billMode).toLowerCase().indexOf("estimate") !== -1);
+
+var printBreakdownHtml = '';
+if (!isEstimatePrint && printBalDue > 0) {
+  printBreakdownHtml =
+    '<tr>' +
+      '<td style="padding:2px 4px; font-weight:bold; font-size:10.5px; color:#15803d; border-top:1px dashed #cbd5e1; white-space:nowrap;">Amount Received:</td>' +
+      '<td style="padding:2px 4px; text-align:right; font-weight:bold; font-size:10.5px; color:#15803d; border-top:1px dashed #cbd5e1; white-space:nowrap;">' + printAmtPaid.toFixed(2) + '</td>' +
+    '</tr>' +
+    '<tr>' +
+      '<td style="padding:2px 4px; font-weight:900; font-size:11px; color:#dc2626; white-space:nowrap;">Balance Due:</td>' +
+      '<td style="padding:2px 4px; text-align:right; font-weight:900; font-size:11px; color:#dc2626; white-space:nowrap;">' + printBalDue.toFixed(2) + '</td>' +
+    '</tr>';
+}
 
       var taxBoxHtml = "";
       if (isGst) {
