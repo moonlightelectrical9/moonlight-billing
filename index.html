@@ -798,6 +798,12 @@
                 <label>DISC (₹/PC)</label>
                 <input type="number" id="itemDisc" value="0" min="0" oninput="calculateItemTotal()">
               </div>
+              <div class="form-col" id="volTierContainer" style="display:none;">
+              <label style="color:#0284c7; font-weight:bold;">Vol. Tier (%)</label>
+              <input type="number" id="itemVolTier" step="0.5" placeholder="0" 
+                     style="border:1.5px solid #0284c7; background:#f0f9ff; font-weight:bold; color:#0284c7;" 
+                     oninput="onVolTierChange()">
+            </div>
               <div class="form-col">
                 <label>GST (₹) [ADDED]</label>
                 <input type="text" id="itemGstAdded" value="0.00" readonly style="color:#b45309; font-weight:800;">
@@ -3780,20 +3786,65 @@ window.uploadBulkPurchaseCSV = function() {
     };
 
     function resolveRate() {
-      if (!currentItemObj) return;
-      var type = document.getElementById("rateType").value;
-      var r = currentItemObj.custRate || 0;
-      if (type === "Electrician Rate") r = currentItemObj.elecRate || r;
-      if (type === "Wholesale Rate") r = currentItemObj.famRate || r;
-      document.getElementById("itemRate").value = "₹" + parseFloat(r).toFixed(2);
+  if (!currentItemObj) return;
+  var type = document.getElementById("rateType").value;
+  var r = currentItemObj.custRate || 0;
+  if (type === "Electrician Rate") r = currentItemObj.elecRate || r;
+  if (type === "Wholesale Rate") r = currentItemObj.famRate || r;
+
+  // Vol. Tier box SIRF Wholesale Rate par dikhega, baki sab par hide rahega
+  var tierBox = document.getElementById("volTierContainer");
+  if (tierBox) {
+    if (type === "Wholesale Rate") {
+      tierBox.style.display = "block";
+    } else {
+      tierBox.style.display = "none";
+      var tierInput = document.getElementById("itemVolTier");
+      if (tierInput) tierInput.value = "";
     }
+  }
 
-    window.calculateItemTotal = function() {
-    var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
-    var baseRate = parseFloat(rVal) || 0; // Yeh aapka Inclusive Rate hai
-    var disc = parseFloat(document.getElementById("itemDisc").value) || 0;
+  document.getElementById("itemRate").value = "₹" + parseFloat(r).toFixed(2);
+}
 
-    // --- PROFIT PROTECTION LOCK (Purchase Price + 10%) ---
+// Jab Vol. Tier (%) me type ho (Sirf Wholesale)
+window.onVolTierChange = function() {
+  var tierVal = document.getElementById("itemVolTier").value;
+  if (tierVal !== "" && !isNaN(parseFloat(tierVal)) && currentItemObj) {
+    // Discount box ko auto-zero karein taaki double discount na ho
+    var discEl = document.getElementById("itemDisc");
+    if (discEl) discEl.value = "0";
+
+    // Purchase Price + Tier% calculation
+    var pCost = parseFloat(currentItemObj.purchasePrice || 0);
+    if (pCost > 0) {
+      var marginPct = parseFloat(tierVal) || 0;
+      var newRate = pCost + (pCost * (marginPct / 100));
+      document.getElementById("itemRate").value = "₹" + parseFloat(newRate).toFixed(2);
+    }
+  } else if (tierVal === "") {
+    resolveRate();
+  }
+  calculateItemTotal();
+};
+
+window.calculateItemTotal = function() {
+  var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
+  var baseRate = parseFloat(rVal) || 0;
+  var disc = parseFloat(document.getElementById("itemDisc").value) || 0;
+  var currentRateType = document.getElementById("rateType") ? document.getElementById("rateType").value : "";
+
+  // Agar user Discount box me hath lagaye toh Vol. Tier box khali ho jaye
+  if (disc > 0) {
+    var tierInput = document.getElementById("itemVolTier");
+    if (tierInput && tierInput.value !== "") {
+      tierInput.value = "";
+    }
+  }
+
+  // --- PROFIT PROTECTION LOCK (Purchase Price + 10%) ---
+  // CUSTOMER AUR ELECTRICIAN RATE KE LIYE BILKUL SAME PEHLE JAISA LOCKED RAHEGA
+  if (currentRateType !== "Wholesale Rate") {
     if (typeof currentItemObj !== "undefined" && currentItemObj) {
       var purchasePrice = parseFloat(currentItemObj.purchasePrice || 0);
       if (purchasePrice > 0 && baseRate > 0) {
@@ -3808,7 +3859,8 @@ window.uploadBulkPurchaseCSV = function() {
         }
       }
     }
-    // -----------------------------------------------------
+  }
+  // ---------------------------------------------------
 
     var qty = parseFloat(document.getElementById("itemQty").value) || 1;
     var finalUnitRate = Math.max(0, baseRate - disc); // Customer ka final rate per piece
@@ -3885,6 +3937,7 @@ window.uploadBulkPurchaseCSV = function() {
       document.getElementById("itemRate").value = "Locked";
       document.getElementById("itemRate").readOnly = true;
       document.getElementById("itemDisc").value = "0";
+      var tIn = document.getElementById("itemVolTier"); if (tIn) tIn.value = "";
       document.getElementById("itemQty").value = "1";
       document.getElementById("itemTotal").value = "0.00";
       currentItemObj = null;
