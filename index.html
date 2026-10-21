@@ -3780,20 +3780,10 @@ window.uploadBulkPurchaseCSV = function() {
     }
 
     window.onRateTypeChange = function() {
-      if (currentItemObj && !currentItemObj.name.toLowerCase().includes("labour")) resolveRate();
-      calculateItemTotal();
-      checkFormState();
-    };
-
-    function resolveRate() {
-  if (!currentItemObj) return;
   var type = document.getElementById("rateType").value;
-  var r = currentItemObj.custRate || 0;
-  if (type === "Electrician Rate") r = currentItemObj.elecRate || r;
-  if (type === "Wholesale Rate") r = currentItemObj.famRate || r;
-
-  // Vol. Tier box SIRF Wholesale Rate par dikhega, baki sab par hide rahega
   var tierBox = document.getElementById("volTierContainer");
+
+  // Item select ho ya na ho, Wholesale par box turant dikhega
   if (tierBox) {
     if (type === "Wholesale Rate") {
       tierBox.style.display = "block";
@@ -3804,9 +3794,21 @@ window.uploadBulkPurchaseCSV = function() {
     }
   }
 
+  if (currentItemObj && !currentItemObj.name.toLowerCase().includes("labour")) {
+    resolveRate();
+  }
+  calculateItemTotal();
+  checkFormState();
+};
+
+function resolveRate() {
+  if (!currentItemObj) return;
+  var type = document.getElementById("rateType").value;
+  var r = currentItemObj.custRate || 0;
+  if (type === "Electrician Rate") r = currentItemObj.elecRate || r;
+  if (type === "Wholesale Rate") r = currentItemObj.famRate || r;
   document.getElementById("itemRate").value = "₹" + parseFloat(r).toFixed(2);
 }
-
 // Jab Vol. Tier (%) me type ho (Sirf Wholesale)
 window.onVolTierChange = function() {
   var tierVal = document.getElementById("itemVolTier").value;
