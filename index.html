@@ -3863,7 +3863,6 @@ window.calculateItemTotal = function() {
   var baseRate = parseFloat(rVal) || 0;
 
   // --- PROFIT PROTECTION LOCK (Purchase Price + 10%) ---
-  // Sirf Customer & Electrician par chalega, Wholesale bypass rahega
   if (currentRateType !== "Wholesale Rate") {
     if (typeof currentItemObj !== "undefined" && currentItemObj) {
       var purchasePrice = parseFloat(currentItemObj.purchasePrice || 0);
@@ -3901,9 +3900,17 @@ window.calculateItemTotal = function() {
   if (totEl) totEl.value = totalVal.toFixed(2);
 
   // Live Update: Top Navbar Build Code
-  updateNavbarBuildCode();
-};
+  if (typeof updateNavbarBuildCode === "function") {
+    updateNavbarBuildCode();
+  }
 
+  return {
+    finalUnitRate: finalUnitRate,
+    taxablePerPc: taxablePerPc,
+    gstPerPc: gstPerPc,
+    total: totalVal
+  };
+};
 // Top Navbar secret profit indicator update function
 window.updateNavbarBuildCode = function() {
   var buildEl = document.getElementById("secretBuildVal");
