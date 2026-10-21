@@ -3917,39 +3917,54 @@ window.updateNavbarBuildCode = function() {
   if (!buildEl) return;
 
   var netProfit = 0;
+
+  // 1. Bill me added items ka profit
   if (typeof billItems !== "undefined" && Array.isArray(billItems)) {
     billItems.forEach(function(item) {
-      var itemCost = parseFloat(item.purchasePrice || 0);
+      // Inventory cache se match karke purchase price nikalna
+      var pCost = parseFloat(item.purchasePrice || 0);
+      if (pCost <= 0 && typeof cachedItems !== "undefined" && Array.isArray(cachedItems)) {
+        var match = cachedItems.find(function(ci) {
+          return ci.name && item.name && ci.name.toLowerCase().trim() === item.name.toLowerCase().trim();
+        });
+        if (match) pCost = parseFloat(match.purchasePrice || 0);
+      }
       var itemSelling = parseFloat(item.finalRate || 0);
       var itemQty = parseFloat(item.qty || 1);
-      if (itemCost > 0) {
-        netProfit += (itemSelling - itemCost) * itemQty;
+      if (pCost > 0) {
+        netProfit += (itemSelling - pCost) * itemQty;
       }
     });
   }
 
+  // 2. Abhi screen par active item ka live profit
   if (currentItemObj) {
     var curCost = parseFloat(currentItemObj.purchasePrice || 0);
-    var curDisc = parseFloat(document.getElementById("itemDisc").value) || 0;
-    var curRate = parseFloat(document.getElementById("itemRate").value.replace("₹", "").trim()) || 0;
+    var discEl = document.getElementById("itemDisc");
+    var curDisc = parseFloat(discEl ? discEl.value : 0) || 0;
+    var rVal = document.getElementById("itemRate") ? document.getElementById("itemRate").value.replace("₹", "").trim() : "0";
+    var curRate = parseFloat(rVal) || 0;
     var curFinal = Math.max(0, curRate - curDisc);
-    var curQty = parseFloat(document.getElementById("itemQty").value) || 1;
+    var curQty = parseFloat(document.getElementById("itemQty") ? document.getElementById("itemQty").value : 1) || 1;
     if (curCost > 0) {
       netProfit += (curFinal - curCost) * curQty;
     }
   }
 
   netProfit = Math.round(netProfit);
+
+  // Formatting: Bada profit ho tab bhi cut na ho!
   if (netProfit >= 0) {
-    var pStr = ("0000" + netProfit).slice(-4);
+    var pStr = netProfit < 10000 ? ("0000" + netProfit).slice(-4) : netProfit.toString();
     buildEl.innerText = "v9." + pStr;
     buildEl.style.color = "#475569";
   } else {
-    var lStr = ("0000" + Math.abs(netProfit)).slice(-4);
+    var absVal = Math.abs(netProfit);
+    var lStr = absVal < 10000 ? ("0000" + absVal).slice(-4) : absVal.toString();
     buildEl.innerText = "v0." + lStr;
-    buildEl.style.color = "#dc2626";
+    buildEl.style.color = "#dc2626"; // Loss indicator
   }
-};    
+};
     window.addItemToBill = function() {
       var name = document.getElementById("itemSearch").value.trim();
       if (!name) return;
