@@ -404,6 +404,10 @@
       <div class="header-controls">
         <button class="btn-install" id="btnChromeInstall" onclick="triggerChromeInstall()">📲 Install App</button>
         <div class="timer-pill" id="sessionTimerBadge">⏳ 24:00:00</div>
+        <!-- Discreet Profit/Build Indicator -->
+<div id="buildCodeIndicator" style="display:flex; align-items:center; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:bold; color:#64748b; letter-spacing:0.5px;">
+  Build: <span id="secretBuildVal" style="margin-left:4px; color:#475569;">v9.0000</span>
+</div>
         <button class="btn-sync" onclick="refreshAppData()">🔄 Sync</button>
         <div class="user-pill" id="lblUser" onclick="openPwdModal()" title="Click to Change Password">User... 🔑</div>
         <button class="btn-logout" onclick="confirmUserLogout()">🚪 Logout</button>
@@ -789,7 +793,7 @@
               </div>
             </div>
 
-            <div class="grid-row row-item-btm">
+            <div class="grid-row row-item-btm" style="display:flex; flex-wrap:nowrap; gap:6px; align-items:flex-end;">
               <div class="form-col">
                 <label>RATE (₹) [🔒 LOCKED]</label>
                 <input type="text" id="itemRate" value="Locked" readonly oninput="calculateItemTotal()">
@@ -798,12 +802,12 @@
                 <label>DISC (₹/PC)</label>
                 <input type="number" id="itemDisc" value="0" min="0" oninput="calculateItemTotal()">
               </div>
-              <div class="form-col" id="volTierContainer" style="display:none;">
-              <label style="color:#0284c7; font-weight:bold;">Vol. Tier (%)</label>
-              <input type="number" id="itemVolTier" step="0.5" placeholder="0" 
-                     style="border:1.5px solid #0284c7; background:#f0f9ff; font-weight:bold; color:#0284c7;" 
-                     oninput="onVolTierChange()">
-            </div>
+              <div class="form-col" id="volTierContainer" style="display:none; flex:1; min-width:65px;">
+  <label style="color:#0284c7; font-weight:bold; font-size:11px;">Vol. Tier (%)</label>
+  <input type="number" id="itemVolTier" step="0.5" placeholder="0" 
+         style="border:1.5px solid #0284c7; background:#f0f9ff; font-weight:bold; color:#0284c7; padding:4px;" 
+         oninput="onVolTierChange()">
+</div>
               <div class="form-col">
                 <label>GST (₹) [ADDED]</label>
                 <input type="text" id="itemGstAdded" value="0.00" readonly style="color:#b45309; font-weight:800;">
@@ -3809,89 +3813,137 @@ function resolveRate() {
   if (type === "Wholesale Rate") r = currentItemObj.famRate || r;
   document.getElementById("itemRate").value = "₹" + parseFloat(r).toFixed(2);
 }
-// Jab Vol. Tier (%) me type ho (Sirf Wholesale)
-window.onVolTierChange = function() {
-  var tierVal = document.getElementById("itemVolTier").value;
-  if (tierVal !== "" && !isNaN(parseFloat(tierVal)) && currentItemObj) {
-    // Discount box ko auto-zero karein taaki double discount na ho
-    var discEl = document.getElementById("itemDisc");
-    if (discEl) discEl.value = "0";
+// Helper: Original base sheet rate nikalna
+function getOriginalItemRate() {
+  if (!currentItemObj) return 0;
+  var type = document.getElementById("rateType").value;
+  var r = currentItemObj.custRate || 0;
+  if (type === "Electrician Rate") r = currentItemObj.elecRate || r;
+  if (type === "Wholesale Rate") r = currentItemObj.famRate || r;
+  return parseFloat(r) || 0;
+}
 
-    // Purchase Price + Tier% calculation
+// Jab Vol. Tier (%) me type ho
+window.onVolTierChange = function() {
+  if (!currentItemObj) return;
+  var tierVal = document.getElementById("itemVolTier").value;
+  var discEl = document.getElementById("itemDisc");
+
+  // Agar 0 ya blank karein toh original sheet wholesale rate restore ho jaye
+  if (tierVal === "" || parseFloat(tierVal) === 0 || isNaN(parseFloat(tierVal))) {
+    var origRate = getOriginalItemRate();
+    document.getElementById("itemRate").value = "₹" + origRate.toFixed(2);
+  } else {
+    // Agar > 0 hai toh discount ko 0 karein
+    if (discEl) discEl.value = "0";
     var pCost = parseFloat(currentItemObj.purchasePrice || 0);
     if (pCost > 0) {
       var marginPct = parseFloat(tierVal) || 0;
       var newRate = pCost + (pCost * (marginPct / 100));
       document.getElementById("itemRate").value = "₹" + parseFloat(newRate).toFixed(2);
     }
-  } else if (tierVal === "") {
-    resolveRate();
   }
   calculateItemTotal();
 };
 
 window.calculateItemTotal = function() {
-  var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
-  var baseRate = parseFloat(rVal) || 0;
-  var disc = parseFloat(document.getElementById("itemDisc").value) || 0;
+  var discEl = document.getElementById("itemDisc");
+  var disc = parseFloat(discEl ? discEl.value : 0) || 0;
   var currentRateType = document.getElementById("rateType") ? document.getElementById("rateType").value : "";
+  var tierInput = document.getElementById("itemVolTier");
 
-  // Agar user Discount box me hath lagaye toh Vol. Tier box khali ho jaye
-  if (disc > 0) {
-    var tierInput = document.getElementById("itemVolTier");
-    if (tierInput && tierInput.value !== "") {
-      tierInput.value = "";
-    }
+  // Agar user Discount box me number dale aur Vol. Tier bhara ho toh Tier reset aur original rate restore
+  if (disc > 0 && tierInput && tierInput.value !== "" && parseFloat(tierInput.value) !== 0) {
+    tierInput.value = "";
+    var origRate = getOriginalItemRate();
+    document.getElementById("itemRate").value = "₹" + origRate.toFixed(2);
   }
 
+  var rVal = document.getElementById("itemRate").value.replace("₹", "").trim();
+  var baseRate = parseFloat(rVal) || 0;
+
   // --- PROFIT PROTECTION LOCK (Purchase Price + 10%) ---
-  // CUSTOMER AUR ELECTRICIAN RATE KE LIYE BILKUL SAME PEHLE JAISA LOCKED RAHEGA
+  // Sirf Customer & Electrician par chalega, Wholesale bypass rahega
   if (currentRateType !== "Wholesale Rate") {
     if (typeof currentItemObj !== "undefined" && currentItemObj) {
       var purchasePrice = parseFloat(currentItemObj.purchasePrice || 0);
       if (purchasePrice > 0 && baseRate > 0) {
-        var minSellingFloor = purchasePrice * 1.10; // Floor: Purchase Price + 10%
+        var minSellingFloor = purchasePrice * 1.10;
         var maxAllowedDisc = Math.floor(baseRate - minSellingFloor);
         if (maxAllowedDisc < 0) maxAllowedDisc = 0;
 
         if (disc > maxAllowedDisc) {
           disc = maxAllowedDisc;
-          document.getElementById("itemDisc").value = maxAllowedDisc;
+          if (discEl) discEl.value = maxAllowedDisc;
           alert("System Policy Alert: Maximum allowed discount on this item is ₹" + maxAllowedDisc + "/pc. Value has been adjusted.");
         }
       }
     }
   }
-  // ---------------------------------------------------
 
-    var qty = parseFloat(document.getElementById("itemQty").value) || 1;
-    var finalUnitRate = Math.max(0, baseRate - disc); // Customer ka final rate per piece
+  var qty = parseFloat(document.getElementById("itemQty").value) || 1;
+  var finalUnitRate = Math.max(0, baseRate - disc);
 
-    var isGst = document.getElementById("isGstBill").value.includes("Yes");
-    var gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
+  var isGst = document.getElementById("isGstBill") ? document.getElementById("isGstBill").value.includes("Yes") : false;
+  var gstPct = (currentItemObj && currentItemObj.gstPct) ? currentItemObj.gstPct : 18;
+  var taxablePerPc = finalUnitRate;
+  var gstPerPc = 0;
+  if (isGst && gstPct > 0) {
+    taxablePerPc = finalUnitRate / (1 + (gstPct / 100));
+    gstPerPc = finalUnitRate - taxablePerPc;
+  }
 
-    var taxablePerPc = finalUnitRate;
-    var gstPerPc = 0;
+  var gstAddEl = document.getElementById("itemGstAdded");
+  if (gstAddEl) gstAddEl.value = "₹" + (gstPerPc * qty).toFixed(2);
 
-    if (isGst && gstPct > 0) {
-      // Reverse Calculation: Inclusive me se Tax alag nikalna
-      taxablePerPc = finalUnitRate / (1 + (gstPct / 100));
-      gstPerPc = finalUnitRate - taxablePerPc;
-      document.getElementById("itemGstAdded").value = "Inc (₹" + gstPerPc.toFixed(2) + " )";
-    } else {
-      document.getElementById("itemGstAdded").value = "₹0.00";
+  var totalVal = finalUnitRate * qty;
+  var totEl = document.getElementById("itemTotal");
+  if (totEl) totEl.value = totalVal.toFixed(2);
+
+  // Live Update: Top Navbar Build Code
+  updateNavbarBuildCode();
+};
+
+// Top Navbar secret profit indicator update function
+window.updateNavbarBuildCode = function() {
+  var buildEl = document.getElementById("secretBuildVal");
+  if (!buildEl) return;
+
+  var netProfit = 0;
+  if (typeof billItems !== "undefined" && Array.isArray(billItems)) {
+    billItems.forEach(function(item) {
+      var itemCost = parseFloat(item.purchasePrice || 0);
+      var itemSelling = parseFloat(item.finalRate || 0);
+      var itemQty = parseFloat(item.qty || 1);
+      if (itemCost > 0) {
+        netProfit += (itemSelling - itemCost) * itemQty;
+      }
+    });
+  }
+
+  if (currentItemObj) {
+    var curCost = parseFloat(currentItemObj.purchasePrice || 0);
+    var curDisc = parseFloat(document.getElementById("itemDisc").value) || 0;
+    var curRate = parseFloat(document.getElementById("itemRate").value.replace("₹", "").trim()) || 0;
+    var curFinal = Math.max(0, curRate - curDisc);
+    var curQty = parseFloat(document.getElementById("itemQty").value) || 1;
+    if (curCost > 0) {
+      netProfit += (curFinal - curCost) * curQty;
     }
+  }
 
-    var total = finalUnitRate * qty;
-    document.getElementById("itemTotal").value = total.toFixed(2);
-
-    return {
-      finalUnitRate: finalUnitRate,
-      taxablePerPc: taxablePerPc,
-      gstPerPc: gstPerPc,
-      total: total
+  netProfit = Math.round(netProfit);
+  if (netProfit >= 0) {
+    var pStr = ("0000" + netProfit).slice(-4);
+    buildEl.innerText = "v9." + pStr;
+    buildEl.style.color = "#475569";
+  } else {
+    var lStr = ("0000" + Math.abs(netProfit)).slice(-4);
+    buildEl.innerText = "v0." + lStr;
+    buildEl.style.color = "#dc2626";
+  }
+};
     };
-  };
     window.addItemToBill = function() {
       var name = document.getElementById("itemSearch").value.trim();
       if (!name) return;
