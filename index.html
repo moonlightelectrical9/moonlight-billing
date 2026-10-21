@@ -800,7 +800,7 @@
               </div>
               <div class="form-col">
                 <label>DISC (₹/PC)</label>
-                <input type="number" id="itemDisc" value="0" min="0" oninput="calculateItemTotal()">
+                <input type="number" id="itemDisc" value="" placeholder="0" min="0" onfocus="this.select()" oninput="calculateItemTotal()">
               </div>
               <div class="form-col" id="volTierContainer" style="display:none; flex:1; min-width:65px;">
   <label style="color:#0284c7; font-weight:bold; font-size:11px;">Vol. Tier (%)</label>
