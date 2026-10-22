@@ -1569,9 +1569,11 @@
     };
 
     window.openMasterDriveFolder = function() {
-      var url = masterDriveFolderLink || "https://drive.google.com/drive/folders/1lp-Jwl_g_DWVmXvK1OZgdOQD6VjUlBxC?usp=drive_link";
-      window.open(url, "_blank");
-    };
+  // Folder ID se direct clean aur universal link banayenge:
+  var folderId = "1lp-JwL_g_DWVmXvK10ZgdOQD6VjUlbxC";
+  var cleanUrl = "https://drive.google.com/drive/folders/" + folderId;
+  window.open(cleanUrl, "_blank");
+};
 
     function setupDynamicDateBounds(minB, maxB) {
       transactionBounds = { minB: minB, maxB: maxB };
