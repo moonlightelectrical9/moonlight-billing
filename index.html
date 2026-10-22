@@ -1187,16 +1187,43 @@
               </div>
             </div>
 
-            <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:14px; border-radius:8px; max-width:600px;">
-              <h4 style="font-weight:800; color:#b45309; margin-bottom:10px;">🏦 Update Bank & UPI Details</h4>
-              <div class="form-col" style="margin-bottom:8px;"><label>Bank Name</label><input type="text" id="setBankName" value="Kotak Mahindra Bank"></div>
-              <div class="form-col" style="margin-bottom:8px;"><label>Account Holder Name</label><input type="text" id="setHolder" value="SHIVAM CHAUHAN"></div>
-              <div class="form-col" style="margin-bottom:8px;"><label>Account Number</label><input type="text" id="setAccNo" value="6413488039"></div>
-              <div class="form-col" style="margin-bottom:8px;"><label>IFSC Code</label><input type="text" id="setIfsc" value="KKBK0000181"></div>
-              <div class="form-col" style="margin-bottom:8px;"><label>UPI ID</label><input type="text" id="setUpi" value="8860880453@kotak"></div>
-              <button class="btn-add" onclick="saveBankSettings()" style="width:auto; padding:8px 18px; margin-top:6px;">Save Bank Details</button>
-            </div>
-          </div>
+            <div style="background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:16px; margin-top:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+  <h4 style="font-weight:800; color:#b45309; margin-bottom:14px;">🏦 Update Bank & UPI Details</h4>
+  
+  <!-- Add New Staff Style Single-Row Bar (Blank Inputs) -->
+  <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#f8fafc; border:1px dashed #cbd5e1; padding:12px; border-radius:6px;">
+    <input type="text" id="setBankName" placeholder="Bank Name" style="flex:1; min-width:140px; padding:7px 10px; border:1px solid #cbd5e1; border-radius:4px; font-size:12.5px;" />
+    <input type="text" id="setHolder" placeholder="Account Holder" style="flex:1; min-width:140px; padding:7px 10px; border:1px solid #cbd5e1; border-radius:4px; font-size:12.5px;" />
+    <input type="text" id="setAccNo" placeholder="Account Number" style="flex:1; min-width:140px; padding:7px 10px; border:1px solid #cbd5e1; border-radius:4px; font-size:12.5px;" />
+    <input type="text" id="setIfsc" placeholder="IFSC Code" style="flex:1; min-width:120px; padding:7px 10px; border:1px solid #cbd5e1; border-radius:4px; font-size:12.5px;" />
+    <input type="text" id="setupi" placeholder="UPI ID" style="flex:1; min-width:140px; padding:7px 10px; border:1px solid #cbd5e1; border-radius:4px; font-size:12.5px;" />
+    <button type="button" class="btn-add" onclick="saveBankSettings()" style="background:#0f766e; color:#fff; border:none; padding:8px 16px; border-radius:4px; font-weight:700; cursor:pointer;">Update Bank</button>
+  </div>
+
+  <!-- Bank Details History Table -->
+  <div style="margin-top:22px;">
+    <h5 style="font-weight:700; color:#1e293b; margin-bottom:8px;">📜 Bank Details Update History</h5>
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+        <thead>
+          <tr style="background:#f1f5f9; color:#475569; border-bottom:2px solid #cbd5e1;">
+            <th style="padding:8px 10px;">Bank Name</th>
+            <th style="padding:8px 10px;">A/C Holder</th>
+            <th style="padding:8px 10px;">A/C Number</th>
+            <th style="padding:8px 10px;">IFSC Code</th>
+            <th style="padding:8px 10px;">UPI ID</th>
+            <th style="padding:8px 10px;">Updated Date</th>
+            <th style="padding:8px 10px;">Updated By</th>
+            <th style="padding:8px 10px;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="bankHistoryTableBody">
+          <tr><td colspan="8" style="padding:12px; text-align:center; color:#94a3b8;">Loading history...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
         </div>
       </main>
     </div>
@@ -3599,17 +3626,83 @@ window.uploadBulkPurchaseCSV = function() {
     }
 
     window.saveBankSettings = async function() {
-      var payload = {
-        bankName: document.getElementById("setBankName").value.trim(),
-        holder: document.getElementById("setHolder").value.trim(),
-        accNo: document.getElementById("setAccNo").value.trim(),
-        ifsc: document.getElementById("setIfsc").value.trim(),
-        upi: document.getElementById("setUpi").value.trim()
-      };
-      var res = await apiCall("updateBankSettings", { data: payload });
-      if (res && res.success) alert("Bank details updated successfully!");
-    };
+  var bName = document.getElementById("setBankName").value.trim();
+  var holder = document.getElementById("setHolder").value.trim();
+  var accNo = document.getElementById("setAccNo").value.trim();
+  var ifsc = document.getElementById("setIfsc").value.trim();
+  var upi = document.getElementById("setupi").value.trim();
 
+  if (!bName || !holder || !accNo) {
+    alert("Kripya kam se kam Bank Name, Holder Name aur Account Number zaroor bharein!");
+    return;
+  }
+
+  var payload = {
+    bankName: bName,
+    holder: holder,
+    accNo: accNo,
+    ifsc: ifsc,
+    upi: upi,
+    updatedBy: (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : "Varun Sharma (Owner)"
+  };
+
+  var res = await apiCall("updateBankSettings", { data: payload });
+  if (res && res.success) {
+    alert("Bank details updated successfully!");
+    // Inputs ko turant blank/reset kar dein
+    document.getElementById("setBankName").value = "";
+    document.getElementById("setHolder").value = "";
+    document.getElementById("setAccNo").value = "";
+    document.getElementById("setIfsc").value = "";
+    document.getElementById("setupi").value = "";
+    
+    // Live bankSettings update aur history reload
+    bankSettings = payload;
+    if (typeof loadBankHistoryList === "function") {
+      loadBankHistoryList();
+    }
+  } else {
+    alert("Update failed: " + (res && res.message ? res.message : "Error"));
+  }
+};
+
+window.renderBankHistory = function(list) {
+  var tbody = document.getElementById("bankHistoryTableBody");
+  if (!tbody) return;
+  if (!list || list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="padding:12px; text-align:center; color:#94a3b8;">No update history found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(function(item, idx) {
+    var isCurrent = (idx === 0);
+    return '<tr style="border-bottom:1px solid #e2e8f0; background:' + (isCurrent ? '#f0fdf4' : '#fff') + ';">' +
+      '<td style="padding:8px 10px; font-weight:' + (isCurrent ? 'bold' : 'normal') + ';">' + (item.bankName || '-') + '</td>' +
+      '<td style="padding:8px 10px;">' + (item.holder || '-') + '</td>' +
+      '<td style="padding:8px 10px; font-family:monospace;">' + (item.accNo || '-') + '</td>' +
+      '<td style="padding:8px 10px; font-family:monospace;">' + (item.ifsc || '-') + '</td>' +
+      '<td style="padding:8px 10px;">' + (item.upi || '-') + '</td>' +
+      '<td style="padding:8px 10px; white-space:nowrap; color:#64748b;">' + (item.date || '-') + '</td>' +
+      '<td style="padding:8px 10px; font-weight:600; color:#0369a1;">' + (item.updatedBy || '-') + '</td>' +
+      '<td style="padding:8px 10px;">' + (isCurrent ? '<span style="background:#22c55e; color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Active</span>' : '<span style="color:#94a3b8; font-size:11px;">Archived</span>') + '</td>' +
+    '</tr>';
+  }).join('');
+};
+window.loadBankHistoryList = async function() {
+  var tbody = document.getElementById("bankHistoryTableBody");
+  if (!tbody) return;
+  
+  try {
+    var res = await apiCall("getBankDetailsWithHistory");
+    if (res && res.history) {
+      window.renderBankHistory(res.history);
+      if (res.active) {
+        bankSettings = res.active;
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to load bank history:", err);
+  }
+};
     async function apiCall(action, payload) {
   if (!payload) payload = {};
   payload.action = action;
