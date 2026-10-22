@@ -4671,6 +4671,7 @@ window.sendConsolidatedWhatsAppReminder = function() {
     selectedBills.push(bill);
   });
 
+  // Dynamic Active UPI ID & Holder from Settings
   var activeUpi = (typeof bankSettings !== "undefined" && bankSettings && bankSettings.upi) 
                     ? bankSettings.upi.trim() 
                     : "8860880453@kotak";
@@ -4678,26 +4679,32 @@ window.sendConsolidatedWhatsAppReminder = function() {
                     ? bankSettings.holder.trim() 
                     : "Moon Light Electricals";
 
-  var upiLink = "upi://pay?pa=" + activeUpi + "&pn=" + encodeURIComponent(payeeName) + "&am=" + totalAmount.toFixed(2) + "&cu=INR";
+  // Dedicated QR Code Payment Page (Screenshot 2 wala pay.html link)
+  var payUrl = "https://moonlightelectrical9.github.io/moonlight-billing/pay.html?pa=" 
+                + encodeURIComponent(activeUpi) 
+                + "&pn=" + encodeURIComponent(payeeName) 
+                + "&am=" + totalAmount.toFixed(2);
 
+  // Build Real Invoice Number Bullet Lines (docNo se fix kiya)
   var billsListText = "";
   selectedBills.forEach(function(b, i) {
-    var invNo = b.invoiceNo || b.billNo || ("INV-" + (i + 1));
+    var invNo = b.docNo || b.invoiceNo || b.billNo || ("INV-" + (i + 1));
     var bDate = b.date || "-";
-    var bAmt = parseFloat(b.dueAmount || b.pendingAmount || b.balance || b.amount || 0);
+    var bAmt = parseFloat(b.amount || b.dueAmount || b.pendingAmount || b.balance || 0);
     billsListText += "• Inv #" + invNo + " (" + bDate + "): ₹" + bAmt.toFixed(2) + "\n";
   });
 
+  // Final Professional English WhatsApp Format
   var msg = "Dear " + currentCrmCustomerName + ",\n\n"
           + "Greetings from Moon Light Electricals!\n\n"
           + "This is a gentle reminder regarding the outstanding balance for your pending invoice(s):\n\n"
           + billsListText
           + "-----------------------------------------\n"
           + "Total Payable Amount: ₹" + totalAmount.toFixed(2) + "\n\n"
-          + "Please clear the dues using any UPI App (GPay / PhonePe / Paytm / BHIM) using the payment details below:\n\n"
-          + "UPI ID: " + activeUpi + "\n"
-          + "Pay Link: " + upiLink + "\n\n"
-          + "(Kindly scan the UPI QR code to make an instant payment).\n\n"
+          + "Pay securely using UPI by clicking here:\n"
+          + payUrl + "\n\n"
+          + "UPI ID: " + activeUpi + "\n\n"
+          + "(Kindly scan the QR code on the link above to make an instant payment).\n\n"
           + "If already paid, please ignore this message.\n\n"
           + "Thank you for choosing\n"
           + "MOON LIGHT ELECTRICALS\n"
