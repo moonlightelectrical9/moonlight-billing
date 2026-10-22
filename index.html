@@ -3082,7 +3082,7 @@ window.renderKhataTable = function() {
 window.handleKhataAction = function(sel, docNo, name, phone, amount) {
     var val = sel.value;
     if (val === "remind") {
-        sendKhataReminder(docNo, name, phone, amount);
+      triggerCustomerReminder(phone, name);
     } else if (val === "paid") {
         markPaid(docNo);
     }
@@ -4555,7 +4555,211 @@ function calculateBalanceDue() {
   }
 
   onPaymentModeChange();
+}  
+    // ================= CONSOLIDATED REMINDER LOGIC =================
+var currentCrmCustomerBills = [];
+var currentCrmCustomerPhone = "";
+var currentCrmCustomerName = "";
+
+window.triggerCustomerReminder = function(phone, customerName) {
+  currentCrmCustomerPhone = String(phone || "").trim();
+  currentCrmCustomerName = customerName || "Valued Customer";
+
+  // Data cachedKhataRecords se uthayenge
+  var allLedgerRows = (typeof window.cachedKhataRecords !== "undefined" && Array.isArray(window.cachedKhataRecords)) 
+                        ? window.cachedKhataRecords 
+                        : [];
+  
+  // Is customer ke saare pending bills filter karenge
+  currentCrmCustomerBills = allLedgerRows.filter(function(row) {
+    var rowPhone = String(row.phone || "").trim();
+    var status = String(row.status || "").toLowerCase();
+    var pendingAmt = parseFloat(row.amount || 0);
+    return rowPhone === currentCrmCustomerPhone && status.indexOf("paid") === -1 && pendingAmt > 0;
+  });
+
+  if (currentCrmCustomerBills.length > 0) {
+    openConsolidatedReminderModal();
+  } else {
+    alert("No pending bills found for this customer.");
+  }
+};
+
+function openConsolidatedReminderModal() {
+  var modal = document.getElementById("consolidatedReminderModal");
+  var tbody = document.getElementById("crmBillsTableBody");
+  var custInfo = document.getElementById("crmCustomerInfo");
+
+  custInfo.innerText = currentCrmCustomerName + " | Ph: " + currentCrmCustomerPhone + " (" + currentCrmCustomerBills.length + " Pending Bills)";
+  tbody.innerHTML = "";
+
+  currentCrmCustomerBills.forEach(function(bill, index) {
+    var invNo = bill.docNo || ("INV-" + (index + 1));
+    var bDate = bill.date || "-";
+    var amt = parseFloat(bill.amount || 0);
+    var status = bill.status || "Pending";
+    var updatedBy = bill.updatedBy || "Admin";
+
+    var tr = document.createElement("tr");
+    tr.style.borderBottom = "1px solid #f1f5f9";
+    tr.innerHTML = `
+      <td style="padding:10px; text-align:center;">
+        <input type="checkbox" class="crm-bill-checkbox" data-index="${index}" data-amount="${amt}" checked onchange="onCrmItemCheckChange()" style="cursor:pointer; transform:scale(1.15);">
+      </td>
+      <td style="padding:10px; font-weight:600; color:#0f4c81;">${invNo}</td>
+      <td style="padding:10px; color:#64748b;">${bDate}</td>
+      <td style="padding:10px; font-weight:700; color:#1e293b;">₹${amt.toFixed(2)}</td>
+      <td style="padding:10px;"><span style="background:#fee2e2; color:#b91c1c; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:bold;">${status}</span></td>
+      <td style="padding:10px; color:#64748b; font-size:12px;">${updatedBy}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("crmSelectAll").checked = true;
+  modal.style.display = "flex";
+  updateCrmLiveCalculation();
 }
+window.closeConsolidatedReminderModal = function() {
+  document.getElementById("consolidatedReminderModal").style.display = "none";
+};
+
+window.toggleCrmSelectAll = function(masterCb) {
+  var cbs = document.querySelectorAll(".crm-bill-checkbox");
+  cbs.forEach(function(cb) {
+    cb.checked = masterCb.checked;
+  });
+  updateCrmLiveCalculation();
+};
+
+window.onCrmItemCheckChange = function() {
+  var cbs = document.querySelectorAll(".crm-bill-checkbox");
+  var allChecked = true;
+  cbs.forEach(function(cb) {
+    if (!cb.checked) allChecked = false;
+  });
+  document.getElementById("crmSelectAll").checked = (cbs.length > 0 && allChecked);
+  updateCrmLiveCalculation();
+};
+
+function updateCrmLiveCalculation() {
+  var cbs = document.querySelectorAll(".crm-bill-checkbox:checked");
+  var total = 0;
+  cbs.forEach(function(cb) {
+    total += parseFloat(cb.getAttribute("data-amount") || 0);
+  });
+
+  document.getElementById("crmLiveTotal").innerText = total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  document.getElementById("crmSendBtn").innerText = "Send WhatsApp Reminder (₹" + total.toFixed(2) + ")";
+  document.getElementById("crmSendBtn").disabled = (cbs.length === 0);
+}
+
+window.sendConsolidatedWhatsAppReminder = function() {
+  var checkedBoxes = document.querySelectorAll(".crm-bill-checkbox:checked");
+  if (checkedBoxes.length === 0) {
+    alert("Please select at least one invoice.");
+    return;
+  }
+
+  var selectedBills = [];
+  var totalAmount = 0;
+
+  checkedBoxes.forEach(function(cb) {
+    var idx = parseInt(cb.getAttribute("data-index"));
+    var bill = currentCrmCustomerBills[idx];
+    var amt = parseFloat(cb.getAttribute("data-amount") || 0);
+    totalAmount += amt;
+    selectedBills.push(bill);
+  });
+
+  var activeUpi = (typeof bankSettings !== "undefined" && bankSettings && bankSettings.upi) 
+                    ? bankSettings.upi.trim() 
+                    : "8860880453@kotak";
+  var payeeName = (typeof bankSettings !== "undefined" && bankSettings && bankSettings.holder) 
+                    ? bankSettings.holder.trim() 
+                    : "Moon Light Electricals";
+
+  var upiLink = "upi://pay?pa=" + activeUpi + "&pn=" + encodeURIComponent(payeeName) + "&am=" + totalAmount.toFixed(2) + "&cu=INR";
+
+  var billsListText = "";
+  selectedBills.forEach(function(b, i) {
+    var invNo = b.invoiceNo || b.billNo || ("INV-" + (i + 1));
+    var bDate = b.date || "-";
+    var bAmt = parseFloat(b.dueAmount || b.pendingAmount || b.balance || b.amount || 0);
+    billsListText += "• Inv #" + invNo + " (" + bDate + "): ₹" + bAmt.toFixed(2) + "\n";
+  });
+
+  var msg = "Dear " + currentCrmCustomerName + ",\n\n"
+          + "Greetings from Moon Light Electricals!\n\n"
+          + "This is a gentle reminder regarding the outstanding balance for your pending invoice(s):\n\n"
+          + billsListText
+          + "-----------------------------------------\n"
+          + "Total Payable Amount: ₹" + totalAmount.toFixed(2) + "\n\n"
+          + "Please clear the dues using any UPI App (GPay / PhonePe / Paytm / BHIM) using the payment details below:\n\n"
+          + "UPI ID: " + activeUpi + "\n"
+          + "Pay Link: " + upiLink + "\n\n"
+          + "(Kindly scan the UPI QR code to make an instant payment).\n\n"
+          + "If already paid, please ignore this message.\n\n"
+          + "Thank you for choosing\n"
+          + "MOON LIGHT ELECTRICALS\n"
+          + "Shop No. 1, Sadbhavna Market, Opp. Cleo County Gate No. 3, Ghadi Chaukhandi, Sector 121, Noida - 201304\n"
+          + "📞 9650897965 / 8860706865 / 8860880453";
+
+  var cleanPhone = currentCrmCustomerPhone.replace(/[^0-9]/g, "");
+  if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
+
+  var waUrl = "https://wa.me/" + cleanPhone + "?text=" + encodeURIComponent(msg);
+  window.open(waUrl, "_blank");
+  closeConsolidatedReminderModal();
+};
   </script>
+  <!-- Consolidated Reminder Modal (HTML yahan aayega) -->
+<div id="consolidatedReminderModal" style="display:none; position:fixed; z-index:99999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.65); backdrop-filter:blur(3px); justify-content:center; align-items:center;">
+  <div style="background:#fff; width:95%; max-width:780px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3); overflow:hidden; display:flex; flex-direction:column; max-height:90vh; font-family:sans-serif;">
+    
+    <!-- Modal Header -->
+    <div style="background:#0f4c81; color:#fff; padding:16px 20px; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h3 style="margin:0; font-size:18px; font-weight:700;">Consolidated Payment Reminder</h3>
+        <p id="crmCustomerInfo" style="margin:4px 0 0; font-size:13px; opacity:0.9;">Customer Details</p>
+      </div>
+      <button onclick="closeConsolidatedReminderModal()" style="background:transparent; border:none; color:#fff; font-size:24px; cursor:pointer; line-height:1;">&times;</button>
+    </div>
+
+    <!-- Live Total Strip -->
+    <div style="background:#f0f7ff; padding:12px 20px; border-bottom:1px solid #d0e3f7; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:14px; color:#333; font-weight:600;">Selected Bills for Payment:</span>
+      <div style="background:#22c55e; color:#fff; padding:6px 14px; border-radius:20px; font-size:15px; font-weight:bold; box-shadow:0 2px 4px rgba(34,197,94,0.3);">
+        Total: ₹<span id="crmLiveTotal">0.00</span>
+      </div>
+    </div>
+
+    <!-- Pending Bills Table -->
+    <div style="padding:15px 20px; overflow-y:auto; flex:1;">
+      <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+        <thead>
+          <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; color:#475569;">
+            <th style="padding:10px; width:40px; text-align:center;">
+              <input type="checkbox" id="crmSelectAll" onchange="toggleCrmSelectAll(this)" style="cursor:pointer; transform:scale(1.2);">
+            </th>
+            <th style="padding:10px;">Invoice No</th>
+            <th style="padding:10px;">Date</th>
+            <th style="padding:10px;">Pending (₹)</th>
+            <th style="padding:10px;">Status</th>
+            <th style="padding:10px;">Updated By</th>
+          </tr>
+        </thead>
+        <tbody id="crmBillsTableBody">
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal Footer -->
+    <div style="padding:14px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px;">
+      <button onclick="closeConsolidatedReminderModal()" style="padding:9px 18px; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:6px; cursor:pointer; font-weight:600;">Cancel</button>
+      <button id="crmSendBtn" onclick="sendConsolidatedWhatsAppReminder()" style="padding:9px 22px; background:#16a34a; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; box-shadow:0 2px 5px rgba(22,163,74,0.3);">Send WhatsApp Reminder (₹0)</button>
+    </div>
+
+  </div>
+</div>
 </body>
 </html>
