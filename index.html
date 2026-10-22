@@ -3705,6 +3705,12 @@ window.loadBankHistoryList = async function() {
     console.warn("Failed to load bank history:", err);
   }
 };
+    // Auto-load bank history on page open
+setTimeout(function() {
+  if (typeof window.loadBankHistoryList === "function") {
+    window.loadBankHistoryList();
+  }
+}, 800);
     async function apiCall(action, payload) {
   if (!payload) payload = {};
   payload.action = action;
