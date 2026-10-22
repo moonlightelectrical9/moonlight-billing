@@ -2837,11 +2837,11 @@ if (!isEstimatePrint && (printBalDue > 0 || printAmtPaid !== grandTotal)) {
         '<td style="width:58%; vertical-align:top; padding:4px 5px; box-sizing:border-box;">' +
         '<table style="width:100%; border-collapse:collapse; border:1px solid #1e3a8a; margin:0;">' +
         '<tr style="background:#e0e7ff; color:#1e3a8a; font-weight:bold;"><td colspan="2" style="padding:2px 4px; font-size:9.5px;">Bank Details</td></tr>' +
-        '<tr><td style="width:40%; padding:2px 4px; font-size:9px; border:1px solid #cbd5e1; white-space:nowrap;"><b>A/c Holder\'s Name:</b></td><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1;">SHIVAM CHAUHAN</td></tr>' +
-        '<tr><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1; white-space:nowrap;"><b>Bank Name:</b></td><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1;">Kotak Mahindra Bank</td></tr>' +
-        '<tr><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1; white-space:nowrap;"><b>A/c No.:</b></td><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1;">6413488039</td></tr>' +
-        '<tr><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1; white-space:nowrap;"><b>Branch & IFS Code:</b></td><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1;">Sector 18, Noida & KKBK0000181</td></tr>' +
-        '<tr><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1; white-space:nowrap;"><b>UPI ID:</b></td><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1;">8860880453@kotak</td></tr>' +
+        '<tr><td style="width:40%; padding:2px 4px; font-size:9px; border:1px solid #cbd5e1; white-space:nowrap;"><b>A/c Holder\'s Name:</b></td><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1;">' + ((bankSettings && bankSettings.holder) ? bankSettings.holder : 'SHIVAM CHAUHAN') + '</td></tr>' +
+        '<tr><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1; white-space:nowrap;"><b>Bank Name:</b></td><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1;">' + ((bankSettings && bankSettings.bankName) ? bankSettings.bankName : 'Kotak Mahindra Bank') + '</td></tr>' +
+        '<tr><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1; white-space:nowrap;"><b>A/c No.:</b></td><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1;">' + ((bankSettings && bankSettings.accNo) ? bankSettings.accNo : '6413488039') + '</td></tr>' +
+        '<tr><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1; white-space:nowrap;"><b>Branch & IFS Code:</b></td><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1;">' + ((bankSettings && bankSettings.ifsc) ? bankSettings.ifsc : 'Sector 18, Noida & KKBK0000181') + '</td></tr>' +
+        '<tr><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1; white-space:nowrap;"><b>UPI ID:</b></td><td style="padding:2px 4px; font-size:9px; border:1px solid #cbd5e1;">' + ((bankSettings && bankSettings.upi) ? bankSettings.upi : '8860880453@kotak') + '</td></tr>' +
         '</table>' +
         '</td>' +
         '<td style="width:42%; vertical-align:top; padding:4px 5px; border-left:1.5px solid #1e3a8a; background:#fafafa; box-sizing:border-box;">' +
