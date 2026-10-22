@@ -2694,15 +2694,27 @@ function updateBulkTabVisibility() {
 
       var grandTotal = parseFloat(b.grandTotal || b.amount || computedTotal || 0);
 
-      var printAmtPaid = (b.paymentMode === "Pay Later") ? 0 : (b.amountPaid !== undefined ? parseFloat(b.amountPaid) : grandTotal);
-      var printBalDue = (b.paymentMode === "Pay Later") ? grandTotal : (b.balanceDue !== undefined ? parseFloat(b.balanceDue) : Math.max(0, grandTotal - printAmtPaid));
+      var rawRec = (b.amountPaid !== undefined && b.amountPaid !== null && b.amountPaid !== "") ? b.amountPaid :
+             (b.amountReceived !== undefined && b.amountReceived !== null && b.amountReceived !== "") ? b.amountReceived :
+             (b.receivedAmount !== undefined && b.receivedAmount !== null && b.receivedAmount !== "") ? b.receivedAmount :
+             (b.paid !== undefined && b.paid !== null && b.paid !== "") ? b.paid : null;
 
-      var isEstimatePrint = (typeof isEstimate !== "undefined" && isEstimate) || 
-                      (b && b.docNo && String(b.docNo).indexOf("EST") !== -1) || 
+var printAmtPaid = (b.paymentMode === "Pay Later") ? 0 : (rawRec !== null ? parseFloat(rawRec) : grandTotal);
+if (isNaN(printAmtPaid)) printAmtPaid = 0;
+
+var rawBal = (b.balanceDue !== undefined && b.balanceDue !== null && b.balanceDue !== "") ? b.balanceDue :
+             (b.balance !== undefined && b.balance !== null && b.balance !== "") ? b.balance : null;
+
+var printBalDue = (b.paymentMode === "Pay Later") ? grandTotal : (rawBal !== null ? parseFloat(rawBal) : Math.max(0, grandTotal - printAmtPaid));
+if (isNaN(printBalDue)) printBalDue = 0;
+
+var isEstimatePrint = (typeof isEstimate !== "undefined" && isEstimate) ||
+                      (b && b.docNo && String(b.docNo).indexOf("EST") !== -1) ||
                       (b && b.billMode && String(b.billMode).toLowerCase().indexOf("estimate") !== -1);
 
 var printBreakdownHtml = '';
-if (!isEstimatePrint && printBalDue > 0) {
+// Agar balance bacha ho YA amount received grandTotal se alag ho (jaise zero pay kiya ho)
+if (!isEstimatePrint && (printBalDue > 0 || printAmtPaid !== grandTotal)) {
   printBreakdownHtml =
     '<tr>' +
       '<td style="padding:2px 4px; font-weight:bold; font-size:10.5px; color:#15803d; border-top:1px dashed #cbd5e1; white-space:nowrap;">Amount Received:</td>' +
