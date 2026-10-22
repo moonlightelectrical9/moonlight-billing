@@ -2693,6 +2693,7 @@ function updateBulkTabVisibility() {
       }
 
       var grandTotal = parseFloat(b.grandTotal || b.amount || computedTotal || 0);
+      console.log("REPRINT BILL DATA OBJECT:", b);
 
       var rawRec = (b.amountPaid !== undefined && b.amountPaid !== null && b.amountPaid !== "") ? b.amountPaid :
              (b.amountReceived !== undefined && b.amountReceived !== null && b.amountReceived !== "") ? b.amountReceived :
