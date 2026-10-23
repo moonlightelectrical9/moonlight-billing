@@ -2747,20 +2747,26 @@ function updateBulkTabVisibility() {
       var grandTotal = parseFloat(b.grandTotal || b.amount || computedTotal || 0);
       console.log("REPRINT BILL DATA OBJECT:", b);
 
+    // Smart Payment & Due Calculation (Prevents Line Item Balance Bug)
+      var pModeStr = String(b.paymentMode || b.payMode || "").toLowerCase();
+      var isPayLater = (pModeStr.indexOf("later") !== -1 || pModeStr.indexOf("credit") !== -1 || pModeStr.indexOf("udhar") !== -1);
+
       var rawRec = (b.amountPaid !== undefined && b.amountPaid !== null && b.amountPaid !== "") ? b.amountPaid :
-             (b.amountReceived !== undefined && b.amountReceived !== null && b.amountReceived !== "") ? b.amountReceived :
-             (b.receivedAmount !== undefined && b.receivedAmount !== null && b.receivedAmount !== "") ? b.receivedAmount :
-             (b.paid !== undefined && b.paid !== null && b.paid !== "") ? b.paid : null;
+                   (b.amountReceived !== undefined && b.amountReceived !== null && b.amountReceived !== "") ? b.amountReceived :
+                   (b.receivedAmount !== undefined && b.receivedAmount !== null && b.receivedAmount !== "") ? b.receivedAmount :
+                   (b.paid !== undefined && b.paid !== null && b.paid !== "") ? b.paid : null;
 
-var printAmtPaid = (b.paymentMode === "Pay Later") ? 0 : (rawRec !== null ? parseFloat(rawRec) : grandTotal);
-if (isNaN(printAmtPaid)) printAmtPaid = 0;
+      var printAmtPaid = 0;
+      if (isPayLater) {
+        printAmtPaid = (rawRec !== null && parseFloat(rawRec) > 0) ? parseFloat(rawRec) : 0;
+      } else {
+        printAmtPaid = (rawRec !== null) ? parseFloat(rawRec) : grandTotal;
+      }
+      if (isNaN(printAmtPaid)) printAmtPaid = 0;
 
-var rawBal = (b.balanceDue !== undefined && b.balanceDue !== null && b.balanceDue !== "") ? b.balanceDue :
-             (b.balance !== undefined && b.balance !== null && b.balance !== "") ? b.balance : null;
-
-var printBalDue = (b.paymentMode === "Pay Later") ? grandTotal : (rawBal !== null ? parseFloat(rawBal) : Math.max(0, grandTotal - printAmtPaid));
-if (isNaN(printBalDue)) printBalDue = 0;
-
+      // Real Balance Due Formula: Total Amount - Paid Amount
+      var printBalDue = Math.max(0, Math.round((grandTotal - printAmtPaid) * 100) / 100);
+            
 var isEstimatePrint = (typeof isEstimate !== "undefined" && isEstimate) ||
                       (b && b.docNo && String(b.docNo).indexOf("EST") !== -1) ||
                       (b && b.billMode && String(b.billMode).toLowerCase().indexOf("estimate") !== -1);
