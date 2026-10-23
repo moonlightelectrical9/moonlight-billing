@@ -408,6 +408,10 @@
 <div id="buildCodeIndicator" style="display:flex; align-items:center; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:bold; color:#64748b; letter-spacing:0.5px;">
   Build: <span id="secretBuildVal" style="margin-left:4px; color:#475569;">v9.0000</span>
 </div>
+        <!-- Discreet Active Item Unit & Line Margin Indicator -->
+        <div id="activeItemMarginIndicator" style="display:none; align-items:center; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:bold; color:#475569; letter-spacing:0.5px; transition:all 0.2s;">
+          Item: <span id="activeItemMarginVal" style="margin-left:4px;">-</span>
+        </div>
         <button class="btn-sync" onclick="refreshAppData()">🔄 Sync</button>
         <div class="user-pill" id="lblUser" onclick="openPwdModal()" title="Click to Change Password">User... 🔑</div>
         <button class="btn-logout" onclick="confirmUserLogout()">🚪 Logout</button>
@@ -4011,6 +4015,9 @@ window.calculateItemTotal = function() {
   var totalVal = finalUnitRate * qty;
   var totEl = document.getElementById("itemTotal");
   if (totEl) totEl.value = totalVal.toFixed(2);
+  if (typeof updateActiveItemMarginTracker === "function") {
+     updateActiveItemMarginTracker();
+   }
 
   // Live Update: Top Navbar Build Code
   if (typeof updateNavbarBuildCode === "function") {
@@ -4078,6 +4085,51 @@ window.updateNavbarBuildCode = function() {
     buildEl.style.color = "#dc2626"; // Loss indicator
   }
 };
+    // Active Item Unit & Line Margin Tracker with Loss Color Alert
+window.updateActiveItemMarginTracker = function() {
+  var indicatorBox = document.getElementById("activeItemMarginIndicator");
+  var valSpan = document.getElementById("activeItemMarginVal");
+  if (!indicatorBox || !valSpan) return;
+
+  if (!currentItemObj) {
+    indicatorBox.style.display = "none";
+    return;
+  }
+
+  var curCost = parseFloat(currentItemObj.purchasePrice || 0);
+  if (curCost <= 0) {
+    indicatorBox.style.display = "none";
+    return;
+  }
+
+  var discEl = document.getElementById("itemDisc");
+  var curDisc = parseFloat(discEl ? discEl.value : 0) || 0;
+  var rVal = document.getElementById("itemRate") ? document.getElementById("itemRate").value.replace("₹", "").trim() : "0";
+  var curRate = parseFloat(rVal) || 0;
+  var curFinal = Math.max(0, curRate - curDisc);
+  var curQty = parseFloat(document.getElementById("itemQty") ? document.getElementById("itemQty").value : 1) || 1;
+
+  var unitMargin = Math.round(curFinal - curCost);
+  var lineMargin = Math.round(unitMargin * curQty);
+
+  indicatorBox.style.display = "inline-flex";
+
+  if (unitMargin >= 0) {
+    valSpan.innerText = "P: " + unitMargin + " (" + lineMargin + ")";
+    indicatorBox.style.background = "#f1f5f9";
+    indicatorBox.style.borderColor = "#cbd5e1";
+    indicatorBox.style.color = "#475569";
+    valSpan.style.color = "#059669";
+  } else {
+    var absUnit = Math.abs(unitMargin);
+    var absLine = Math.abs(lineMargin);
+    valSpan.innerText = "L: " + absUnit + " (" + absLine + ")";
+    indicatorBox.style.background = "#fee2e2";
+    indicatorBox.style.borderColor = "#fca5a5";
+    indicatorBox.style.color = "#dc2626";
+    valSpan.style.color = "#dc2626";
+  }
+};
     window.addItemToBill = function() {
       var name = document.getElementById("itemSearch").value.trim();
       if (!name) return;
@@ -4129,6 +4181,7 @@ window.updateNavbarBuildCode = function() {
       document.getElementById("itemQty").value = "1";
       document.getElementById("itemTotal").value = "0.00";
       currentItemObj = null;
+      var mBox = document.getElementById("activeItemMarginIndicator"); if (mBox) mBox.style.display = "none";
       checkFormState();
     };
 
