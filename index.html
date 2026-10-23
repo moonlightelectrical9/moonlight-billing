@@ -947,6 +947,26 @@
                 <button class="btn-sync" style="height: 40px; justify-content:center;" onclick="loadBillHistory()">🔄 Refresh List</button>
               </div>
             </div>
+            <!-- DYNAMIC BOUNDED FILTER BAR -->
+            <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:12px; margin-bottom:12px; background:#f8fafc; padding:10px 14px; border-radius:8px; border:1.5px solid #cbd5e1;">
+              <span style="font-size:12px; font-weight:800; color:#334155;">FILTER:</span>
+              <button type="button" class="btn-sync filter-btn-active" id="btnHistoryToday" onclick="applyHistoryDateFilter('today')">Today</button>
+              <button type="button" class="btn-sync" id="btnHistory7Days" onclick="applyHistoryDateFilter('7days')">Last 7 Days</button>
+              <button type="button" class="btn-sync" id="btnHistoryMonth" onclick="applyHistoryDateFilter('month')">Month View ▾</button>
+              <button type="button" class="btn-sync" id="btnHistorySpecific" onclick="applyHistoryDateFilter('specific')">📅 Specific Date</button>
+              <button type="button" class="btn-sync" id="btnHistoryAll" onclick="applyHistoryDateFilter('all')">All Bills</button>
+
+              <!-- Month & Year Selectors (Dynamically Bounded) -->
+              <div id="historyMonthYearGroup" style="display:none; gap:6px; align-items:center; margin-left:6px;">
+                <select id="selHistoryYear" onchange="onHistoryYearChange()" style="width:95px; padding:5px 8px; font-size:12px; font-weight:700;"></select>
+                <select id="selHistoryMonth" onchange="renderFilteredBillHistory()" style="width:130px; padding:5px 8px; font-size:12px; font-weight:700;"></select>
+              </div>
+
+              <!-- Specific Date Picker (Locked Min/Max) -->
+              <div id="historySpecificGroup" style="display:none; gap:6px; align-items:center; margin-left:6px;">
+                <input type="date" id="selHistorySpecificDate" onchange="renderFilteredBillHistory()" style="width:150px; padding:5px 8px; font-size:12px; font-weight:700;">
+              </div>
+            </div>
             <div id="historyTableContainer" style="margin-top: 14px;"></div>
           </div>
         </div>
@@ -3185,49 +3205,188 @@ window.markPaid = function(docNo) {
     }
   }
 };
+    var activeHistoryFilter = "today";
+    var historyMinDate = null;
+    var historyMaxDate = null;
+
     async function loadBillHistory() {
       var c = document.getElementById("historyTableContainer");
-      c.innerHTML = "Fetching invoices list...";
+      if (c) c.innerHTML = "<div style='padding:15px; font-weight:bold; color:#0284c7;'>Fetching invoices list...</div>";
+      
       var res = await apiCall("getBillHistory");
       if (res && res.records) {
         cachedBillHistory = res.records;
-        filterBillHistory();
+
+        // 1. Records se exact Min aur Max Date calculate karke dropdown & picker lock karna
+        setupHistoryDateBoundaries();
+
+        // 2. Default view: Today
+        applyHistoryDateFilter("today");
+      } else {
+        if (c) c.innerHTML = "<div style='padding:15px; color:#dc2626; font-weight:bold;'>Failed to load invoices.</div>";
       }
     }
 
-    window.filterBillHistory = function() {
-      var query = (document.getElementById("historySearchInput").value || "").trim().toLowerCase();
-      var filtered = !query ? cachedBillHistory : cachedBillHistory.filter(function(r) {
-        return (r.docNo && r.docNo.toLowerCase().includes(query)) ||
-               (r.customerName && r.customerName.toLowerCase().includes(query)) ||
-               (r.phone && String(r.phone).includes(query));
+    // Dynamic Boundary Lock: Sirf wahi date aur month aayenge jahan data exist karta hai
+    function setupHistoryDateBoundaries() {
+      if (!cachedBillHistory || cachedBillHistory.length === 0) return;
+
+      var timestamps = cachedBillHistory.map(function(b) {
+        return b.date ? new Date(b.date).getTime() : NaN;
+      }).filter(function(t) { return !isNaN(t); });
+
+      if (timestamps.length === 0) return;
+
+      historyMinDate = new Date(Math.min.apply(null, timestamps));
+      historyMaxDate = new Date(Math.max.apply(null, timestamps));
+
+      // Specific Date Picker ke min aur max boundary set karna (calendar lock)
+      var specInput = document.getElementById("selHistorySpecificDate");
+      if (specInput) {
+        var minStr = historyMinDate.toISOString().slice(0, 10);
+        var maxStr = historyMaxDate.toISOString().slice(0, 10);
+        specInput.min = minStr;
+        specInput.max = maxStr;
+        specInput.value = maxStr;
+      }
+
+      // Year Dropdown: Sirf bills wale active years dikhana
+      var ySel = document.getElementById("selHistoryYear");
+      if (ySel) {
+        ySel.innerHTML = "";
+        var startY = historyMinDate.getFullYear();
+        var endY = historyMaxDate.getFullYear();
+        for (var y = endY; y >= startY; y--) {
+          ySel.innerHTML += "<option value='" + y + "'>" + y + "</option>";
+        }
+      }
+
+      onHistoryYearChange();
+    }
+
+    window.onHistoryYearChange = function() {
+      var ySel = document.getElementById("selHistoryYear");
+      var mSel = document.getElementById("selHistoryMonth");
+      if (!ySel || !mSel || !historyMinDate || !historyMaxDate) return;
+
+      var selYear = parseInt(ySel.value, 10);
+      mSel.innerHTML = "";
+
+      var monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      var minM = (selYear === historyMinDate.getFullYear()) ? historyMinDate.getMonth() : 0;
+      var maxM = (selYear === historyMaxDate.getFullYear()) ? historyMaxDate.getMonth() : 11;
+
+      // Unused/khali mahine dropdown mein aayenge hi nahi
+      for (var m = maxM; m >= minM; m--) {
+        mSel.innerHTML += "<option value='" + m + "'>" + monthNames[m] + "</option>";
+      }
+
+      renderFilteredBillHistory();
+    };
+
+    window.applyHistoryDateFilter = function(mode) {
+      activeHistoryFilter = mode;
+
+      // Filter tab click karne par search input clear karein
+      var sInp = document.getElementById("historySearchInput");
+      if (sInp) sInp.value = "";
+
+      ["Today", "7Days", "Month", "Specific", "All"].forEach(function(m) {
+        var b = document.getElementById("btnHistory" + m);
+        if (b) b.classList.remove("filter-btn-active");
       });
 
+      var map = { today: "btnHistoryToday", "7days": "btnHistory7Days", month: "btnHistoryMonth", specific: "btnHistorySpecific", all: "btnHistoryAll" };
+      if (map[mode] && document.getElementById(map[mode])) {
+        document.getElementById(map[mode]).classList.add("filter-btn-active");
+      }
+
+      var myGroup = document.getElementById("historyMonthYearGroup");
+      var specGroup = document.getElementById("historySpecificGroup");
+      if (myGroup) myGroup.style.display = (mode === "month") ? "inline-flex" : "none";
+      if (specGroup) specGroup.style.display = (mode === "specific") ? "inline-flex" : "none";
+
+      renderFilteredBillHistory();
+    };
+
+    window.filterBillHistory = function() {
+      renderFilteredBillHistory();
+    };
+
+    function renderFilteredBillHistory() {
+      var query = (document.getElementById("historySearchInput").value || "").trim().toLowerCase();
+      var filtered = [];
+
+      // 🌟 UNIVERSAL SEARCH OVERRIDE:
+      // Agar user ne Search Box mein Mobile / Name / Invoice No likha, toh date filter bypass hoga aur All-Time match aayega
+      if (query.length > 0) {
+        filtered = cachedBillHistory.filter(function(r) {
+          return (r.docNo && r.docNo.toLowerCase().includes(query)) ||
+                 (r.customerName && r.customerName.toLowerCase().includes(query)) ||
+                 (r.phone && String(r.phone).includes(query));
+        });
+      } else {
+        // Agar search box blank hai, tab active Date Filter execute hoga
+        var now = new Date();
+        var todayStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+        var sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 3600 * 1000));
+
+        filtered = cachedBillHistory.filter(function(r) {
+          if (!r.date) return false;
+          var bDate = new Date(r.date);
+          var bDateStr = bDate.getFullYear() + "-" + String(bDate.getMonth() + 1).padStart(2, '0') + "-" + String(bDate.getDate()).padStart(2, '0');
+
+          if (activeHistoryFilter === "today") {
+            return bDateStr === todayStr || (bDate.toDateString() === now.toDateString());
+          } else if (activeHistoryFilter === "7days") {
+            return bDate >= sevenDaysAgo && bDate <= now;
+          } else if (activeHistoryFilter === "month") {
+            var selM = parseInt(document.getElementById("selHistoryMonth").value, 10);
+            var selY = parseInt(document.getElementById("selHistoryYear").value, 10);
+            return bDate.getMonth() === selM && bDate.getFullYear() === selY;
+          } else if (activeHistoryFilter === "specific") {
+            var specDateVal = document.getElementById("selHistorySpecificDate").value;
+            return bDateStr === specDateVal;
+          } else if (activeHistoryFilter === "all") {
+            return true;
+          }
+          return true;
+        });
+      }
+
       var c = document.getElementById("historyTableContainer");
-      var html = '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Doc No</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Generated By</th><th>Actions</th></tr></thead><tbody>';
-      
-      // FIX: cachedBillHistory[idx] ke bajay seedhe filtered[idx] pass kiya gaya hai
-      filtered.forEach(function(r, idx) {
-        html += "<tr>" +
-          "<td>" + (r.date || '-') + "</td>" +
-          "<td><b>" + r.docNo + "</b></td>" +
-          "<td>" + r.customerName + "</td>" +
-          "<td>" + (r.phone || '-') + "</td>" +
-          "<td><b>₹" + parseFloat(r.amount || 0).toFixed(2) + "</b></td>" +
-          "<td><b>" + (r.generatedBy || r.operatorName || '-') + "</b></td>" +
-          "<td style='white-space:nowrap;'>" +
-          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='triggerDirectPrint(filteredBillHistoryItem(" + idx + "))'>🖨️ Re-Print</button>" +
-          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;' onclick='shareBillOnWhatsApp(filteredBillHistoryItem(" + idx + "))'>📲 WhatsApp</button>" +
-          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='viewDownloadPdf(filteredBillHistoryItem(" + idx + "))'>👁️ View</button>" +
-          (!r.docNo || r.docNo.indexOf("EST") === -1 ? "<button class='btn-sync' style='padding:4px 8px; font-size:11px; background:#f97316; color:#fff; border-color:#ea580c; margin-right:4px;' onclick='openReturnModal(" + idx + ")'>🔄 Return</button>" : "") +
-          "<button class='btn-sync' style='padding:4px 8px; font-size:11px; background:#ef4444; color:#fff; border-color:#dc2626; margin-left:4px;' onclick='confirmDeleteBill(\"" + r.docNo + "\")'>🗑️ Delete</button>" +
-          "</td>" +
-          "</tr>";
-      });
+      if (!c) return;
+
+      var html = '<div class="table-wrap"><table><thead><tr>' +
+        '<th>Date</th><th>Doc No</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Generated By</th><th>Actions</th>' +
+        '</tr></thead><tbody>';
+
+      if (filtered.length === 0) {
+        html += '<tr><td colspan="7" style="text-align:center; padding:18px; color:#64748b; font-weight:bold;">No invoices found for selected filter.</td></tr>';
+      } else {
+        filtered.forEach(function(r, idx) {
+          html += "<tr>" +
+            "<td>" + (r.date || '-') + "</td>" +
+            "<td><b>" + r.docNo + "</b></td>" +
+            "<td>" + r.customerName + "</td>" +
+            "<td>" + (r.phone || '-') + "</td>" +
+            "<td><b>₹" + parseFloat(r.amount || 0).toFixed(2) + "</b></td>" +
+            "<td><b>" + (r.generatedBy || r.operatorName || '-') + "</b></td>" +
+            "<td style='white-space:nowrap;'>" +
+            "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='triggerDirectPrint(filteredBillHistoryItem(" + idx + "))'>🖨️ Re-Print</button>" +
+            "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;' onclick='shareBillOnWhatsApp(filteredBillHistoryItem(" + idx + "))'>📲 WhatsApp</button>" +
+            "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='viewDownloadPdf(filteredBillHistoryItem(" + idx + "))'>👁️ View</button>" +
+            (!r.docNo || r.docNo.indexOf("EST") === -1 ? "<button class='btn-sync' style='padding:4px 8px; font-size:11px; background:#f97316; color:#fff; border-color:#ea580c; margin-right:4px;' onclick='openReturnModal(" + idx + ")'>🔄 Return</button>" : "") +
+            "<button class='btn-sync' style='padding:4px 8px; font-size:11px; background:#ef4444; color:#fff; border-color:#dc2626; margin-left:4px;' onclick='confirmDeleteBill(\"" + r.docNo + "\")'>🗑️ Delete</button>" +
+            "</td>" +
+            "</tr>";
+        });
+      }
+
       html += '</tbody></table></div>';
       c.innerHTML = html;
-      window._activeFilteredHistory = filtered; // Global storage for exact click
-    };
+      window._activeFilteredHistory = filtered;
+    }
 
     window.filteredBillHistoryItem = function(idx) {
       if (window._activeFilteredHistory && window._activeFilteredHistory[idx]) {
