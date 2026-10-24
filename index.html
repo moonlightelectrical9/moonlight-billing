@@ -2248,23 +2248,60 @@
       activeResumedDraftId = draft.draftId;
       switchBillingView('gen');
 
+      // 1. Basic Fields Populate
       document.getElementById("custName").value = draft.customerName || "";
       document.getElementById("custPhone").value = draft.phone || "";
       document.getElementById("custAddress").value = draft.address || "Sector-121, Noida";
       if (draft.billMode) document.getElementById("billMode").value = draft.billMode;
       if (draft.rateType) document.getElementById("rateType").value = draft.rateType;
-      if (draft.paymentMode) document.getElementById("paymentMode").value = draft.paymentMode;
-      document.getElementById("isGstBill").value = draft.isGst ? "Yes (GST Invoice)" : "No (Regular Bill)";
+      document.getElementById("isGstBill").value = (draft.isGst === true || String(draft.isGst).indexOf("Yes") !== -1) ? "Yes (GST Invoice)" : "No (Regular Bill)";
 
-      billItems = draft.items || [];
+      // 2. Attach Inventory Purchase Cost & HSN to prevent Dashboard FIFO Mismatch
+      billItems = (draft.items || []).map(function(itm) {
+        var itmName = String(itm.name || itm.itemName || "").toLowerCase().trim();
+        var invMatch = (cachedItems || []).find(function(ci) {
+          return ci.name && ci.name.toLowerCase().trim() === itmName;
+        });
+        if (invMatch) {
+          if (!itm.purchasePrice && invMatch.purchasePrice) itm.purchasePrice = invMatch.purchasePrice;
+          if (!itm.hsn && invMatch.hsn) itm.hsn = invMatch.hsn;
+        }
+        return itm;
+      });
+
       renderBillTable();
+
+      // 3. Mode aur Payment ke events explicitly run karein taaki Amount Received aur Pending boxes open ho sakein
+      onBillModeChange();
+      var defaultPay = draft.paymentMode || "Cash";
+      document.getElementById("paymentMode").value = defaultPay;
+      onPaymentModeChange();
+
+      // 4. Grand Total calculate karke Received Amount box me fill karein
+      var grand = billItems.reduce(function(a, b) { return a + (parseFloat(b.total) || 0); }, 0);
+      var recInput = document.getElementById("receivedAmt");
+      if (recInput) {
+        if (defaultPay === "Pay Later") {
+          recInput.value = "0";
+        } else if (draft.receivedAmt !== undefined && draft.receivedAmt !== null && draft.receivedAmt !== "") {
+          recInput.value = draft.receivedAmt;
+        } else {
+          recInput.value = grand.toFixed(2);
+        }
+      }
+
+      // 5. Balance Due Formula Trigger karein taaki Checkout button turant highlight ho
+      calculateBalanceDue();
       checkFormState();
+
+      if (typeof updateNavbarBuildCode === "function") {
+        updateNavbarBuildCode();
+      }
 
       document.getElementById("lblResumedDraftId").innerText = draft.draftId + " - " + draft.customerName;
       document.getElementById("bannerResumedDraft").style.display = "flex";
       document.getElementById("cardBillForm").scrollIntoView({ behavior: 'smooth' });
     };
-
     window.cancelResumedDraft = function() {
       activeResumedDraftId = null;
       document.getElementById("bannerResumedDraft").style.display = "none";
