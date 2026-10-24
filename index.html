@@ -2277,16 +2277,13 @@
       document.getElementById("paymentMode").value = defaultPay;
       onPaymentModeChange();
 
-      // 4. Grand Total calculate karke Received Amount box me fill karein
-      var grand = billItems.reduce(function(a, b) { return a + (parseFloat(b.total) || 0); }, 0);
+      // 4. Amount Received ko default Blank (Khali) rakhein taaki operator manually enter kare
       var recInput = document.getElementById("receivedAmt");
       if (recInput) {
         if (defaultPay === "Pay Later") {
           recInput.value = "0";
-        } else if (draft.receivedAmt !== undefined && draft.receivedAmt !== null && draft.receivedAmt !== "") {
-          recInput.value = draft.receivedAmt;
         } else {
-          recInput.value = grand.toFixed(2);
+          recInput.value = ""; // Blank rakhein taaki manually type ho sake
         }
       }
 
