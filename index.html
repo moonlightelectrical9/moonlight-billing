@@ -929,7 +929,20 @@
               </div>
               <div style="font-size:13px; font-weight:700; color:#7c2d12; background:#ffedd5; padding:4px 12px; border-radius:20px;" id="lblTotalPendingCount">0 Pending Bills</div>
             </div>
-            <h3 style="font-weight:900; margin-bottom:12px;">Pending Udhar Records & Reminders Tracking</h3>
+            <!-- Header with Secret Discreet Icon -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <h3 style="font-weight:900; margin:0;">Pending Udhar Records & Reminders Tracking</h3>
+        <!-- 🔒 Secret Discreet Icon (Bilkul subtle, notice nahi hoga) -->
+        <span onclick="toggleDiscreetLedgerBar()" title="Mode" style="cursor:pointer; opacity:0.25; font-size:16px; user-select:none; transition:opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=0.25">🔒</span>
+      </div>
+      <!-- Secret Toggle Buttons (By default hidden) -->
+      <div id="discreetLedgerBar" style="display:none; align-items:center; gap:6px; background:#f1f5f9; padding:4px 8px; border-radius:20px; border:1px solid #cbd5e1;">
+        <button type="button" id="btnKhataGst" onclick="switchKhataFilter('GST')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:#2563eb; color:#ffffff;">🏢 GST Bills</button>
+        <button type="button" id="btnKhataReg" onclick="switchKhataFilter('REG')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:transparent; color:#64748b;">📦 Regular</button>
+        <button type="button" id="btnKhataAll" onclick="switchKhataFilter('ALL')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:transparent; color:#64748b;">📊 All</button>
+      </div>
+    </div>
             <div id="khataListContainer"></div>
           </div>
         </div>
@@ -3047,8 +3060,30 @@ if (!isEstimatePrint && (printBalDue > 0 || printAmtPaid !== grandTotal)) {
       }
     }
 
-   window.khataFilterStatus = "ALL";
+  window.khataFilterStatus = "GST";
 window.cachedKhataRecords = [];
+
+// Secret Button Toggle Logic
+window.toggleDiscreetLedgerBar = function() {
+  var bar = document.getElementById('discreetLedgerBar');
+  if (!bar) return;
+  bar.style.display = (bar.style.display === 'none' || bar.style.display === '') ? 'flex' : 'none';
+};
+
+// Filter Switch Logic (GST / REG / ALL)
+window.switchKhataFilter = function(mode) {
+  window.khataFilterStatus = mode;
+
+  var btnG = document.getElementById('btnKhataGst');
+  var btnR = document.getElementById('btnKhataReg');
+  var btnA = document.getElementById('btnKhataAll');
+
+  if (btnG) { btnG.style.background = (mode === 'GST' ? '#2563eb' : 'transparent'); btnG.style.color = (mode === 'GST' ? '#ffffff' : '#64748b'); }
+  if (btnR) { btnR.style.background = (mode === 'REG' ? '#0f172a' : 'transparent'); btnR.style.color = (mode === 'REG' ? '#ffffff' : '#64748b'); }
+  if (btnA) { btnA.style.background = (mode === 'ALL' ? '#475569' : 'transparent'); btnA.style.color = (mode === 'ALL' ? '#ffffff' : '#64748b'); }
+
+  renderKhataTable();
+};
 
 async function loadKhataRecords() {
     var c = document.getElementById("khataListContainer");
@@ -3058,18 +3093,6 @@ async function loadKhataRecords() {
         var res = await apiCall("getKhataRecords");
         if (res && res.records) {
             window.cachedKhataRecords = res.records;
-            var totalPending = 0, count = 0;
-            res.records.forEach(function(r) {
-                if (String(r.status || '').toLowerCase().indexOf("paid") === -1) {
-                    totalPending += parseFloat(r.amount) || 0;
-                    count++;
-                }
-            });
-            var lblPending = document.getElementById("lblTotalPendingUdhar");
-            var lblCount = document.getElementById("lblTotalPendingCount");
-            if (lblPending) lblPending.innerText = "₹" + totalPending.toFixed(2);
-            if (lblCount) lblCount.innerText = count + " Pending Bills";
-
             renderKhataTable();
         } else {
             if (c) c.innerHTML = '<div style="padding:15px; color:red;">Failed to load records.</div>';
@@ -3082,32 +3105,39 @@ async function loadKhataRecords() {
 
 window.renderKhataTable = function() {
     var c = document.getElementById("khataListContainer");
-    if (!c) return;
-    var list = window.cachedKhataRecords || [];
-    
-    var filtered = list.filter(function(r) {
-        var isPending = String(r.status || '').toLowerCase().indexOf("paid") === -1;
-        if (window.khataFilterStatus === "PENDING") return isPending;
-        if (window.khataFilterStatus === "PAID") return !isPending;
-        return true;
-    });
+  var rawList = window.cachedKhataRecords || [];
 
-    var html = '<div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">' +
-        '<span style="font-weight: 700; font-size: 13px; color: #475569;">Filter Records:</span>' +
-        '<select onchange="window.khataFilterStatus = this.value; renderKhataTable();" style="padding: 6px 12px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-weight: 700; background: #fff; cursor: pointer;">' +
-            '<option value="ALL"' + (window.khataFilterStatus === "ALL" ? " selected" : "") + '>All Bills (' + list.length + ')</option>' +
-            '<option value="PENDING"' + (window.khataFilterStatus === "PENDING" ? " selected" : "") + '>Pending Only</option>' +
-            '<option value="PAID"' + (window.khataFilterStatus === "PAID" ? " selected" : "") + '>Paid Only</option>' +
-        '</select>' +
-    '</div>' +
-    '<div class="table-wrap"><table><thead><tr>' +
+  // Active Filter ke hisaab se bills chunein
+  var list = rawList.filter(function(r) {
+    var doc = String(r.docNo || "").toUpperCase();
+    var amt = parseFloat(r.amount) || 0;
+    if (amt <= 0) return false;
+
+    if (window.khataFilterStatus === "GST") {
+      return doc.indexOf("INV") !== -1;
+    } else if (window.khataFilterStatus === "REG") {
+      return doc.indexOf("REG") !== -1;
+    }
+    return true; // "ALL"
+  });
+
+  // Top Card ka Total Amount aur Count update karein
+  var totalPending = 0;
+  list.forEach(function(r) {
+    totalPending += parseFloat(r.amount) || 0;
+  });
+  var lblPending = document.getElementById("lblTotalPendingUdhar");
+  var lblCount = document.getElementById("lblTotalPendingCount");
+  if (lblPending) lblPending.innerText = "₹" + totalPending.toFixed(2);
+  if (lblCount) lblCount.innerText = list.length + " Pending Bill" + (list.length === 1 ? "" : "s");    
+    var html = '<div class="table-wrap"><table><thead><tr>' +
         '<th>Invoice No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Status</th><th>Reminder Tracking</th><th>Updated By</th><th>Actions</th>' +
     '</tr></thead><tbody>';
 
-    if (filtered.length === 0) {
+    if (list.length === 0) {
         html += '<tr><td colspan="9" style="text-align: center; padding: 18px; color: #64748b; font-weight: 700;">No records found for selected filter.</td></tr>';
     } else {
-        filtered.forEach(function(r) {
+        list.forEach(function(r) {
             var isPending = String(r.status || '').toLowerCase().indexOf("paid") === -1;
             var statusColor = isPending ? '#d97706' : '#059669';
             var statusText = isPending ? 'Pending' : 'Paid';
