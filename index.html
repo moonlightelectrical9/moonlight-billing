@@ -4580,44 +4580,38 @@ setTimeout(function() {
     }
 
     window.openGstExportModal = function() {
-      var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
-      var isOwner = (user && (user.isOwner === true || user.phone === "8860706865" || (user.role && user.role.toLowerCase().includes("admin"))));
-      if (!isOwner) {
-        alert("Security Alert: Only Admin/Owner has permission to export GSTR-1 Tax reports!");
-        return;
-      }
+  var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
+  var isOwner = (user && (user.isOwner === true || user.phone === "8860706865" || (user.role && user.role.toLowerCase().includes("admin"))));
+  if (!isOwner) {
+    alert("Security Alert: Only Admin/Owner has permission to export GSTR-1 Tax reports!");
+    return;
+  }
 
-      // 100% Accurate Detection: Check if current screen/mode is Without GST (Non-GST)
-      var isNonGst = false;
+  // Exact Dashboard Check
+  var selBillType = document.getElementById("selExportBillType");
+  if (selBillType) {
+    var isGstActive = false;
 
-      // 1. Check toggle checkbox agar exist karta hai
-      var chkGst = document.getElementById("chkGstMode") || document.getElementById("billingGstToggle") || document.getElementById("isGstBill");
-      if (chkGst && !chkGst.checked) {
-        isNonGst = true;
+    // 1. Check window location hash
+    var hash = window.location.hash.toLowerCase();
+    if (hash.indexOf("nongst") !== -1 || hash.indexOf("regular") !== -1) {
+      isGstActive = false;
+    } else if (hash.indexOf("gst") !== -1) {
+      isGstActive = true;
+    } else {
+      // 2. Check billing mode / toggle if present
+      if (typeof currentBillingMode !== "undefined") {
+        isGstActive = (currentBillingMode === "gst");
+      } else if (typeof isGstBilling !== "undefined") {
+        isGstActive = !!isGstBilling;
+      } else {
+        // Default GST dashboard maan kar chalein
+        isGstActive = true;
       }
+    }
 
-      // 2. Check global variables / storage / attributes
-      if (typeof currentBillingMode !== "undefined" && (currentBillingMode === "nongst" || currentBillingMode === "regular")) {
-        isNonGst = true;
-      }
-      if (typeof currentInvoicePrefix !== "undefined" && String(currentInvoicePrefix).indexOf("REG") !== -1) {
-        isNonGst = true;
-      }
-      if (localStorage.getItem("mle_active_billing_mode") === "nongst" || localStorage.getItem("mle_billing_type") === "nongst") {
-        isNonGst = true;
-      }
-
-      // 3. Fallback: Agar bill history table mein samne REG bills display ho rahe hain
-      var tableText = document.getElementById("historyTableBody") ? document.getElementById("historyTableBody").innerText : "";
-      if (tableText.indexOf("MLE/REG-") !== -1 && tableText.indexOf("MLE/INV-") === -1) {
-        isNonGst = true;
-      }
-
-      // Dropdown auto-select
-      var selBillType = document.getElementById("selExportBillType");
-      if (selBillType) {
-        selBillType.value = isNonGst ? "NONGST" : "GST";
-      }
+    selBillType.value = isGstActive ? "GST" : "NONGST";
+  }
 
       setupExportDateSelectors();
       document.getElementById("gstExportModal").style.display = "flex";
