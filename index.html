@@ -4701,6 +4701,14 @@ setTimeout(function() {
         alert("Selected period ke liye koi data nahi mila.");
         return;
       }
+      // Direct Invoice Number Numeric Sorting (001, 002, 003, 004, 005...)
+      filtered.sort(function(a, b) {
+        var getNum = function(doc) {
+          var matches = String(doc || "").match(/\d+/g);
+          return matches ? parseInt(matches[matches.length - 1], 10) : 0;
+        };
+        return getNum(a.docNo) - getNum(b.docNo);
+      });
 
       // EXACT 33-COLUMN STRUCTURE
       var headerRow1 = new Array(33).fill("");
