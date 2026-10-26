@@ -4315,105 +4315,132 @@ setTimeout(function() {
         filterViewsByDashboardMode(mode);
       }
     };
-    // ================= MODE-BASED FILTERING FOR BILLING, SEARCH, KHATA & DASHBOARD =================
+    // ================= STRICT MODE-BASED FILTERING FOR BILLING, SEARCH, KHATA & DASHBOARD =================
     window.filterViewsByDashboardMode = function(mode) {
       mode = mode || window.currentActiveDashboard || "GST";
+      var user = null;
+      try { user = JSON.parse(localStorage.getItem("mle_user")); } catch(e) {}
+      var isOwner = (user && (user.isOwner || (user.role && user.role.toLowerCase().includes("owner")) || (user.role && user.role.toLowerCase().includes("admin"))));
 
-      // 1. BILLING FORM: Lock / Unlock GST BILL? Dropdown
+      // 1. BILLING FORM: Lock GST BILL?
       var allSelects = document.querySelectorAll("select");
-      var selGstMode = null;
       allSelects.forEach(function(s) {
         var opts = Array.from(s.options).map(function(o) { return o.text.toLowerCase(); });
         if (opts.some(function(t) { return t.includes("gst invoice") || t.includes("regular bill"); })) {
-          selGstMode = s;
+          if (mode === "GST") {
+            Array.from(s.options).forEach(function(opt) {
+              if (opt.text.toLowerCase().includes("yes") || opt.text.toLowerCase().includes("gst invoice")) s.value = opt.value;
+            });
+            s.disabled = true;
+          } else if (mode === "NONGST") {
+            Array.from(s.options).forEach(function(opt) {
+              if (opt.text.toLowerCase().includes("no") || opt.text.toLowerCase().includes("regular")) s.value = opt.value;
+            });
+            s.disabled = true;
+          } else {
+            s.disabled = false;
+          }
+          var evt = new Event("change", { bubbles: true });
+          s.dispatchEvent(evt);
         }
       });
 
-      var gstinContainer = document.querySelector("#custGstin") ? document.querySelector("#custGstin").closest(".form-col") : null;
-
-      if (selGstMode) {
-        var parentCol = selGstMode.closest("div") || selGstMode.parentElement;
-        if (mode === "GST") {
-          Array.from(selGstMode.options).forEach(function(opt) {
-            if (opt.text.toLowerCase().includes("yes") || opt.text.toLowerCase().includes("gst invoice")) {
-              selGstMode.value = opt.value;
-            }
-          });
-          selGstMode.disabled = true;
-          if (parentCol) parentCol.style.opacity = "0.7";
-          if (gstinContainer) gstinContainer.style.display = "block";
-        } else if (mode === "NONGST") {
-          Array.from(selGstMode.options).forEach(function(opt) {
-            if (opt.text.toLowerCase().includes("no") || opt.text.toLowerCase().includes("regular")) {
-              selGstMode.value = opt.value;
-            }
-          });
-          selGstMode.disabled = true;
-          if (parentCol) parentCol.style.opacity = "0.7";
-          if (gstinContainer) gstinContainer.style.display = "none";
+      // 2. HIDE OLD TOGGLE BUTTONS FOR STAFF (Search Bill & Credit Ledger)
+      var toggleBars = document.querySelectorAll(".bill-type-filter-group, [onclick*='filterBillsByType'], [onclick*='filterKhataByType']");
+      toggleBars.forEach(function(el) {
+        var container = el.closest("div") || el;
+        if (!isOwner && mode !== "CONSOLIDATED") {
+          container.style.display = "none";
         } else {
-          selGstMode.disabled = false;
-          if (parentCol) parentCol.style.opacity = "1";
-          if (gstinContainer) gstinContainer.style.display = "block";
+          container.style.display = "flex";
         }
-        var evt = new Event("change", { bubbles: true });
-        selGstMode.dispatchEvent(evt);
-      }
+      });
 
-      // Helper function to check if bill matches active mode
-      function isBillMatchMode(docNo, billType) {
-        var doc = String(docNo || "").toUpperCase();
-        var type = String(billType || "").toLowerCase();
-        var isGst = doc.includes("/TAX-") || doc.includes("GST") || type.includes("gst") || type.includes("tax");
+      // 3. SEARCH BILL HISTORY TABLE STRICT FILTER
+      var searchRows = document.querySelectorAll("#searchBillsTable tbody tr, #tblSearchBills tbody tr, #billsListTable tbody tr, table tbody tr");
+      searchRows.forEach(function(tr) {
+        var trText = tr.innerText || "";
+        var docNo = "";
+        var cells = tr.querySelectorAll("td");
+        cells.forEach(function(td) {
+          var t = td.innerText.trim();
+          if (t.includes("MLE/") || t.includes("/REG-") || t.includes("/TAX-") || t.includes("/INV-")) {
+            docNo = t;
+          }
+        });
 
-        if (mode === "GST") return isGst;
-        if (mode === "NONGST") return !isGst;
-        return true; // CONSOLIDATED mode shows both
-      }
+        if (docNo) {
+          var isGstBill = (docNo.includes("/TAX-") || docNo.includes("/INV-") || trText.includes("Tax Invoice") || trText.includes("GST"));
+          var isRegBill = (docNo.includes("/REG-") || trText.includes("Regular"));
 
-      // 2. SEARCH & COUNTER REPRINT TABLE FILTERING
-      var searchTableRows = document.querySelectorAll("#searchBillsTable tbody tr, #tblSearchBills tbody tr, #billsListTable tbody tr, table tbody tr");
-      if (searchTableRows.length > 0) {
-        searchTableRows.forEach(function(tr) {
-          var text = tr.innerText || "";
-          var docNo = "";
-          var cells = tr.querySelectorAll("td");
-          cells.forEach(function(td) {
-            var cellTxt = td.innerText.trim();
-            if (cellTxt.includes("MLE/") || cellTxt.includes("TAX") || cellTxt.includes("REG")) {
-              docNo = cellTxt;
-            }
-          });
-          if (docNo) {
-            tr.style.display = isBillMatchMode(docNo, text) ? "" : "none";
+          if (mode === "GST") {
+            tr.style.display = isGstBill ? "" : "none";
+          } else if (mode === "NONGST") {
+            tr.style.display = isRegBill ? "" : "none";
+          } else {
+            tr.style.display = "";
+          }
+        }
+      });
+
+      // 4. CREDIT LEDGER (KHATA) TABLE STRICT FILTER
+      var khataRows = document.querySelectorAll("#khataTable tbody tr, #tblKhata tbody tr, #creditLedgerTable tbody tr");
+      khataRows.forEach(function(tr) {
+        var trText = tr.innerText || "";
+        var docNo = "";
+        var cells = tr.querySelectorAll("td");
+        cells.forEach(function(td) {
+          var t = td.innerText.trim();
+          if (t.includes("MLE/") || t.includes("/REG-") || t.includes("/TAX-") || t.includes("/INV-")) {
+            docNo = t;
+          }
+        });
+
+        if (docNo) {
+          var isGstUdhar = (docNo.includes("/TAX-") || docNo.includes("/INV-") || trText.includes("GST"));
+          var isRegUdhar = (docNo.includes("/REG-") || trText.includes("Regular"));
+
+          if (mode === "GST") {
+            tr.style.display = isGstUdhar ? "" : "none";
+          } else if (mode === "NONGST") {
+            tr.style.display = isRegUdhar ? "" : "none";
+          } else {
+            tr.style.display = "";
+          }
+        }
+      });
+
+      // 5. Trigger existing sub-buttons
+      if (mode === "GST") {
+        document.querySelectorAll("button, span, div").forEach(function(b) {
+          if ((b.innerText === "GST Invoices" || b.innerText === "GST Bills") && typeof b.click === "function") {
+            try { b.click(); } catch(e) {}
+          }
+        });
+      } else if (mode === "NONGST") {
+        document.querySelectorAll("button, span, div").forEach(function(b) {
+          if (b.innerText === "Regular" && typeof b.click === "function") {
+            try { b.click(); } catch(e) {}
           }
         });
       }
 
-      // 3. CREDIT LEDGER (KHATA) TABLE FILTERING
-      var khataTableRows = document.querySelectorAll("#khataTable tbody tr, #tblKhata tbody tr, #creditLedgerTable tbody tr");
-      if (khataTableRows.length > 0) {
-        khataTableRows.forEach(function(tr) {
-          var text = tr.innerText || "";
-          var docNo = "";
-          var cells = tr.querySelectorAll("td");
-          cells.forEach(function(td) {
-            var cellTxt = td.innerText.trim();
-            if (cellTxt.includes("MLE/") || cellTxt.includes("TAX") || cellTxt.includes("REG")) {
-              docNo = cellTxt;
-            }
-          });
-          if (docNo) {
-            tr.style.display = isBillMatchMode(docNo, text) ? "" : "none";
-          }
-        });
-      }
-
-      // 4. DASHBOARD ANALYTICS RE-CALCULATION & FILTERING
-      if (typeof loadDashboardAnalytics === "function") {
-        loadDashboardAnalytics();
+      // 6. DASHBOARD ANALYTICS REFRESH
+      if (typeof window.recalcDashboardAnalyticsForMode === "function") {
+        window.recalcDashboardAnalyticsForMode(mode);
       }
     };
+
+    // Auto-listen to date tabs (Today, Last 7 Days, Month View) so filters stay active
+    document.addEventListener("click", function(e) {
+      if (e.target && (e.target.innerText === "Today" || e.target.innerText === "Last 7 Days" || e.target.innerText === "Month View" || e.target.innerText === "All Bills" || e.target.innerText === "Refresh List")) {
+        setTimeout(function() {
+          if (typeof filterViewsByDashboardMode === "function") {
+            filterViewsByDashboardMode(window.currentActiveDashboard);
+          }
+        }, 300);
+      }
+    });
     
     window.confirmUserLogout = function() {
       if (confirm("Are you sure you want to log out of your session?")) executeUserLogout();
