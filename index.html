@@ -4587,12 +4587,18 @@ setTimeout(function() {
         return;
       }
 
+      // Active view check: Agar Non-GST / Regular view hai to NONGST select hoga, warna GST
+      var selBillType = document.getElementById("selExportBillType");
+      if (selBillType) {
+        var isNonGstMode = (typeof currentBillingMode !== "undefined" && currentBillingMode === "nongst") ||
+                           (typeof currentInvoicePrefix !== "undefined" && String(currentInvoicePrefix).indexOf("REG") !== -1) ||
+                           (document.body.getAttribute("data-theme") === "nongst");
+
+        selBillType.value = isNonGstMode ? "NONGST" : "GST";
+      }
+
       setupExportDateSelectors();
       document.getElementById("gstExportModal").style.display = "flex";
-    };
-
-    window.closeGstExportModal = function() {
-      document.getElementById("gstExportModal").style.display = "none";
     };
 
     window.onExportTimelineChange = function() {
@@ -4659,7 +4665,7 @@ setTimeout(function() {
         var doc = String(b.docNo || "").toUpperCase();
         if (doc.indexOf("EST") !== -1) return false;
         if (bType === "GST") return doc.indexOf("INV") !== -1 || b.isGst === true;
-        if (bType === "NONGST") return doc.indexOf("REG") !== -1;
+        if (bType === "NONGST") return doc.indexOf("REG") !== -1 || b.isGst === false;
         return true;
       });
 
