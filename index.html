@@ -1013,57 +1013,74 @@
         </div>
       </div>
 
-      <!-- Modern Enterprise Dropdown-Based Bulk Operation Card -->
+     <!-- Modern Enterprise Dropdown-Based Bulk Operation Card (Compact & Closable) -->
       <div id="boxStockBulk" style="display: none; margin-top: 14px; margin-bottom: 16px; padding: 20px 24px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
         
-        <div style="font-weight: 900; font-size: 16px; color: #0f172a; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
-          📤 Bulk Inventory Operations
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <div style="font-weight: 900; font-size: 16px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            📤 Bulk Inventory Operations
+          </div>
+          <!-- Close / Reset Button -->
+          <button type="button" onclick="closeBulkOperationsBox()" style="background: transparent; border: 1px solid #cbd5e1; color: #64748b; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">
+            ✕ Close
+          </button>
         </div>
+
         <div style="font-size: 12px; color: #64748b; margin-bottom: 18px;">
           Select bulk operation type to inward stock purchases or revise selling rates across inventory via CSV.
         </div>
 
         <!-- Step 1: Bulk Type Selector -->
-        <div style="max-width: 480px; margin-bottom: 18px;">
+        <div style="max-width: 480px; margin-bottom: 16px;">
           <label style="display: block; font-size: 11.5px; font-weight: 800; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
             Bulk Type <span style="color: #dc2626;">*</span> :
           </label>
-          <select id="selBulkOperationType" onchange="onBulkTypeSelectionChange()" style="padding: 10px 12px; font-size: 13.5px; font-weight: 700; border: 1.5px solid #0284c7; border-radius: 6px; background: #f0f9ff; color: #0369a1; cursor: pointer; width: 100%;">
-            <option value="" selected disabled>-- Select Bulk Type --</option>
-            <option value="purchase">📦 Bulk Purchase Inward Entry</option>
-            <option value="rate">💲 Quick Rate Revision (Selling Rates)</option>
-          </select>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <select id="selBulkOperationType" onchange="onBulkTypeSelectionChange()" style="flex: 1; padding: 9px 12px; font-size: 13px; font-weight: 700; border: 1.5px solid #0284c7; border-radius: 6px; background: #f0f9ff; color: #0369a1; cursor: pointer;">
+              <option value="" selected>-- Select Bulk Type --</option>
+              <option value="purchase">📦 Bulk Purchase Inward Entry</option>
+              <option value="rate">💲 Quick Rate Revision (Selling Rates)</option>
+            </select>
+            <button type="button" id="btnResetBulkSelection" onclick="resetBulkSelection()" style="display: none; background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 9px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+              Reset
+            </button>
+          </div>
         </div>
 
-        <!-- Step 2: Dynamic Action Container (Default Hidden) -->
-        <div id="bulkDynamicActionBox" style="display: none; border-top: 1px dashed #cbd5e1; padding-top: 16px;">
+        <!-- Step 2: Dynamic Action Container (Default Hidden, Compact Max-Width) -->
+        <div id="bulkDynamicActionBox" style="display: none; border-top: 1px dashed #cbd5e1; padding-top: 16px; max-width: 620px;">
           
           <!-- Sample Format Bar -->
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; background: #f8fafc; padding: 10px 14px; border-radius: 6px; border: 1px solid #e2e8f0;">
-            <span style="font-size: 12.5px; color: #334155; font-weight: 600;" id="lblBulkHelpText">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; background: #f8fafc; padding: 9px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <span style="font-size: 12px; color: #334155; font-weight: 600;" id="lblBulkHelpText">
               Format guidelines for selected operation.
             </span>
-            <button type="button" id="btnDownloadSampleAction" onclick="handleDynamicSampleDownload()" style="background: #0284c7; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
-              📥 Download Format / Sample
+            <button type="button" id="btnDownloadSampleAction" onclick="handleDynamicSampleDownload()" style="background: #0284c7; color: #fff; border: none; padding: 6px 12px; border-radius: 5px; font-size: 11.5px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+              📥 Download Sample
             </button>
           </div>
 
-          <!-- Drag / Select Upload Box -->
-          <div style="border: 2px dashed #93c5fd; background: #f8fafc; border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 16px;">
-            <div style="font-size: 32px; margin-bottom: 6px;">📄</div>
-            <div style="font-weight: 700; font-size: 13.5px; color: #1e3a8a; margin-bottom: 4px;">
+          <!-- Compact Upload Box (Reduced Padding & Height) -->
+          <div style="border: 1.5px dashed #93c5fd; background: #f8fafc; border-radius: 8px; padding: 16px 14px; text-align: center; margin-bottom: 14px;">
+            <div style="font-size: 24px; margin-bottom: 4px;">📄</div>
+            <div style="font-weight: 700; font-size: 12.5px; color: #1e3a8a; margin-bottom: 3px;">
               Choose your prepared CSV file to process
             </div>
-            <div style="font-size: 11.5px; color: #64748b; margin-bottom: 14px;">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">
               Supported file format: .csv
             </div>
-            <input type="file" id="dynamicBulkCsvInput" accept=".csv" style="max-width: 320px; font-size: 12px; margin: 0 auto; display: block;" />
+            <div style="display: flex; justify-content: center;">
+              <input type="file" id="dynamicBulkCsvInput" accept=".csv" style="font-size: 11.5px; max-width: 280px;" />
+            </div>
           </div>
 
-          <!-- Process Button -->
-          <div style="display: flex; justify-content: flex-start; gap: 10px;">
-            <button type="button" id="btnExecuteBulkSubmit" onclick="executeSelectedBulkUpload()" style="background: #10b981; color: #fff; border: none; padding: 11px 28px; border-radius: 6px; font-size: 13.5px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(16,185,129,0.3);">
+          <!-- Action Buttons (Submit & Cancel) -->
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button type="button" id="btnExecuteBulkSubmit" onclick="executeSelectedBulkUpload()" style="background: #10b981; color: #fff; border: none; padding: 9px 22px; border-radius: 6px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(16,185,129,0.25);">
               🚀 Submit & Process File
+            </button>
+            <button type="button" onclick="resetBulkSelection()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 9px 16px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
+              Cancel
             </button>
           </div>
 
@@ -3677,8 +3694,10 @@ window.submitReturnProcess = async function(idx) {
     };
    // ================= MODERN DROPDOWN BULK INVENTORY HANDLER =================
     window.onBulkTypeSelectionChange = function() {
-      var type = document.getElementById("selBulkOperationType").value;
+      var sel = document.getElementById("selBulkOperationType");
+      var type = sel ? sel.value : "";
       var actionBox = document.getElementById("bulkDynamicActionBox");
+      var resetBtn = document.getElementById("btnResetBulkSelection");
       var helpText = document.getElementById("lblBulkHelpText");
       var sampleBtn = document.getElementById("btnDownloadSampleAction");
       var submitBtn = document.getElementById("btnExecuteBulkSubmit");
@@ -3688,6 +3707,7 @@ window.submitReturnProcess = async function(idx) {
 
       if (type === "purchase") {
         actionBox.style.display = "block";
+        if (resetBtn) resetBtn.style.display = "inline-block";
         helpText.innerHTML = "<b>Format Rule:</b> Download sample CSV, fill Date, Item Name, Qty, Price, Vendor, then upload.";
         sampleBtn.innerHTML = "📥 Download Sample Purchase CSV";
         sampleBtn.style.background = "#0284c7";
@@ -3695,14 +3715,36 @@ window.submitReturnProcess = async function(idx) {
         submitBtn.style.background = "#10b981";
       } else if (type === "rate") {
         actionBox.style.display = "block";
+        if (resetBtn) resetBtn.style.display = "inline-block";
         helpText.innerHTML = "<b>Format Rule:</b> Download current rates CSV, update Customer/Electrician/Wholesale rates, then upload back.";
         sampleBtn.innerHTML = "📥 Download Current Rates CSV";
         sampleBtn.style.background = "#6366f1";
         submitBtn.innerHTML = "🏷️ Update Selling Rates";
         submitBtn.style.background = "#ea580c";
       } else {
+        // Agar blank / -- Select Bulk Type -- chuna jaye toh band ho jayega
         actionBox.style.display = "none";
+        if (resetBtn) resetBtn.style.display = "none";
       }
+    };
+
+    // Selection clear aur box collapse karne ke liye
+    window.resetBulkSelection = function() {
+      var sel = document.getElementById("selBulkOperationType");
+      if (sel) sel.value = "";
+      var fileInp = document.getElementById("dynamicBulkCsvInput");
+      if (fileInp) fileInp.value = "";
+      var actionBox = document.getElementById("bulkDynamicActionBox");
+      if (actionBox) actionBox.style.display = "none";
+      var resetBtn = document.getElementById("btnResetBulkSelection");
+      if (resetBtn) resetBtn.style.display = "none";
+    };
+
+    // Pura bulk operation card band karne ke liye
+    window.closeBulkOperationsBox = function() {
+      resetBulkSelection();
+      var card = document.getElementById("boxStockBulk");
+      if (card) card.style.display = "none";
     };
 
     window.handleDynamicSampleDownload = function() {
