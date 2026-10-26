@@ -4441,25 +4441,25 @@ setTimeout(function() {
           bankSettings = res.bankInfo;
           if (res.driveFolderUrl) masterDriveFolderLink = res.driveFolderUrl;
 
-         var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
-         var isOwner = (user && (user.isOwner || (user.role && user.role.toLowerCase().includes("admin")) || (user.role && user.role.toLowerCase().includes("owner"))));
-         var perms = (user && user.permissions) ? user.permissions : "all";
-         var canSeeAlerts = isOwner || perms === "all" || (typeof perms === "string" && perms.includes("alert_stock")) || (Array.isArray(perms) && perms.includes("alert_stock"));
-        var alertEl = document.getElementById("lowStockAlertBox") || document.getElementById("lowStockAlertBar");
-        if (alertEl) {
-          if (canSeeAlerts && res.alerts && res.alerts.length > 0) {
-            var listEl = document.getElementById("lowStockItemsList");
-            if (listEl) listEl.innerHTML = res.alerts.map(function(A) { return "• " + A; }).join("<br>");
-            alertEl.style.display = "block";
-          } else {
-         alertEl.style.display = "none";
+          var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
+          var isOwner = (user && (user.isOwner || (user.role && user.role.toLowerCase().includes("admin")) || (user.role && user.role.toLowerCase().includes("owner"))));
+          var perms = (user && user.permissions) ? user.permissions : "all";
+          var canSeeAlerts = isOwner || perms === "all" || (typeof perms === "string" && perms.includes("alert_stock")) || (Array.isArray(perms) && perms.includes("alert_stock"));
+          
+          var alertEl = document.getElementById("lowStockAlertBox") || document.getElementById("lowStockAlertBar");
+          if (alertEl) {
+            if (canSeeAlerts && res.alerts && res.alerts.length > 0) {
+              var listEl = document.getElementById("lowStockItemsList");
+              if (listEl) listEl.innerHTML = res.alerts.map(function(A) { return "• " + A; }).join("<br>");
+              alertEl.style.display = "block";
+            } else {
+              alertEl.style.display = "none";
+            }
+          }
         }
-      }
-    }
-  }
-} catch(e) {}
-};
-
+      } catch(e) {}
+    };
+    
     window.switchNav = function(nav) {
       document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
       document.getElementById("viewDashboard").style.display = (nav === 'dash') ? 'block' : 'none';
