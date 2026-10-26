@@ -2703,12 +2703,22 @@ function updateBulkTabVisibility() {
 }
     
     window.setStockMode = function(mode) {
+      var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
+      var isOwner = (user && (user.isOwner === true || user.phone === "8860706865" || (user.role && user.role.toLowerCase().includes("admin"))));
+      var perms = String(user ? user.permissions : "all");
+      var pList = perms === "all" ? [] : perms.split(",").map(function(s){ return s.trim(); });
+
+      // Agar is specific stock tab ka access nahi hai toh click allow mat karo
+      var mapKey = { inward: "stk_inward", hsn: "stk_hsn", rate: "stk_rate", correct: "stk_correct", purchase: "stk_pur", bulk: "stk_bulk" };
+      if (!isOwner && perms !== "all" && mapKey[mode] && !pList.includes(mapKey[mode])) {
+        return;
+      }
+
       updateBulkTabVisibility();
       ["Inward", "Hsn", "Rate", "Correct", "Purchase", "Bulk"].forEach(function(t) {
         var b = document.getElementById("btnStkTab" + t);
         if (b) b.classList.remove("filter-btn-active");
       });
-
       var mapBtn = { inward: "btnStkTabInward", hsn: "btnStkTabHsn", rate: "btnStkTabRate", correct: "btnStkTabCorrect", purchase: "btnStkTabPurchase", bulk: "btnStkTabBulk" };
       if (mapBtn[mode] && document.getElementById(mapBtn[mode])) {
         document.getElementById(mapBtn[mode]).classList.add("filter-btn-active");
@@ -4578,6 +4588,27 @@ setTimeout(function() {
       if (subView === 'stock') {
         document.getElementById("btnSubStock").classList.add("active");
         loadInwardAuditLog();
+
+        // Check karein user ke paas konse stock tab ka access hai
+        var pList = perms === "all" ? ["stk_inward","stk_hsn","stk_rate","stk_correct","stk_pur","stk_bulk"] : perms.split(",").map(function(s){ return s.trim(); });
+        
+        if (isOwner || pList.includes("stk_inward")) {
+          setStockMode('inward');
+        } else if (pList.includes("stk_hsn")) {
+          setStockMode('hsn');
+        } else if (pList.includes("stk_rate")) {
+          setStockMode('rate');
+        } else if (pList.includes("stk_correct")) {
+          setStockMode('correct');
+        } else if (pList.includes("stk_pur")) {
+          setStockMode('purchase');
+        } else if (pList.includes("stk_bulk")) {
+          setStockMode('bulk');
+        } else {
+          // Agar kisi bhi stock tab ka access nahi hai toh wapas gen par bhej dein
+          switchBillingView('gen');
+          return;
+        }
       }
     };
     
