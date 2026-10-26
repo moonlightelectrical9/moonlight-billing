@@ -2665,7 +2665,7 @@ function updateBulkTabVisibility() {
       }
     };
 
-    // 🖨 CONDITIONAL BILL PRINT FORMAT (PERFECT A4 FULL STRETCH - MATCHING BACKEND)
+    // 🖨 CONDITIONAL BILL PRINT FORMAT (PERFECT A4 FULL STRETCH - ALL 5 GST SCENARIOS COVERED)
     function buildReceiptHtml(b) {
       if (!b) return "";
 
@@ -2716,34 +2716,32 @@ function updateBulkTabVisibility() {
         buyerGstLine = '<div>GSTIN/UIN: ' + custGstin + ' | State: ' + buyerStateName + ', Code: ' + buyerStateCode + '</div>';
       }
 
-      // Check Place of Supply / Delivery State for Inter-State
-      var isShipDiffActive = b.isShipDiff === true || b.hasDiffShip === true || 
-                             (document.getElementById("diffShipAddressCheck") && document.getElementById("diffShipAddressCheck").checked);
+      // Check whether distinct shipping details are enabled
+      var isShipDiffActive = false;
+      if (b.isShipDiff === true || b.hasDiffShip === true) {
+        isShipDiffActive = true;
+      } else if (b.isShipDiff === undefined) {
+        var diffCheckEl = document.getElementById("diffShipAddressCheck");
+        if (diffCheckEl && diffCheckEl.checked) isShipDiffActive = true;
+      }
 
-      var shipStateVal = b.shipState || (document.getElementById("shipStateSelect") ? document.getElementById("shipStateSelect").value : "");
-      var shipNameVal = b.shipName || (document.getElementById("shipName") ? document.getElementById("shipName").value.trim() : "") || custName;
-      var shipPhoneVal = b.shipPhone || (document.getElementById("shipPhone") ? document.getElementById("shipPhone").value.trim() : "") || custPhone;
-      var shipAddrVal = b.shipAddress || (document.getElementById("shipAddress") ? document.getElementById("shipAddress").value.trim() : "") || custAddr;
+      var shipStateVal = isShipDiffActive ? (b.shipState || (document.getElementById("shipStateSelect") ? document.getElementById("shipStateSelect").value : "")) : "";
+      var shipNameVal = (isShipDiffActive && b.shipName) ? b.shipName : custName;
+      var shipPhoneVal = (isShipDiffActive && b.shipPhone) ? b.shipPhone : custPhone;
+      var shipAddrVal = (isShipDiffActive && b.shipAddress) ? b.shipAddress : custAddr;
 
-      var placeOfSupplyCode = '09';
+      var deliveryStateCode = buyerStateCode;
       if (isShipDiffActive && shipStateVal) {
         var matchCode = String(shipStateVal).match(/^\d{2}/);
         if (matchCode) {
-          placeOfSupplyCode = matchCode[0];
-        } else if (String(shipStateVal).toLowerCase().indexOf('delhi') !== -1) {
-          placeOfSupplyCode = '07';
-        } else if (String(shipStateVal).toLowerCase().indexOf('jammu') !== -1) {
-          placeOfSupplyCode = '01';
-        } else {
-          placeOfSupplyCode = '99';
+          deliveryStateCode = matchCode[0];
         }
-      } else {
-        placeOfSupplyCode = buyerStateCode;
       }
 
-      var isInterState = (placeOfSupplyCode !== '09');
-      var bStateText = (isGst && !buyerGstLine) ? 'State Name: Uttar Pradesh, Code: 09' : '';
-      var sStateText = isGst ? (shipStateVal ? ('State / Place of Supply: ' + shipStateVal) : 'State / Place of Supply: 09 - Uttar Pradesh') : '';
+      // ALL 5 CONDITIONS RESOLUTION:
+      var isInterState = (buyerStateCode !== '09' || deliveryStateCode !== '09');
+      var bStateText = (isGst && !buyerGstLine) ? ('State Name: ' + buyerStateName + ', Code: ' + buyerStateCode) : '';
+      var sStateText = isGst ? ('State / Place of Supply: ' + (shipStateVal || (deliveryStateCode + ' - ' + (stateMap[deliveryStateCode] || buyerStateName)))) : '';
 
       var lines = "";
       var itms = b.items || [];
@@ -2774,40 +2772,67 @@ function updateBulkTabVisibility() {
         }
 
         var displayRate = isGst ? (finalRate - gstPerPc) : finalRate;
-        var displayAmount = isGst ? (displayRate * qty) : itemTotal;
+        var displayTaxableAmt = isGst ? (displayRate * qty) : itemTotal;
+        var lineGstAmt = gstPerPc * qty;
 
-        totalTaxable += (displayRate * qty);
-        totalGst += (gstPerPc * qty);
+        totalTaxable += displayTaxableAmt;
+        totalGst += lineGstAmt;
         computedTotal += itemTotal;
 
         var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
-        lines += '<tr>' +
-          '<td style="padding:5px 4px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px; white-space:nowrap;">' + (idx + 1) + '</td>' +
-          '<td style="padding:5px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;"><b>' + (it.name || it.itemName || '-') + '</b>' + snStr + '</td>' +
-          '<td style="padding:5px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + (it.hsn || '-') + '</td>' +
-          '<td style="padding:5px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + qty + '</td>' +
-          '<td style="padding:5px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px; white-space:nowrap;">' + displayRate.toFixed(2) + '</td>' +
-          '<td style="padding:5px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold; white-space:nowrap;">' + displayAmount.toFixed(2) + '</td>' +
-          '</tr>';
+
+        if (isGst) {
+          if (isInterState) {
+            lines += '<tr>' +
+              '<td style="padding:4px 3px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:10px;">' + (idx + 1) + '</td>' +
+              '<td style="padding:4px 5px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:10px;"><b>' + (it.name || it.itemName || '-') + '</b>' + snStr + '</td>' +
+              '<td style="padding:4px 3px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:10px;">' + (it.hsn || '-') + '</td>' +
+              '<td style="padding:4px 3px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:10px;">' + qty + '</td>' +
+              '<td style="padding:4px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:10px;">' + displayRate.toFixed(2) + '</td>' +
+              '<td style="padding:4px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:10px;">' + displayTaxableAmt.toFixed(2) + '</td>' +
+              '<td style="padding:4px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:10px; color:#b45309;">' + lineGstAmt.toFixed(2) + '<br><small>(18%)</small></td>' +
+              '<td style="padding:4px 4px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:10px; font-weight:bold;">' + itemTotal.toFixed(2) + '</td>' +
+              '</tr>';
+          } else {
+            var lineHalfTax = lineGstAmt / 2;
+            lines += '<tr>' +
+              '<td style="padding:4px 3px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:10px;">' + (idx + 1) + '</td>' +
+              '<td style="padding:4px 5px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:10px;"><b>' + (it.name || it.itemName || '-') + '</b>' + snStr + '</td>' +
+              '<td style="padding:4px 3px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:10px;">' + (it.hsn || '-') + '</td>' +
+              '<td style="padding:4px 3px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:10px;">' + qty + '</td>' +
+              '<td style="padding:4px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:10px;">' + displayRate.toFixed(2) + '</td>' +
+              '<td style="padding:4px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:10px;">' + displayTaxableAmt.toFixed(2) + '</td>' +
+              '<td style="padding:4px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:10px; color:#0284c7;">' + lineHalfTax.toFixed(2) + '<br><small>(9%)</small></td>' +
+              '<td style="padding:4px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:10px; color:#0284c7;">' + lineHalfTax.toFixed(2) + '<br><small>(9%)</small></td>' +
+              '<td style="padding:4px 4px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:10px; font-weight:bold;">' + itemTotal.toFixed(2) + '</td>' +
+              '</tr>';
+          }
+        } else {
+          lines += '<tr>' +
+            '<td style="padding:5px 4px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + (idx + 1) + '</td>' +
+            '<td style="padding:5px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; font-size:11px;"><b>' + (it.name || it.itemName || '-') + '</b>' + snStr + '</td>' +
+            '<td style="padding:5px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + (it.hsn || '-') + '</td>' +
+            '<td style="padding:5px 4px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:center; font-size:11px;">' + qty + '</td>' +
+            '<td style="padding:5px 6px; border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a; text-align:right; font-size:11px;">' + displayRate.toFixed(2) + '</td>' +
+            '<td style="padding:5px 6px; border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a; text-align:right; font-size:11px; font-weight:bold;">' + itemTotal.toFixed(2) + '</td>' +
+            '</tr>';
+        }
       });
 
-      // Stretch table vertically on A4 page
-      var fillerHeight = (itms.length <= 12) ? Math.max(160, 520 - (itms.length * 28)) : 0;
+      var totalCols = isGst ? (isInterState ? 8 : 9) : 6;
+      var fillerHeight = (itms.length <= 12) ? Math.max(140, 480 - (itms.length * 28)) : 0;
       if (fillerHeight > 0) {
-        lines += '<tr>' +
-          '<td class="print-filler-cell" style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-          '<td style="border-left:1px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
-          '<td style="border-left:1px solid #1e3a8a; border-right:1.5px solid #1e3a8a;">&nbsp;</td>' +
-          '</tr>';
+        var fillerCells = '';
+        for (var c = 0; c < totalCols; c++) {
+          var borderL = (c === 0) ? 'border-left:1.5px solid #1e3a8a;' : 'border-left:1px solid #1e3a8a;';
+          var borderR = (c === totalCols - 1) ? 'border-right:1.5px solid #1e3a8a;' : 'border-right:1px solid #1e3a8a;';
+          fillerCells += '<td class="print-filler-cell" style="height:' + fillerHeight + 'px; ' + borderL + ' ' + borderR + '">&nbsp;</td>';
+        }
+        lines += '<tr>' + fillerCells + '</tr>';
       }
 
       var grandTotal = parseFloat(b.grandTotal || b.amount || computedTotal || 0);
-      console.log("REPRINT BILL DATA OBJECT:", b);
 
-    // Smart Payment & Due Calculation (Prevents Line Item Balance Bug)
       var pModeStr = String(b.paymentMode || b.payMode || "").toLowerCase();
       var isPayLater = (pModeStr.indexOf("later") !== -1 || pModeStr.indexOf("credit") !== -1 || pModeStr.indexOf("udhar") !== -1);
 
@@ -2816,34 +2841,27 @@ function updateBulkTabVisibility() {
                    (b.receivedAmount !== undefined && b.receivedAmount !== null && b.receivedAmount !== "") ? b.receivedAmount :
                    (b.paid !== undefined && b.paid !== null && b.paid !== "") ? b.paid : null;
 
-      var printAmtPaid = 0;
-      if (isPayLater) {
-        printAmtPaid = (rawRec !== null && parseFloat(rawRec) > 0) ? parseFloat(rawRec) : 0;
-      } else {
-        printAmtPaid = (rawRec !== null) ? parseFloat(rawRec) : grandTotal;
-      }
+      var printAmtPaid = isPayLater ? ((rawRec !== null && parseFloat(rawRec) > 0) ? parseFloat(rawRec) : 0) : ((rawRec !== null) ? parseFloat(rawRec) : grandTotal);
       if (isNaN(printAmtPaid)) printAmtPaid = 0;
 
-      // Real Balance Due Formula: Total Amount - Paid Amount
       var printBalDue = Math.max(0, Math.round((grandTotal - printAmtPaid) * 100) / 100);
-            
-var isEstimatePrint = (typeof isEstimate !== "undefined" && isEstimate) ||
-                      (b && b.docNo && String(b.docNo).indexOf("EST") !== -1) ||
-                      (b && b.billMode && String(b.billMode).toLowerCase().indexOf("estimate") !== -1);
 
-var printBreakdownHtml = '';
-// Agar balance bacha ho YA amount received grandTotal se alag ho (jaise zero pay kiya ho)
-if (!isEstimatePrint && (printBalDue > 0 || printAmtPaid !== grandTotal)) {
-  printBreakdownHtml =
-    '<tr>' +
-      '<td style="padding:2px 4px; font-weight:bold; font-size:10.5px; color:#15803d; border-top:1px dashed #cbd5e1; white-space:nowrap;">Amount Received:</td>' +
-      '<td style="padding:2px 4px; text-align:right; font-weight:bold; font-size:10.5px; color:#15803d; border-top:1px dashed #cbd5e1; white-space:nowrap;">' + printAmtPaid.toFixed(2) + '</td>' +
-    '</tr>' +
-    '<tr>' +
-      '<td style="padding:2px 4px; font-weight:900; font-size:11px; color:#dc2626; white-space:nowrap;">Balance Due:</td>' +
-      '<td style="padding:2px 4px; text-align:right; font-weight:900; font-size:11px; color:#dc2626; white-space:nowrap;">' + printBalDue.toFixed(2) + '</td>' +
-    '</tr>';
-}
+      var isEstimatePrint = (typeof isEstimate !== "undefined" && isEstimate) ||
+                            (b && b.docNo && String(b.docNo).indexOf("EST") !== -1) ||
+                            (b && b.billMode && String(b.billMode).toLowerCase().indexOf("estimate") !== -1);
+
+      var printBreakdownHtml = '';
+      if (!isEstimatePrint && (printBalDue > 0 || printAmtPaid !== grandTotal)) {
+        printBreakdownHtml =
+          '<tr>' +
+            '<td style="padding:2px 4px; font-weight:bold; font-size:10.5px; color:#15803d; border-top:1px dashed #cbd5e1; white-space:nowrap;">Amount Received:</td>' +
+            '<td style="padding:2px 4px; text-align:right; font-weight:bold; font-size:10.5px; color:#15803d; border-top:1px dashed #cbd5e1; white-space:nowrap;">' + printAmtPaid.toFixed(2) + '</td>' +
+          '</tr>' +
+          '<tr>' +
+            '<td style="padding:2px 4px; font-weight:900; font-size:11px; color:#dc2626; white-space:nowrap;">Balance Due:</td>' +
+            '<td style="padding:2px 4px; text-align:right; font-weight:900; font-size:11px; color:#dc2626; white-space:nowrap;">' + printBalDue.toFixed(2) + '</td>' +
+          '</tr>';
+      }
 
       var taxBoxHtml = "";
       if (isGst) {
@@ -2864,7 +2882,7 @@ if (!isEstimatePrint && (printBalDue > 0 || printAmtPaid !== grandTotal)) {
           printBreakdownHtml +
           '</table>';
       } else {
-       taxBoxHtml = '<table style="width:100%; border-collapse:collapse; margin:0; padding:0;">' +
+        taxBoxHtml = '<table style="width:100%; border-collapse:collapse; margin:0; padding:0;">' +
           '<tr>' +
             '<td style="padding:4px 4px; font-weight:bold; font-size:11px; white-space:nowrap;">Subtotal:</td>' +
             '<td style="padding:4px 6px; text-align:right; font-weight:bold; font-size:11px; white-space:nowrap;">Rs. ' + grandTotal.toFixed(2) + '</td>' +
@@ -2909,6 +2927,41 @@ if (!isEstimatePrint && (printBalDue > 0 || printAmtPaid !== grandTotal)) {
           '</tr>';
       }
 
+      // Dynamic Table Header Columns
+      var tableHeaderCols = "";
+      if (isGst) {
+        if (isInterState) {
+          tableHeaderCols = 
+            '<th style="width:35px; text-align:center; padding:5px 2px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Sl No.</th>' +
+            '<th style="text-align:left; padding:5px 4px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Description of Goods</th>' +
+            '<th style="width:55px; text-align:center; padding:5px 2px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">HSN/SAC</th>' +
+            '<th style="width:35px; text-align:center; padding:5px 2px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Qty</th>' +
+            '<th style="width:60px; text-align:right; padding:5px 3px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Rate</th>' +
+            '<th style="width:65px; text-align:right; padding:5px 3px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Taxable</th>' +
+            '<th style="width:60px; text-align:right; padding:5px 3px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">IGST</th>' +
+            '<th style="width:75px; text-align:right; padding:5px 4px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Total (Rs.)</th>';
+        } else {
+          tableHeaderCols = 
+            '<th style="width:32px; text-align:center; padding:5px 2px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Sl No.</th>' +
+            '<th style="text-align:left; padding:5px 4px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Description of Goods</th>' +
+            '<th style="width:50px; text-align:center; padding:5px 2px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">HSN/SAC</th>' +
+            '<th style="width:32px; text-align:center; padding:5px 2px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Qty</th>' +
+            '<th style="width:55px; text-align:right; padding:5px 3px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Rate</th>' +
+            '<th style="width:60px; text-align:right; padding:5px 3px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Taxable</th>' +
+            '<th style="width:55px; text-align:right; padding:5px 3px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">CGST</th>' +
+            '<th style="width:55px; text-align:right; padding:5px 3px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">SGST</th>' +
+            '<th style="width:70px; text-align:right; padding:5px 4px; border:1px solid #1e3a8a; font-size:9.5px; text-transform:uppercase;">Total (Rs.)</th>';
+        }
+      } else {
+        tableHeaderCols = 
+          '<th style="width:45px; text-align:center; padding:5px 3px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase; white-space:nowrap;">Sl No.</th>' +
+          '<th style="text-align:left; padding:5px 4px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase;">Description of Goods</th>' +
+          '<th style="width:60px; text-align:center; padding:5px 3px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase;">HSN/SAC</th>' +
+          '<th style="width:45px; text-align:center; padding:5px 3px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase;">Quantity</th>' +
+          '<th style="width:70px; text-align:right; padding:5px 4px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase; white-space:nowrap;">Rate (Rs.)</th>' +
+          '<th style="width:80px; text-align:right; padding:5px 4px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase; white-space:nowrap;">Amount (Rs.)</th>';
+      }
+
       return '<div style="width:100%; margin:0 auto; padding:0; font-family:Helvetica, Arial, sans-serif; font-size:10.5px; color:#000; line-height:1.3; background:#fff; box-sizing:border-box;">' +
         '<div style="text-align:center; font-size:15px; font-weight:900; color:#1e3a8a; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.5px;">' + headerTitle + '</div>' +
         '<div style="border:2px solid #1e3a8a; width:100%; box-sizing:border-box;">' +
@@ -2937,12 +2990,7 @@ if (!isEstimatePrint && (printBalDue > 0 || printAmtPaid !== grandTotal)) {
         '<table style="width:100%; border-collapse:collapse; margin:0; padding:0; border-bottom:1.5px solid #1e3a8a;">' +
         '<thead>' +
         '<tr style="background:#1e3a8a; color:#fff;">' +
-        '<th style="width:45px; text-align:center; padding:5px 3px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase; white-space:nowrap;">Sl No.</th>' +
-        '<th style="text-align:left; padding:5px 4px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase;">Description of Goods</th>' +
-        '<th style="width:60px; text-align:center; padding:5px 3px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase;">HSN/SAC</th>' +
-        '<th style="width:45px; text-align:center; padding:5px 3px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase;">Quantity</th>' +
-        '<th style="width:70px; text-align:right; padding:5px 4px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase; white-space:nowrap;">Rate (Rs.)</th>' +
-        '<th style="width:80px; text-align:right; padding:5px 4px; border:1px solid #1e3a8a; font-size:10px; text-transform:uppercase; white-space:nowrap;">Amount (Rs.)</th>' +
+        tableHeaderCols +
         '</tr>' +
         '</thead>' +
         '<tbody>' + lines + '</tbody>' +
