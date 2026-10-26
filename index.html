@@ -464,7 +464,7 @@
 
             <!-- User Actions -->
             <div>
-              <div onclick="openChangePinModal(); toggleUserProfileDropdown();" style="padding: 7px 10px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+              <div onclick="openPwdModal(); toggleUserProfileDropdown();" style="padding: 7px 10px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
                 <span>🔑</span> Change PIN / Password
               </div>
               <div onclick="triggerAppLogout()" style="padding: 7px 10px; font-size: 12px; font-weight: 700; color: #dc2626; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
@@ -1605,9 +1605,10 @@
       }
     };
 
-    function initSession() {
+   function initSession() {
       if (!currentUser) return;
-      document.getElementById("lblUser").innerText = currentUser.name + " 🔑";
+      var lblUserEl = document.getElementById("lblUser");
+      if (lblUserEl) lblUserEl.innerText = currentUser.name + " 🔑";
       applyUserPermissions();
       startSessionTimer();
       startSecurityHeartbeat();
