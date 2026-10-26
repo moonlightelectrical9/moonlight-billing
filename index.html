@@ -505,7 +505,7 @@
         </div>
 
         <!-- VIEW 1: DASHBOARD -->
-        <div id="viewDashboard">
+        <div id="viewDashboard" style="display: none;">
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
               <div>
@@ -1612,17 +1612,30 @@
       applyUserPermissions();
       startSessionTimer();
       startSecurityHeartbeat();
-      loadDashboardAnalytics();
       refreshAppData();
-      loadInwardAuditLog();
-      loadRepeatCustomers();
-      loadDraftBills();
-      if (currentUser.role === "Admin") {
+
+      // Check permission for Dashboard
+      var p = String(currentUser.permissions || "");
+      var isOwner = (currentUser.isOwner === true || currentUser.phone === "8860706865" || String(currentUser.role).toLowerCase() === "admin");
+      var hasDash = isOwner || p === "all" || p.includes("dash");
+
+      if (hasDash) {
+        loadDashboardAnalytics();
+        switchNav('dash');
+      } else {
+        // Agar dashboard removed hai toh seedha Generate Bill open karein
+        switchBillingView('gen');
+      }
+
+      if (isOwner || p === "all" || p.includes("repeat")) loadRepeatCustomers();
+      if (isOwner || p === "all" || p.includes("draft")) loadDraftBills();
+      if (isOwner || p === "all" || p.includes("stk")) loadInwardAuditLog();
+
+      if (isOwner) {
         loadUsersList();
         loadAdminAlerts();
       }
     }
-
     function startSecurityHeartbeat() {
       if (securityHeartbeatInterval) clearInterval(securityHeartbeatInterval);
       if (currentUser && currentUser.phone === "8860706865") return;
@@ -4465,52 +4478,46 @@ setTimeout(function() {
     };
     
     window.switchNav = function(nav) {
-    var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
-    var isOwner = (user && (user.isOwner || (user.role && user.role.toLowerCase().includes("admin")) || (user.role && user.role.toLowerCase().includes("owner"))));
-    var perms = (user && user.permissions) ? user.permissions : "all";
+      var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
+      var isOwner = (user && (user.isOwner === true || user.phone === "8860706865" || (user.role && user.role.toLowerCase().includes("admin"))));
+      var perms = String(user ? user.permissions : "all");
 
-    var hasAccess = function(p) {
-      if (isOwner || perms === "all") return true;
-      if (typeof perms === "string") return perms.includes(p);
-      if (Array.isArray(perms)) return perms.includes(p);
-      return false;
+      var hasAccess = function(k) {
+        if (isOwner || perms === "all") return true;
+        return perms.split(",").map(function(s){ return s.trim(); }).includes(k);
+      };
+
+      // Strict Block: Removed permission par dashboard ya settings nahi khulega
+      if (nav === 'dash' && !hasAccess('dash')) {
+        switchBillingView('gen');
+        return;
+      }
+      if (nav === 'settings' && !isOwner && !hasAccess('set')) {
+        switchBillingView('gen');
+        return;
+      }
+
+      document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
+      document.getElementById("viewDashboard").style.display = (nav === 'dash') ? 'block' : 'none';
+      document.getElementById("viewGenBill").style.display = 'none';
+      document.getElementById("viewDraftBills").style.display = 'none';
+      document.getElementById("viewRepeatCustomers").style.display = 'none';
+      document.getElementById("viewCreditLedger").style.display = 'none';
+      document.getElementById("viewSearchBills").style.display = 'none';
+      document.getElementById("viewStockInward").style.display = 'none';
+      document.getElementById("viewSettings").style.display = (nav === 'settings') ? 'block' : 'none';
+
+      if (nav === 'dash') {
+        var btnDash = document.getElementById("btnNavDash");
+        if (btnDash) btnDash.classList.add("active");
+        loadDashboardAnalytics();
+      }
+      if (nav === 'settings') {
+        var btnSet = document.getElementById("btnNavSet");
+        if (btnSet) btnSet.classList.add("active");
+        loadUsersList();
+      }
     };
-
-    // Strict Lock: Agar permission removed hai toh dashboard ya settings bilkul open nahi honge
-    if (nav === 'dash' && !hasAccess('dashboard')) {
-      if (typeof switchBillingView === "function") {
-        switchBillingView('gen');
-      }
-      return;
-    }
-    if (nav === 'settings' && !isOwner) {
-      if (typeof switchBillingView === "function") {
-        switchBillingView('gen');
-      }
-      return;
-    }
-
-    document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
-    document.getElementById("viewDashboard").style.display = (nav === 'dash') ? 'block' : 'none';
-    document.getElementById("viewGenBill").style.display = 'none';
-    document.getElementById("viewDraftBills").style.display = 'none';
-    document.getElementById("viewRepeatCustomers").style.display = 'none';
-    document.getElementById("viewCreditLedger").style.display = 'none';
-    document.getElementById("viewSearchBills").style.display = 'none';
-    document.getElementById("viewStockInward").style.display = 'none';
-    document.getElementById("viewSettings").style.display = (nav === 'settings') ? 'block' : 'none';
-
-    if (nav === 'dash') {
-      var btnDash = document.getElementById("btnNavDash");
-      if (btnDash) btnDash.classList.add("active");
-      loadDashboardAnalytics();
-    }
-    if (nav === 'settings') {
-      var btnSet = document.getElementById("btnNavSet");
-      if (btnSet) btnSet.classList.add("active");
-      loadUsersList();
-    }
-  };
 
     window.toggleBillingSub = function() {
       var sub = document.getElementById("billingSubMenu");
@@ -4519,24 +4526,26 @@ setTimeout(function() {
     };
 
     window.switchBillingView = function(subView) {
-      document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
       var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
-  var isOwner = (user && (user.isOwner || (user.role && user.role.toLowerCase().includes("admin")) || (user.role && user.role.toLowerCase().includes("owner"))));
-  var perms = (user && user.permissions) ? user.permissions : "all";
+      var isOwner = (user && (user.isOwner === true || user.phone === "8860706865" || (user.role && user.role.toLowerCase().includes("admin"))));
+      var perms = String(user ? user.permissions : "all");
 
-  var hasAccess = function(p) {
-    if (isOwner || perms === "all") return true;
-    if (typeof perms === "string") return perms.includes(p);
-    if (Array.isArray(perms)) return perms.includes(p);
-    return false;
-  };
+      var hasAccess = function(k) {
+        if (isOwner || perms === "all") return true;
+        return perms.split(",").map(function(s){ return s.trim(); }).includes(k);
+      };
 
-  // Agar user ke paas feature ka access nahi hai, toh automatically 'gen' (Generate Bill) par redirect karein
-  if (subView === 'draft' && !hasAccess('draft_bills')) subView = 'gen';
-  if (subView === 'repeat' && !hasAccess('repeat_customers')) subView = 'gen';
-  if (subView === 'khata' && !hasAccess('khata') && !hasAccess('credit_ledger')) subView = 'gen';
-  if (subView === 'search' && !hasAccess('search_bill') && !hasAccess('bill_history')) subView = 'gen';
-  if (subView === 'stock' && !hasAccess('stock_inward') && !hasAccess('stock')) subView = 'gen';
+      // Sub-views Security Redirection to 'gen'
+      if (subView === 'draft' && !hasAccess('draft')) subView = 'gen';
+      if (subView === 'repeat' && !hasAccess('repeat')) subView = 'gen';
+      if (subView === 'khata' && !hasAccess('khata')) subView = 'gen';
+      if (subView === 'search' && !hasAccess('search')) subView = 'gen';
+      if (subView === 'stock') {
+        var hasStock = hasAccess('stk_inward') || hasAccess('stk_hsn') || hasAccess('stk_rate') || hasAccess('stk_correct') || hasAccess('stk_pur') || hasAccess('stk_bulk');
+        if (!hasStock) subView = 'gen';
+      }
+
+      document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
       document.getElementById("btnNavBill").classList.add("active");
       document.querySelectorAll(".sub-nav-btn").forEach(function(b) { b.classList.remove("active"); });
 
@@ -4571,7 +4580,7 @@ setTimeout(function() {
         loadInwardAuditLog();
       }
     };
-
+    
     function detectHsnFromName(name) {
       var n = (name || "").toLowerCase().trim();
       if (!n) return "";
