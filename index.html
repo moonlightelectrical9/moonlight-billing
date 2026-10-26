@@ -4587,14 +4587,36 @@ setTimeout(function() {
         return;
       }
 
-      // Active view check: Agar Non-GST / Regular view hai to NONGST select hoga, warna GST
+      // 100% Accurate Detection: Check if current screen/mode is Without GST (Non-GST)
+      var isNonGst = false;
+
+      // 1. Check toggle checkbox agar exist karta hai
+      var chkGst = document.getElementById("chkGstMode") || document.getElementById("billingGstToggle") || document.getElementById("isGstBill");
+      if (chkGst && !chkGst.checked) {
+        isNonGst = true;
+      }
+
+      // 2. Check global variables / storage / attributes
+      if (typeof currentBillingMode !== "undefined" && (currentBillingMode === "nongst" || currentBillingMode === "regular")) {
+        isNonGst = true;
+      }
+      if (typeof currentInvoicePrefix !== "undefined" && String(currentInvoicePrefix).indexOf("REG") !== -1) {
+        isNonGst = true;
+      }
+      if (localStorage.getItem("mle_active_billing_mode") === "nongst" || localStorage.getItem("mle_billing_type") === "nongst") {
+        isNonGst = true;
+      }
+
+      // 3. Fallback: Agar bill history table mein samne REG bills display ho rahe hain
+      var tableText = document.getElementById("historyTableBody") ? document.getElementById("historyTableBody").innerText : "";
+      if (tableText.indexOf("MLE/REG-") !== -1 && tableText.indexOf("MLE/INV-") === -1) {
+        isNonGst = true;
+      }
+
+      // Dropdown auto-select
       var selBillType = document.getElementById("selExportBillType");
       if (selBillType) {
-        var isNonGstMode = (typeof currentBillingMode !== "undefined" && currentBillingMode === "nongst") ||
-                           (typeof currentInvoicePrefix !== "undefined" && String(currentInvoicePrefix).indexOf("REG") !== -1) ||
-                           (document.body.getAttribute("data-theme") === "nongst");
-
-        selBillType.value = isNonGstMode ? "NONGST" : "GST";
+        selBillType.value = isNonGst ? "NONGST" : "GST";
       }
 
       setupExportDateSelectors();
