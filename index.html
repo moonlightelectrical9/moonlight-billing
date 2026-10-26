@@ -1079,18 +1079,19 @@
           <div class="card">
            <!-- Header with Secret Discreet Icon for Search Bills -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <h3 style="font-weight:900; margin:0;">Search & Counter Reprint Engine</h3>      
-      </div>
-    </div>
-            <div class="grid-row row-2">
-              <div class="form-col">
-                <label>Search by Customer Mobile, Name, or Invoice No</label>
-                <input type="text" id="historySearchInput" placeholder="Enter mobile, name or bill no..." oninput="filterBillHistory()">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <h3 style="font-weight:900; margin:0;">Search & Counter Reprint Engine</h3>
               </div>
-              <div class="form-col" style="justify-content: flex-end; flex-direction: row; gap: 8px; align-items: flex-end;">
-                <button type="button" class="btn-sync" id="btnExportGstr1" onclick="openGstExportModal()" style="display:none; height: 40px; background: #059669; color: #fff; border-color: #047857; font-weight: 800;">📊 Export GSTR-1 (.xlsx)</button>
-                <button type="button" class="btn-sync" style="height: 40px; justify-content:center;" onclick="loadBillHistory()">🔄 Refresh List</button>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="btn-sync" id="btnExportGstr1" onclick="openGstExportModal()" style="display:none; height: 36px; background: #059669; color: #fff; border-color: #047857; font-weight: 800; font-size: 13px;">📊 Export GSTR-1 (.xlsx)</button>
+                <button type="button" class="btn-sync" style="height: 36px; justify-content:center; font-size: 13px;" onclick="loadBillHistory()">🔄 Refresh List</button>
+              </div>
+            </div>
+
+            <div class="grid-row row-1" style="margin-bottom: 12px;">
+              <div class="form-col">
+                <label>SEARCH BY CUSTOMER MOBILE, NAME, OR INVOICE NO</label>
+                <input type="text" id="historySearchInput" placeholder="Enter mobile, name or bill no..." oninput="filterBillHistory()">
               </div>
             </div>
             <!-- DYNAMIC BOUNDED FILTER BAR -->
