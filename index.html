@@ -413,9 +413,57 @@
           Ver: <span id="activeItemMarginVal" style="margin-left:4px;">-</span>
         </div>
         <button class="btn-sync" onclick="refreshAppData()">🔄 Sync</button>
-        <div class="user-pill" id="lblUser" onclick="openPwdModal()" title="Click to Change Password">User... 🔑</div>
-        <button class="btn-logout" onclick="confirmUserLogout()">🚪 Logout</button>
-      </div>
+        <!-- User Profile Dropdown Menu (Delhivery/Enterprise Style) -->
+        <div style="position: relative; display: inline-block;">
+          <button type="button" onclick="toggleUserProfileDropdown(event)" id="btnUserProfileHeader" style="background: #ffffff; border: 1.5px solid #cbd5e1; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 12.5px; color: #1e293b; cursor: pointer; display: flex; align-items: center; gap: 7px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <span style="background: #1e3a8a; color: #fff; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;" id="hdrUserAvatar">VS</span>
+            <span id="hdrUserNameDisplay">Varun Sharma</span>
+            <span style="font-size: 10px; color: #64748b;">▼</span>
+          </button>
+
+          <!-- Dropdown Card -->
+          <div id="userProfileDropdownCard" style="display: none; position: absolute; right: 0; top: 38px; width: 270px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 9999; padding: 14px; box-sizing: border-box; text-align: left;">
+            
+            <!-- User Info Header -->
+            <div style="text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 10px;">
+              <div style="background: #0f172a; color: #ffffff; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; margin: 0 auto 6px auto;" id="popupAvatar">VS</div>
+              <div style="font-weight: 800; font-size: 13.5px; color: #0f172a;" id="popupUserName">Varun Sharma</div>
+              <div style="font-size: 11px; color: #64748b; font-weight: 600;">MOON LIGHT ELECTRICALS</div>
+              <div style="display: inline-block; background: #eff6ff; color: #1d4ed8; padding: 2px 8px; border-radius: 12px; font-size: 10.5px; font-weight: 700; margin-top: 4px;" id="popupUserRole">Admin / Owner</div>
+            </div>
+
+            <!-- Switch Dashboard Section (Permission Driven) -->
+            <div id="sectionDashboardSwitcher" style="margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+              <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Switch Dashboard</div>
+              
+              <div id="optDashGst" onclick="switchActiveDashboard('GST')" style="padding: 7px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; color: #0f172a; background: #f0fdf4;">
+                <span>🟢 GST Dashboard</span>
+                <span id="checkDashGst" style="color: #16a34a; font-weight: 900;">✓</span>
+              </div>
+
+              <div id="optDashNonGst" onclick="switchActiveDashboard('NONGST')" style="padding: 7px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; color: #0f172a;">
+                <span>🔵 Without GST (Regular)</span>
+                <span id="checkDashNonGst" style="display: none; color: #2563eb; font-weight: 900;">✓</span>
+              </div>
+
+              <div id="optDashConsolidated" onclick="switchActiveDashboard('CONSOLIDATED')" style="padding: 7px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: #0f172a;">
+                <span>🟣 Consolidated (All-in-One)</span>
+                <span id="checkDashConsolidated" style="display: none; color: #7c3aed; font-weight: 900;">✓</span>
+              </div>
+            </div>
+
+            <!-- User Actions -->
+            <div>
+              <div onclick="openChangePinModal(); toggleUserProfileDropdown();" style="padding: 7px 10px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                <span>🔑</span> Change PIN / Password
+              </div>
+              <div onclick="triggerAppLogout()" style="padding: 7px 10px; font-size: 12px; font-weight: 700; color: #dc2626; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+                <span>🚪</span> Logout
+              </div>
+            </div>
+
+          </div>
+        </div>
     </header>
 
     <div class="main-wrapper">
@@ -1426,6 +1474,7 @@
           try {
             localStorage.setItem("mle_user", JSON.stringify(currentUser));
             localStorage.setItem("mle_pwd_" + phone, res.pin);
+            setupDashboardPermissionsOnLogin(currentUser);
           } catch(e) {}
           showGreetingsWelcome();
         } else {
@@ -1525,6 +1574,7 @@
       try {
         localStorage.setItem("mle_user", JSON.stringify(currentUser));
         localStorage.setItem("mle_login_time", new Date().getTime());
+        setupDashboardPermissionsOnLogin(currentUser);
       } catch(e) {}
       initSession();
     };
@@ -1548,6 +1598,7 @@
       try {
         var stored = localStorage.getItem("mle_user");
         if (stored && stored.startsWith("{")) currentUser = JSON.parse(stored);
+        if (currentUser) setupDashboardPermissionsOnLogin(currentUser);
       } catch(e) { currentUser = null; }
 
       if (!currentUser) {
@@ -4092,6 +4143,169 @@ setTimeout(function() {
         document.getElementById("sessionTimerBadge").innerText = "⏳ " + pad(h) + ":" + pad(m) + ":" + pad(s);
       }, 1000);
     }
+    // ================= DASHBOARD MODE & PROFILE DROPDOWN LOGIC =================
+    window.currentActiveDashboard = "GST"; // Default: 'GST', 'NONGST', 'CONSOLIDATED'
+
+    window.toggleUserProfileDropdown = function(e) {
+      if (e) e.stopPropagation();
+      var card = document.getElementById("userProfileDropdownCard");
+      if (card) card.style.display = (card.style.display === "block") ? "none" : "block";
+    };
+
+    document.addEventListener("click", function(e) {
+      var card = document.getElementById("userProfileDropdownCard");
+      var btn = document.getElementById("btnUserProfileHeader");
+      if (card && card.style.display === "block" && !card.contains(e.target) && (!btn || !btn.contains(e.target))) {
+        card.style.display = "none";
+      }
+    });
+
+    window.triggerAppLogout = function() {
+      var card = document.getElementById("userProfileDropdownCard");
+      if (card) card.style.display = "none";
+      if (typeof window.confirmUserLogout === "function") {
+        window.confirmUserLogout();
+      } else if (typeof executeUserLogout === "function") {
+        executeUserLogout();
+      } else {
+        sessionStorage.clear();
+        localStorage.clear();
+        location.reload();
+      }
+    };
+
+    // Login ke baad strict role aur permission setup
+    window.setupDashboardPermissionsOnLogin = function(user) {
+      if (!user) return;
+      var phone10 = String(user.phone || "").replace(/\D/g, "").slice(-10);
+      var isOwner = (user.isOwner === true || phone10 === "8860706865" || String(user.role).toLowerCase() === "admin");
+      var perms = String(user.permissions || "").toLowerCase();
+
+      // Avatar & Name Display
+      var displayName = user.name || (isOwner ? "Varun Sharma" : "User");
+      var initials = displayName.split(" ").map(function(n) { return n[0]; }).join("").toUpperCase().slice(0, 2) || "VS";
+      
+      var hdrName = document.getElementById("hdrUserNameDisplay");
+      var hdrAvatar = document.getElementById("hdrUserAvatar");
+      var popName = document.getElementById("popupUserName");
+      var popAvatar = document.getElementById("popupAvatar");
+      var popRole = document.getElementById("popupUserRole");
+
+      if (hdrName) hdrName.innerText = displayName;
+      if (hdrAvatar) hdrAvatar.innerText = initials;
+      if (popName) popName.innerText = displayName;
+      if (popAvatar) popAvatar.innerText = initials;
+      if (popRole) popRole.innerText = isOwner ? "Admin / Owner" : (user.role || "Staff");
+
+      var optGst = document.getElementById("optDashGst");
+      var optNonGst = document.getElementById("optDashNonGst");
+      var optConsolidated = document.getElementById("optDashConsolidated");
+      var switcherSection = document.getElementById("sectionDashboardSwitcher");
+
+      if (isOwner) {
+        // Owner/Admin: Sab views accessible, Default = GST
+        if (switcherSection) switcherSection.style.display = "block";
+        if (optGst) optGst.style.display = "flex";
+        if (optNonGst) optNonGst.style.display = "flex";
+        if (optConsolidated) optConsolidated.style.display = "flex";
+        switchActiveDashboard("GST");
+
+      } else {
+        // Staff Rules
+        var hasGst = perms.indexOf("view_gst") !== -1 || perms.indexOf("all") !== -1;
+        var hasNonGst = perms.indexOf("view_nongst") !== -1 || perms.indexOf("all") !== -1;
+
+        if (optConsolidated) optConsolidated.style.display = "none";
+
+        if (hasGst && !hasNonGst) {
+          if (optGst) optGst.style.display = "flex";
+          if (optNonGst) optNonGst.style.display = "none";
+          if (switcherSection) switcherSection.style.display = "none";
+          switchActiveDashboard("GST");
+
+        } else if (!hasGst && hasNonGst) {
+          if (optGst) optGst.style.display = "none";
+          if (optNonGst) optNonGst.style.display = "flex";
+          if (switcherSection) switcherSection.style.display = "none";
+          switchActiveDashboard("NONGST");
+
+        } else if (hasGst && hasNonGst) {
+          if (switcherSection) switcherSection.style.display = "block";
+          if (optGst) optGst.style.display = "flex";
+          if (optNonGst) optNonGst.style.display = "flex";
+          switchActiveDashboard("GST");
+
+        } else {
+          switchActiveDashboard("GST");
+        }
+      }
+    };
+
+    // Mode Switch hone par UI & Active Filters update honge
+    window.switchActiveDashboard = function(mode) {
+      window.currentActiveDashboard = mode;
+
+      var checkGst = document.getElementById("checkDashGst");
+      var checkNon = document.getElementById("checkDashNonGst");
+      var checkCon = document.getElementById("checkDashConsolidated");
+
+      var optGst = document.getElementById("optDashGst");
+      var optNon = document.getElementById("optDashNonGst");
+      var optCon = document.getElementById("optDashConsolidated");
+
+      if (checkGst) checkGst.style.display = (mode === "GST") ? "inline" : "none";
+      if (checkNon) checkNon.style.display = (mode === "NONGST") ? "inline" : "none";
+      if (checkCon) checkCon.style.display = (mode === "CONSOLIDATED") ? "inline" : "none";
+
+      if (optGst) optGst.style.background = (mode === "GST") ? "#f0fdf4" : "transparent";
+      if (optNon) optNon.style.background = (mode === "NONGST") ? "#eff6ff" : "transparent";
+      if (optCon) optCon.style.background = (mode === "CONSOLIDATED") ? "#f5f3ff" : "transparent";
+
+      var card = document.getElementById("userProfileDropdownCard");
+      if (card) card.style.display = "none";
+
+      if (typeof filterViewsByDashboardMode === "function") {
+        filterViewsByDashboardMode(mode);
+      }
+    };
+    // ================= MODE-BASED FILTERING FOR BILLING, SEARCH & KHATA =================
+    window.filterViewsByDashboardMode = function(mode) {
+      // 1. Billing Form Controls Adjust
+      var selBillType = document.getElementById("billMode");
+      if (selBillType) {
+        if (mode === "GST") {
+          selBillType.value = "Tax Invoice";
+          Array.from(selBillType.options).forEach(function(opt) {
+            opt.disabled = (opt.value === "Invoice");
+          });
+        } else if (mode === "NONGST") {
+          selBillType.value = "Invoice";
+          Array.from(selBillType.options).forEach(function(opt) {
+            opt.disabled = (opt.value === "Tax Invoice");
+          });
+        } else {
+          Array.from(selBillType.options).forEach(function(opt) {
+            opt.disabled = false;
+          });
+        }
+        if (typeof onPaymentModeChange === "function") onPaymentModeChange();
+      }
+
+      // 2. Dashboard Analytics refresh with mode
+      if (typeof loadDashboardAnalytics === "function") {
+        loadDashboardAnalytics();
+      }
+
+      // 3. Search Bill history auto-filter
+      if (typeof filterBillHistory === "function") {
+        filterBillHistory();
+      }
+
+      // 4. Khata Ledger auto-filter
+      if (typeof filterKhataLedger === "function") {
+        filterKhataLedger();
+      }
+    };
 
     window.confirmUserLogout = function() {
       if (confirm("Are you sure you want to log out of your session?")) executeUserLogout();
