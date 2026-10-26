@@ -4441,15 +4441,16 @@ setTimeout(function() {
           bankSettings = res.bankInfo;
           if (res.driveFolderUrl) masterDriveFolderLink = res.driveFolderUrl;
 
-          var perms = (currentUser && currentUser.permissions) ? currentUser.permissions : "all";
-          var canSeeAlerts = (currentUser && currentUser.role === "Admin") || perms === "all" || perms.includes("alert_stock");
-
-          if (canSeeAlerts && res.alerts && res.alerts.length > 0) {
-            document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(function(a) { return "• " + a; }).join("<br>");
-            document.getElementById("lowStockAlertBox").style.display = "block";
-          } else {
-            document.getElementById("lowStockAlertBox").style.display = "none";
-          }
+         var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
+         var isOwner = (user && (user.isOwner || (user.role && user.role.toLowerCase().includes("admin")) || (user.role && user.role.toLowerCase().includes("owner"))));
+         var perms = (user && user.permissions) ? user.permissions : "all";
+         var canSeeAlerts = isOwner || perms === "all" || (typeof perms === "string" && perms.includes("alert_stock")) || (Array.isArray(perms) && perms.includes("alert_stock"));
+        if (canSeeAlerts && res.alerts && res.alerts.length > 0) {
+          document.getElementById("lowStockItemsList").innerHTML = res.alerts.map(function(A) { return "• " + A; }).join("<br>");
+          document.getElementById("lowStockAlertBar").style.display = "block";
+        } else {
+          document.getElementById("lowStockAlertBar").style.display = "none";
+        }
         }
       } catch(e) {}
     };
