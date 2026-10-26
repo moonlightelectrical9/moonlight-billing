@@ -991,15 +991,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
       <div style="display:flex; align-items:center; gap:8px;">
         <h3 style="font-weight:900; margin:0;">Pending Udhar Records & Reminders Tracking</h3>
-        <!-- 🔒 Secret Discreet Icon (Bilkul subtle, notice nahi hoga) -->
-        <span onclick="toggleDiscreetLedgerBar()" title="Mode" style="cursor:pointer; opacity:0.25; font-size:16px; user-select:none; transition:opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=0.25">🔒</span>
-      </div>
-      <!-- Secret Toggle Buttons (By default hidden) -->
-      <div id="discreetLedgerBar" style="display:none; align-items:center; gap:6px; background:#f1f5f9; padding:4px 8px; border-radius:20px; border:1px solid #cbd5e1;">
-        <button type="button" id="btnKhataGst" onclick="switchKhataFilter('GST')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:#2563eb; color:#ffffff;">🏢 GST Bills</button>
-        <button type="button" id="btnKhataReg" onclick="switchKhataFilter('REG')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:transparent; color:#64748b;">📦 Regular</button>
-        <button type="button" id="btnKhataAll" onclick="switchKhataFilter('ALL')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:transparent; color:#64748b;">📊 All</button>
-      </div>
+        </div>
     </div>
             <div id="khataListContainer"></div>
           </div>
@@ -1011,15 +1003,7 @@
            <!-- Header with Secret Discreet Icon for Search Bills -->
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
       <div style="display:flex; align-items:center; gap:8px;">
-        <h3 style="font-weight:900; margin:0;">Search & Counter Reprint Engine</h3>
-        <!-- 🔒 Secret Discreet Icon -->
-        <span onclick="toggleDiscreetSearchBillBar()" title="Mode" style="cursor:pointer; opacity:0.25; font-size:16px; user-select:none; transition:opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=0.25">🔒</span>
-      </div>
-      <!-- Secret Toggle Buttons (Default hidden rahega) -->
-      <div id="discreetSearchBillBar" style="display:none; align-items:center; gap:6px; background:#f1f5f9; padding:4px 8px; border-radius:20px; border:1px solid #cbd5e1;">
-        <button type="button" id="btnSearchGst" onclick="switchSearchBillFilter('GST')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:#2563eb; color:#ffffff;">🏢 GST Invoices</button>
-        <button type="button" id="btnSearchReg" onclick="switchSearchBillFilter('REG')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:transparent; color:#64748b;">📦 Regular</button>
-        <button type="button" id="btnSearchAll" onclick="switchSearchBillFilter('ALL')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:transparent; color:#64748b;">📊 All</button>
+        <h3 style="font-weight:900; margin:0;">Search & Counter Reprint Engine</h3>      
       </div>
     </div>
             <div class="grid-row row-2">
@@ -3183,11 +3167,7 @@ if (b.isGst === true || String(b.isGst).toLowerCase() === "true" || (custGstin &
 window.cachedKhataRecords = [];
 
 // Secret Button Toggle Logic
-window.toggleDiscreetLedgerBar = function() {
-  var bar = document.getElementById('discreetLedgerBar');
-  if (!bar) return;
-  bar.style.display = (bar.style.display === 'none' || bar.style.display === '') ? 'flex' : 'none';
-};
+window.toggleDiscreetLedgerBar = function() {};
 
 // Filter Switch Logic (GST / REG / ALL)
 window.switchKhataFilter = function(mode) {
@@ -3207,11 +3187,7 @@ window.switchKhataFilter = function(mode) {
 window.searchBillMode = "GST";
 
 // Secret Bar Toggle Function
-window.toggleDiscreetSearchBillBar = function() {
-  var bar = document.getElementById('discreetSearchBillBar');
-  if (!bar) return;
-  bar.style.display = (bar.style.display === 'none' || bar.style.display === '') ? 'flex' : 'none';
-};
+window.toggleDiscreetSearchBillBar = function() {};
 
 // Filter Switch Function (GST / REG / ALL)
 window.switchSearchBillFilter = function(mode) {
