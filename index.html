@@ -10,6 +10,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
+  <!-- Excel Export SheetJS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     :root {
@@ -400,6 +402,81 @@
         <button class="btn-checkout" style="background:#0284c7; color:#fff;" onclick="triggerDirectPrint()">🖨️ Print Invoice (Hard Copy)</button>
         <button class="btn-checkout" style="background:#2563eb; color:#fff;" onclick="viewDownloadPdf()">👁 View / Download PDF</button>
         <button class="btn-checkout" style="background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1;" onclick="closeSuccessAndNextBill()">🧾 + Create Next Bill</button>
+      </div>
+    </div>
+  </div>
+  <!-- 5.5 GSTR-1 EXCEL EXPORT MODAL (OWNER / ADMIN ONLY) -->
+  <div id="gstExportModal" style="position:fixed; inset:0; background:rgba(15,23,42,0.88); display:none; align-items:center; justify-content:center; z-index:999999; padding:14px;">
+    <div class="modal-box" style="text-align:left; max-width:460px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">
+        <h3 style="font-size:16px; font-weight:900; color:#0f172a; margin:0;">📊 Export GSTR-1 Sales Report</h3>
+        <button type="button" onclick="closeGstExportModal()" style="background:none; border:none; font-size:18px; cursor:pointer; color:#64748b; font-weight:bold;">✕</button>
+      </div>
+
+      <div style="font-size:12px; color:#64748b; margin-bottom:14px;">
+        Generate exact 32-column Government GST Return Excel sheet (<b style="color:#0284c7;">Report.xlsx</b> format).
+      </div>
+
+      <!-- 1. Bill Type Selector -->
+      <div class="form-col" style="margin-bottom:12px;">
+        <label>1. SELECT BILL TYPE TO EXPORT</label>
+        <select id="selExportBillType" style="padding:8px 10px; font-size:13px; font-weight:700;">
+          <option value="GST" selected>🟢 GST Tax Invoices (INV-) [Recommended for CA]</option>
+          <option value="NONGST">🔵 Without GST / Regular Bills (REG-)</option>
+          <option value="ALL">🟣 Consolidated (GST + Regular Bills)</option>
+        </select>
+      </div>
+
+      <!-- 2. Timeline Selector -->
+      <div class="form-col" style="margin-bottom:12px;">
+        <label>2. SELECT EXPORT TIMELINE</label>
+        <select id="selExportTimeline" onchange="onExportTimelineChange()" style="padding:8px 10px; font-size:13px; font-weight:700;">
+          <option value="month" selected>📅 Month-Wise (For Monthly GST Filing)</option>
+          <option value="custom">📆 Custom Date Range (Between 2 Dates)</option>
+          <option value="year">🏢 Financial Year (Full Year)</option>
+        </select>
+      </div>
+
+      <!-- 3. Dynamic Inputs: Month -->
+      <div id="exportGroupMonth" style="margin-bottom:14px; display:flex; gap:8px;">
+        <div class="form-col" style="flex:1;">
+          <label>YEAR</label>
+          <select id="selExportYear" onchange="populateExportMonths()" style="padding:7px; font-size:12.5px; font-weight:700;"></select>
+        </div>
+        <div class="form-col" style="flex:1.5;">
+          <label>MONTH</label>
+          <select id="selExportMonth" style="padding:7px; font-size:12.5px; font-weight:700;"></select>
+        </div>
+      </div>
+
+      <!-- 3. Dynamic Inputs: Custom Date Range -->
+      <div id="exportGroupCustom" style="margin-bottom:14px; display:none; gap:8px;">
+        <div class="form-col" style="flex:1;">
+          <label>FROM DATE</label>
+          <input type="date" id="exportFromDate" style="padding:7px; font-size:12px; font-weight:700;">
+        </div>
+        <div class="form-col" style="flex:1;">
+          <label>TO DATE</label>
+          <input type="date" id="exportToDate" style="padding:7px; font-size:12px; font-weight:700;">
+        </div>
+      </div>
+
+      <!-- 3. Dynamic Inputs: Financial Year -->
+      <div id="exportGroupYear" style="margin-bottom:14px; display:none;">
+        <div class="form-col">
+          <label>SELECT FINANCIAL YEAR</label>
+          <select id="selExportFy" style="padding:8px; font-size:13px; font-weight:700;"></select>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button type="button" class="btn-checkout" id="btnTriggerExportDownload" onclick="generateGstr1Excel()" style="background:#059669; color:#fff; font-weight:900; font-size:13.5px; padding:11px;">
+          📥 Download GSTR-1 Excel (.xlsx)
+        </button>
+        <button type="button" class="btn-checkout" onclick="closeGstExportModal()" style="background:#f1f5f9; color:#0f172a; width:auto; padding:11px 16px;">
+          Cancel
+        </button>
       </div>
     </div>
   </div>
@@ -1011,8 +1088,9 @@
                 <label>Search by Customer Mobile, Name, or Invoice No</label>
                 <input type="text" id="historySearchInput" placeholder="Enter mobile, name or bill no..." oninput="filterBillHistory()">
               </div>
-              <div class="form-col" style="justify-content: flex-end;">
-                <button class="btn-sync" style="height: 40px; justify-content:center;" onclick="loadBillHistory()">🔄 Refresh List</button>
+              <div class="form-col" style="justify-content: flex-end; flex-direction: row; gap: 8px; align-items: flex-end;">
+                <button type="button" class="btn-sync" id="btnExportGstr1" onclick="openGstExportModal()" style="display:none; height: 40px; background: #059669; color: #fff; border-color: #047857; font-weight: 800;">📊 Export GSTR-1 (.xlsx)</button>
+                <button type="button" class="btn-sync" style="height: 40px; justify-content:center;" onclick="loadBillHistory()">🔄 Refresh List</button>
               </div>
             </div>
             <!-- DYNAMIC BOUNDED FILTER BAR -->
@@ -3437,6 +3515,9 @@ window.markPaid = function(docNo) {
 
         // 2. Default view: Today
         applyHistoryDateFilter("today");
+        if (typeof updateExportButtonVisibility === "function") {
+          updateExportButtonVisibility();
+        }
       } else {
         if (c) c.innerHTML = "<div style='padding:15px; color:#dc2626; font-weight:bold;'>Failed to load invoices.</div>";
       }
@@ -4485,6 +4566,238 @@ setTimeout(function() {
           }
         }
       } catch(e) {}
+    };
+    // ================= 📊 GSTR-1 EXCEL EXPORT ENGINE (REPORT.XLSX FORMAT) =================
+    function updateExportButtonVisibility() {
+      var btn = document.getElementById("btnExportGstr1");
+      if (!btn) return;
+      var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
+      var isOwner = (user && (user.isOwner === true || user.phone === "8860706865" || (user.role && user.role.toLowerCase().includes("admin"))));
+      btn.style.display = isOwner ? "inline-flex" : "none";
+    }
+
+    window.openGstExportModal = function() {
+      var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
+      var isOwner = (user && (user.isOwner === true || user.phone === "8860706865" || (user.role && user.role.toLowerCase().includes("admin"))));
+      if (!isOwner) {
+        alert("Security Alert: Only Admin/Owner has permission to export GSTR-1 Tax reports!");
+        return;
+      }
+
+      setupExportDateSelectors();
+      document.getElementById("gstExportModal").style.display = "flex";
+    };
+
+    window.closeGstExportModal = function() {
+      document.getElementById("gstExportModal").style.display = "none";
+    };
+
+    window.onExportTimelineChange = function() {
+      var t = document.getElementById("selExportTimeline").value;
+      document.getElementById("exportGroupMonth").style.display = (t === "month") ? "flex" : "none";
+      document.getElementById("exportGroupCustom").style.display = (t === "custom") ? "flex" : "none";
+      document.getElementById("exportGroupYear").style.display = (t === "year") ? "block" : "none";
+    };
+
+    function setupExportDateSelectors() {
+      var now = new Date();
+      var ySel = document.getElementById("selExportYear");
+      var fySel = document.getElementById("selExportFy");
+      if (!ySel || !fySel) return;
+
+      ySel.innerHTML = "";
+      fySel.innerHTML = "";
+
+      for (var y = now.getFullYear(); y >= 2026; y--) {
+        ySel.innerHTML += "<option value='" + y + "'>" + y + "</option>";
+        fySel.innerHTML += "<option value='" + y + "'>FY " + y + "-" + String(y+1).slice(-2) + "</option>";
+      }
+
+      populateExportMonths();
+
+      var todayStr = now.toISOString().slice(0, 10);
+      var firstDayStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-01";
+      document.getElementById("exportFromDate").value = firstDayStr;
+      document.getElementById("exportToDate").value = todayStr;
+    }
+
+    window.populateExportMonths = function() {
+      var mSel = document.getElementById("selExportMonth");
+      if (!mSel) return;
+      mSel.innerHTML = "";
+      var mNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      var now = new Date();
+      var selY = parseInt(document.getElementById("selExportYear").value, 10);
+      var maxM = (selY === now.getFullYear()) ? now.getMonth() : 11;
+      var minM = (selY === 2026) ? 8 : 0; // September 2026
+
+      for (var m = maxM; m >= minM; m--) {
+        mSel.innerHTML += "<option value='" + m + "'>" + mNames[m] + "</option>";
+      }
+    };
+
+    window.generateGstr1Excel = function() {
+      if (typeof XLSX === "undefined") {
+        alert("Excel export library abhi load ho rahi hai. Kripya 2 second baad dobara click karein!");
+        return;
+      }
+
+      var bType = document.getElementById("selExportBillType").value;
+      var timeline = document.getElementById("selExportTimeline").value;
+      var bills = window.cachedBillHistory || [];
+
+      if (!bills || bills.length === 0) {
+        alert("Koi bills record nahi mila export ke liye.");
+        return;
+      }
+
+      // Filter by Type
+      var filtered = bills.filter(function(b) {
+        var doc = String(b.docNo || "").toUpperCase();
+        if (doc.indexOf("EST") !== -1) return false; // Estimates ignore
+        if (bType === "GST") return doc.indexOf("INV") !== -1 || b.isGst === true;
+        if (bType === "NONGST") return doc.indexOf("REG") !== -1;
+        return true;
+      });
+
+      // Filter by Date
+      var fileSuffix = "";
+      if (timeline === "month") {
+        var selY = parseInt(document.getElementById("selExportYear").value, 10);
+        var selM = parseInt(document.getElementById("selExportMonth").value, 10);
+        filtered = filtered.filter(function(b) {
+          if (!b.date) return false;
+          var dt = new Date(b.date);
+          return dt.getFullYear() === selY && dt.getMonth() === selM;
+        });
+        var mNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        fileSuffix = mNames[selM] + "_" + selY;
+      } else if (timeline === "custom") {
+        var fDate = document.getElementById("exportFromDate").value;
+        var tDate = document.getElementById("exportToDate").value;
+        if (!fDate || !tDate) { alert("Please select From and To dates!"); return; }
+        filtered = filtered.filter(function(b) {
+          if (!b.date) return false;
+          var bDateStr = new Date(b.date).toISOString().slice(0, 10);
+          return bDateStr >= fDate && bDateStr <= tDate;
+        });
+        fileSuffix = fDate + "_to_" + tDate;
+      } else if (timeline === "year") {
+        var fyStartYear = parseInt(document.getElementById("selExportFy").value, 10);
+        var fyStart = new Date(fyStartYear, 3, 1); // 1st April
+        var fyEnd = new Date(fyStartYear + 1, 2, 31, 23, 59, 59); // 31st March
+        filtered = filtered.filter(function(b) {
+          if (!b.date) return false;
+          var dt = new Date(b.date);
+          return dt >= fyStart && dt <= fyEnd;
+        });
+        fileSuffix = "FY_" + fyStartYear + "_" + String(fyStartYear + 1).slice(-2);
+      }
+
+      if (filtered.length === 0) {
+        alert("Selected period aur filter ke liye koi sales data nahi mila.");
+        return;
+      }
+
+      // 32-COLUMN EXACT GOVERNMENT GSTR-1 TEMPLATE STRUCTURE
+      var headerRow1 = [
+        "Details of outward supplies", "", "", "", "Invoice Details", "", "", "", "", "", "Quantity", "",
+        "IGST (Only for Inter State Supply)", "", "CGST", "", "SGST", "", "Cess", "",
+        "Indicate if supply attracts reverse charge $", "Whether Covered u/s 9(5)",
+        "Provisional Assessment Order Details", "", "Name of ecommerce operator",
+        "GSTIN of ecommerce operator", "Shipping Bill (In case of export/SEZ)", "", "", "",
+        "Select Receipient Category if different from 'Regular'", "Item Type"
+      ];
+
+      var headerRow2 = [
+        "Name of the receipient*", "GSTIN/ UIN*", "State Name*", "POS",
+        "No.*", "Date*", "Invoice Value *", "HSN/SAC", "Goods/Service description", "Taxable value*",
+        "Qty", "Unit*", "Rate*", "Amt*", "Rate*", "Amt*", "Rate*", "Amt*", "Rate*", "Amt*",
+        "", "", "No.", "Date", "", "", "Export Type", "No.", "Date", "Port Code", "", ""
+      ];
+
+      var headerRow3 = [];
+      for (var colIdx = 1; colIdx <= 32; colIdx++) {
+        headerRow3.push(colIdx);
+      }
+
+      var dataRows = [headerRow1, headerRow2, headerRow3];
+
+      filtered.forEach(function(b) {
+        var items = b.items && b.items.length > 0 ? b.items : [{
+          name: "Electrical Goods",
+          hsn: "8536",
+          qty: 1,
+          total: parseFloat(b.amount || b.grandTotal || 0)
+        }];
+
+        var docNo = b.docNo || "-";
+        var bDate = b.date ? new Date(b.date).toLocaleDateString("en-GB") : "-"; // DD/MM/YYYY
+        var invVal = parseFloat(b.amount || b.grandTotal || 0);
+        var custName = b.customerName || "Counter Customer";
+        var custGstin = (b.gstin && b.gstin !== "-") ? b.gstin.trim().toUpperCase() : "";
+        var pos = b.shipState || "09 - Uttar Pradesh";
+        var stateName = "Uttar Pradesh";
+        if (custGstin.length >= 2) {
+          stateName = (custGstin.substring(0, 2) === "07") ? "Delhi" : (custGstin.substring(0, 2) === "06") ? "Haryana" : "Uttar Pradesh";
+        }
+        var isInterState = (custGstin.length >= 2 && custGstin.substring(0, 2) !== "09") || (pos && !pos.startsWith("09"));
+
+        items.forEach(function(it) {
+          var qty = parseFloat(it.qty || 1);
+          var itmTotal = parseFloat(it.total || 0);
+          var hsn = it.hsn || "8536";
+          var itmName = it.name || "Electrical Goods";
+
+          var isGstBill = (b.isGst === true || docNo.indexOf("INV") !== -1 || custGstin.length > 0);
+          var taxableVal = isGstBill ? Math.round((itmTotal / 1.18) * 100) / 100 : itmTotal;
+          var totalTax = isGstBill ? Math.round((itmTotal - taxableVal) * 100) / 100 : 0;
+
+          var igstRate = isInterState ? 18 : 0;
+          var igstAmt = isInterState ? totalTax : 0;
+          var cgstRate = !isInterState && isGstBill ? 9 : 0;
+          var cgstAmt = !isInterState && isGstBill ? Math.round((totalTax / 2) * 100) / 100 : 0;
+          var sgstRate = !isInterState && isGstBill ? 9 : 0;
+          var sgstAmt = !isInterState && isGstBill ? Math.round((totalTax / 2) * 100) / 100 : 0;
+
+          var row = new Array(32).fill("");
+          row[0] = custName;             // 1. Name of recipient
+          row[1] = custGstin;            // 2. GSTIN/UIN
+          row[2] = stateName;            // 3. State Name
+          row[3] = pos;                  // 4. POS
+          row[4] = docNo;                // 5. No.*
+          row[5] = bDate;                // 6. Date*
+          row[6] = invVal;               // 7. Invoice Value *
+          row[7] = hsn;                  // 8. HSN/SAC
+          row[8] = itmName;              // 9. Goods description
+          row[9] = taxableVal;           // 10. Taxable value*
+          row[10] = qty;                 // 11. Qty
+          row[11] = "PCS";               // 12. Unit*
+          row[12] = igstRate;            // 13. IGST Rate*
+          row[13] = igstAmt;             // 14. IGST Amt*
+          row[14] = cgstRate;            // 15. CGST Rate*
+          row[15] = cgstAmt;             // 16. CGST Amt*
+          row[16] = sgstRate;            // 17. SGST Rate*
+          row[17] = sgstAmt;             // 18. SGST Amt*
+          row[18] = 0;                   // 19. Cess Rate
+          row[19] = 0;                   // 20. Cess Amt
+          row[20] = "N";                 // 21. Reverse charge (N)
+          row[31] = "G";                 // 32. Item Type (Goods)
+
+          dataRows.push(row);
+        });
+      });
+
+      // Generate Workbook and Trigger Direct Download
+      var wb = XLSX.utils.book_new();
+      var ws = XLSX.utils.aoa_to_sheet(dataRows);
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+      var fileName = "GSTR1_Report_" + bType + "_" + fileSuffix + ".xlsx";
+      XLSX.writeFile(wb, fileName);
+
+      closeGstExportModal();
+      alert("✅ " + fileName + " successfully download ho gaya!");
     };
     
     window.switchNav = function(nav) {
