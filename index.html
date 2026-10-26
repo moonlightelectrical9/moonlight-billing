@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <!-- Excel Export SheetJS Library -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
   <style>
     :root {
@@ -4638,7 +4638,7 @@ setTimeout(function() {
 
     window.generateGstr1Excel = function() {
       if (typeof XLSX === "undefined") {
-        alert("Excel export library abhi load ho rahi hai. Kripya 2 second baad dobara click karein!");
+        alert("Excel engine load ho raha hai, kripya 2 second baad dobara click karein!");
         return;
       }
 
@@ -4654,13 +4654,13 @@ setTimeout(function() {
       // Filter by Type
       var filtered = bills.filter(function(b) {
         var doc = String(b.docNo || "").toUpperCase();
-        if (doc.indexOf("EST") !== -1) return false; // Estimates ignore
+        if (doc.indexOf("EST") !== -1) return false;
         if (bType === "GST") return doc.indexOf("INV") !== -1 || b.isGst === true;
         if (bType === "NONGST") return doc.indexOf("REG") !== -1;
         return true;
       });
 
-      // Filter by Date
+      // Filter by Timeline
       var fileSuffix = "";
       if (timeline === "month") {
         var selY = parseInt(document.getElementById("selExportYear").value, 10);
@@ -4684,8 +4684,8 @@ setTimeout(function() {
         fileSuffix = fDate + "_to_" + tDate;
       } else if (timeline === "year") {
         var fyStartYear = parseInt(document.getElementById("selExportFy").value, 10);
-        var fyStart = new Date(fyStartYear, 3, 1); // 1st April
-        var fyEnd = new Date(fyStartYear + 1, 2, 31, 23, 59, 59); // 31st March
+        var fyStart = new Date(fyStartYear, 3, 1);
+        var fyEnd = new Date(fyStartYear + 1, 2, 31, 23, 59, 59);
         filtered = filtered.filter(function(b) {
           if (!b.date) return false;
           var dt = new Date(b.date);
@@ -4695,33 +4695,66 @@ setTimeout(function() {
       }
 
       if (filtered.length === 0) {
-        alert("Selected period aur filter ke liye koi sales data nahi mila.");
+        alert("Selected period ke liye koi data nahi mila.");
         return;
       }
 
-      // 32-COLUMN EXACT GOVERNMENT GSTR-1 TEMPLATE STRUCTURE
-      var headerRow1 = [
-        "Details of outward supplies", "", "", "", "Invoice Details", "", "", "", "", "", "Quantity", "",
-        "IGST (Only for Inter State Supply)", "", "CGST", "", "SGST", "", "Cess", "",
-        "Indicate if supply attracts reverse charge $", "Whether Covered u/s 9(5)",
-        "Provisional Assessment Order Details", "", "Name of ecommerce operator",
-        "GSTIN of ecommerce operator", "Shipping Bill (In case of export/SEZ)", "", "", "",
-        "Select Receipient Category if different from 'Regular'", "Item Type"
-      ];
+      // EXACT 33-COLUMN STRUCTURE
+      var headerRow1 = new Array(33).fill("");
+      headerRow1[0] = "Details of outward supplies";
 
       var headerRow2 = [
-        "Name of the receipient*", "GSTIN/ UIN*", "State Name*", "POS",
-        "No.*", "Date*", "Invoice Value *", "HSN/SAC", "Goods/Service description", "Taxable value*",
-        "Qty", "Unit*", "Rate*", "Amt*", "Rate*", "Amt*", "Rate*", "Amt*", "Rate*", "Amt*",
-        "", "", "No.", "Date", "", "", "Export Type", "No.", "Date", "Port Code", "", ""
+        'Name of the receipient*            (Mandatory in case of unregistered person)',
+        'GSTIN/ UIN*              (Mandatory in case of Registered person)',
+        'State Name*',
+        'POS                                     (only if\ndifferent from\nthe location of\nrecipient)',
+        'Invoice Details', '', '', '', '', '',
+        'Quantity', '',
+        'IGST                         (Only for Inter State Supply)', '',
+        'CGST', '',
+        'SGST', '',
+        'Cess', '',
+        'Indicate if supply\nattracts\nreverse\ncharge $',
+        'Whether Covered u/s 9(5)',
+        'Provisional Assessment Order Details                      (Enter Details when value in column Y is YES)', '',
+        'Name of ecommerce operator',
+        'GSTIN of ecommerce\noperator                  (if\napplicable)',
+        'Shipping Bill     (In case of export/SEZ)', '', '', '',
+        'Select Receipient Category if different from "Regular"',
+        'Item Type ',
+        'Original Invoice No.'
       ];
 
-      var headerRow3 = [];
-      for (var colIdx = 1; colIdx <= 32; colIdx++) {
-        headerRow3.push(colIdx);
+      var headerRow3 = [
+        '', '', '', '',
+        'No.*', 'Date*', 'Invoice Value *', 'HSN/SAC', 'Goods/Service description', 'Taxable value*',
+        'Qty', 'Unit*',
+        'Rate*', 'Amt*',
+        'Rate*', 'Amt*',
+        'Rate*', 'Amt*',
+        'Rate*', 'Amt*',
+        '', '', 'No.', 'Date', '', '',
+        'Export Type ', 'No.', 'Date ', 'Port Code ', '', '', ''
+      ];
+
+      var headerRow4 = [];
+      for (var colIdx = 1; colIdx <= 33; colIdx++) {
+        headerRow4.push(colIdx);
       }
 
-      var dataRows = [headerRow1, headerRow2, headerRow3];
+      var dataRows = [headerRow1, headerRow2, headerRow3, headerRow4];
+
+      // Format Date to DD-MMM-YYYY (e.g., 25-Oct-2026)
+      function formatGstDate(dStr) {
+        if (!dStr) return "";
+        var d = new Date(dStr);
+        if (isNaN(d.getTime())) return dStr;
+        var day = String(d.getDate()).padStart(2, '0');
+        var mList = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        var mon = mList[d.getMonth()];
+        var yr = d.getFullYear();
+        return day + "-" + mon + "-" + yr;
+      }
 
       filtered.forEach(function(b) {
         var items = b.items && b.items.length > 0 ? b.items : [{
@@ -4732,16 +4765,20 @@ setTimeout(function() {
         }];
 
         var docNo = b.docNo || "-";
-        var bDate = b.date ? new Date(b.date).toLocaleDateString("en-GB") : "-"; // DD/MM/YYYY
+        var bDateFormatted = formatGstDate(b.date);
         var invVal = parseFloat(b.amount || b.grandTotal || 0);
         var custName = b.customerName || "Counter Customer";
         var custGstin = (b.gstin && b.gstin !== "-") ? b.gstin.trim().toUpperCase() : "";
-        var pos = b.shipState || "09 - Uttar Pradesh";
-        var stateName = "Uttar Pradesh";
+        var stateName = "UTTAR PRADESH";
+        var pos = "UTTAR PRADESH";
+
         if (custGstin.length >= 2) {
-          stateName = (custGstin.substring(0, 2) === "07") ? "Delhi" : (custGstin.substring(0, 2) === "06") ? "Haryana" : "Uttar Pradesh";
+          var sc = custGstin.substring(0, 2);
+          if (sc === "07") { stateName = "DELHI"; pos = "DELHI"; }
+          else if (sc === "06") { stateName = "HARYANA"; pos = "HARYANA"; }
         }
-        var isInterState = (custGstin.length >= 2 && custGstin.substring(0, 2) !== "09") || (pos && !pos.startsWith("09"));
+
+        var isInterState = (stateName !== "UTTAR PRADESH");
 
         items.forEach(function(it) {
           var qty = parseFloat(it.qty || 1);
@@ -4760,46 +4797,113 @@ setTimeout(function() {
           var sgstRate = !isInterState && isGstBill ? 9 : 0;
           var sgstAmt = !isInterState && isGstBill ? Math.round((totalTax / 2) * 100) / 100 : 0;
 
-          var row = new Array(32).fill("");
-          row[0] = custName;             // 1. Name of recipient
-          row[1] = custGstin;            // 2. GSTIN/UIN
+          var row = new Array(33).fill("");
+          row[0] = custName;             // 1. Recipient
+          row[1] = custGstin;            // 2. GSTIN
           row[2] = stateName;            // 3. State Name
           row[3] = pos;                  // 4. POS
           row[4] = docNo;                // 5. No.*
-          row[5] = bDate;                // 6. Date*
+          row[5] = bDateFormatted;        // 6. Date*
           row[6] = invVal;               // 7. Invoice Value *
           row[7] = hsn;                  // 8. HSN/SAC
           row[8] = itmName;              // 9. Goods description
           row[9] = taxableVal;           // 10. Taxable value*
           row[10] = qty;                 // 11. Qty
-          row[11] = "PCS";               // 12. Unit*
+          row[11] = "OTH";               // 12. Unit*
           row[12] = igstRate;            // 13. IGST Rate*
-          row[13] = igstAmt;             // 14. IGST Amt*
+          row[13] = igstAmt;             // 14. Amt*
           row[14] = cgstRate;            // 15. CGST Rate*
-          row[15] = cgstAmt;             // 16. CGST Amt*
+          row[15] = cgstAmt;             // 16. Amt*
           row[16] = sgstRate;            // 17. SGST Rate*
-          row[17] = sgstAmt;             // 18. SGST Amt*
+          row[17] = sgstAmt;             // 18. Amt*
           row[18] = 0;                   // 19. Cess Rate
           row[19] = 0;                   // 20. Cess Amt
-          row[20] = "N";                 // 21. Reverse charge (N)
-          row[31] = "G";                 // 32. Item Type (Goods)
+          row[20] = "No";                // 21. Reverse charge (No)
+          row[30] = "Regular";           // 31. Regular
+          row[31] = "Taxable";           // 32. Item Type (Taxable)
+          row[32] = "U";                 // 33. Original Invoice No (U)
 
           dataRows.push(row);
         });
       });
 
-      // Generate Workbook and Trigger Direct Download
-      var wb = XLSX.utils.book_new();
+      // BUILD SHEET WITH STYLES & MERGES
       var ws = XLSX.utils.aoa_to_sheet(dataRows);
-      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+      // EXACT MERGED CELLS
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },   // Row 1: Details of outward supplies (A1:J1)
+        { s: { r: 1, c: 0 }, e: { r: 2, c: 0 } },   // Recipient Name (A2:A3)
+        { s: { r: 1, c: 1 }, e: { r: 2, c: 1 } },   // GSTIN (B2:B3)
+        { s: { r: 1, c: 2 }, e: { r: 2, c: 2 } },   // State Name (C2:C3)
+        { s: { r: 1, c: 3 }, e: { r: 2, c: 3 } },   // POS (D2:D3)
+        { s: { r: 1, c: 4 }, e: { r: 1, c: 9 } },   // Invoice Details (E2:J2)
+        { s: { r: 1, c: 10 }, e: { r: 1, c: 11 } }, // Quantity (K2:L2)
+        { s: { r: 1, c: 12 }, e: { r: 1, c: 13 } }, // IGST (M2:N2)
+        { s: { r: 1, c: 14 }, e: { r: 1, c: 15 } }, // CGST (O2:P2)
+        { s: { r: 1, c: 16 }, e: { r: 1, c: 17 } }, // SGST (Q2:R2)
+        { s: { r: 1, c: 18 }, e: { r: 1, c: 19 } }, // Cess (S2:T2)
+        { s: { r: 1, c: 20 }, e: { r: 2, c: 20 } }, // Reverse Charge (U2:U3)
+        { s: { r: 1, c: 21 }, e: { r: 2, c: 21 } }, // Section 9(5) (V2:V3)
+        { s: { r: 1, c: 22 }, e: { r: 1, c: 23 } }, // Provisional Order (W2:X2)
+        { s: { r: 1, c: 24 }, e: { r: 2, c: 24 } }, // Ecom Operator (Y2:Y3)
+        { s: { r: 1, c: 25 }, e: { r: 2, c: 25 } }, // Ecom GSTIN (Z2:Z3)
+        { s: { r: 1, c: 26 }, e: { r: 1, c: 29 } }, // Shipping Bill (AA2:AD2)
+        { s: { r: 1, c: 30 }, e: { r: 2, c: 30 } }, // Recipient Category (AE2:AE3)
+        { s: { r: 1, c: 31 }, e: { r: 2, c: 31 } }, // Item Type (AF2:AF3)
+        { s: { r: 1, c: 32 }, e: { r: 2, c: 32 } }  // Original Inv (AG2:AG3)
+      ];
+
+      // APPLY COLORS, FONTS & BORDERS
+      var borderThin = {
+        top: { style: "thin", color: { rgb: "000000" } },
+        bottom: { style: "thin", color: { rgb: "000000" } },
+        left: { style: "thin", color: { rgb: "000000" } },
+        right: { style: "thin", color: { rgb: "000000" } }
+      };
+
+      for (var R = 0; R < dataRows.length; R++) {
+        for (var C = 0; C < 33; C++) {
+          var cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!ws[cellRef]) ws[cellRef] = { v: "" };
+
+          if (R === 0) {
+            // Row 1: Peach Background
+            ws[cellRef].s = {
+              fill: { fgColor: { rgb: "FFCC99" } },
+              font: { bold: true, color: { rgb: "000000" } },
+              alignment: { horizontal: "center", vertical: "center" },
+              border: borderThin
+            };
+          } else if (R >= 1 && R <= 3) {
+            // Row 2, 3, 4: Mint Light Green Background
+            var isIgstHeader = (R === 1 && (C === 12 || C === 13));
+            ws[cellRef].s = {
+              fill: { fgColor: { rgb: "CCFFCC" } },
+              font: { bold: true, color: { rgb: isIgstHeader ? "FF0000" : "000000" } },
+              alignment: { horizontal: "center", vertical: "center", wrapText: true },
+              border: borderThin
+            };
+          } else {
+            // Data Rows: Clean Borders
+            ws[cellRef].s = {
+              border: borderThin,
+              alignment: { vertical: "center" }
+            };
+          }
+        }
+      }
+
+      // CREATE WORKBOOK WITH SHEET NAME "Outward Supply"
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Outward Supply");
 
       var fileName = "GSTR1_Report_" + bType + "_" + fileSuffix + ".xlsx";
       XLSX.writeFile(wb, fileName);
 
       closeGstExportModal();
       alert("✅ " + fileName + " successfully download ho gaya!");
-    };
-    
+    };    
     window.switchNav = function(nav) {
       var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
       var isOwner = (user && (user.isOwner === true || user.phone === "8860706865" || (user.role && user.role.toLowerCase().includes("admin"))));
