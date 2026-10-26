@@ -1013,38 +1013,64 @@
         </div>
       </div>
 
-      <!-- Bulk Purchase & Rate Management Card -->
-      <div id="boxStockBulk" style="display: none; margin-top: 14px; margin-bottom: 16px; padding: 14px 16px; background: #f8fafc; border: 1px dashed #0284c7; border-radius: 8px;">
-        <div style="font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #0f172a;">📦 Bulk Purchase & Rate Revision via CSV</div>
-        <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
-          Purchase entry karein ya ek click mein pure inventory ke selling rates update karein.
+      <!-- Modern Enterprise Dropdown-Based Bulk Operation Card -->
+      <div id="boxStockBulk" style="display: none; margin-top: 14px; margin-bottom: 16px; padding: 20px 24px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        
+        <div style="font-weight: 900; font-size: 16px; color: #0f172a; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+          📤 Bulk Inventory Operations
+        </div>
+        <div style="font-size: 12px; color: #64748b; margin-bottom: 18px;">
+          Select bulk operation type to inward stock purchases or revise selling rates across inventory via CSV.
         </div>
 
-        <!-- Section 1: Bulk Purchase Inward -->
-        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
-          <span style="font-size: 12px; font-weight: 600; color: #334155;">1. Purchase Inward:</span>
-          <button type="button" class="btn-sync" onclick="downloadPurchaseSampleCSV()" style="background:#0284c7; color:#fff; padding:5px 10px; font-size:11px;">
-            📥 Sample Purchase CSV
-          </button>
-          <input type="file" id="bulkPurchaseCsvInput" accept=".csv" style="font-size: 11px;" />
-          <button type="button" class="btn-sync" onclick="uploadBulkPurchaseCSV()" style="background:#10b981; color:#fff; padding:5px 12px; font-size:11px; font-weight:700;">
-            🚀 Upload Purchases
-          </button>
+        <!-- Step 1: Bulk Type Selector -->
+        <div style="max-width: 480px; margin-bottom: 18px;">
+          <label style="display: block; font-size: 11.5px; font-weight: 800; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+            Bulk Type <span style="color: #dc2626;">*</span> :
+          </label>
+          <select id="selBulkOperationType" onchange="onBulkTypeSelectionChange()" style="padding: 10px 12px; font-size: 13.5px; font-weight: 700; border: 1.5px solid #0284c7; border-radius: 6px; background: #f0f9ff; color: #0369a1; cursor: pointer; width: 100%;">
+            <option value="" selected disabled>-- Select Bulk Type --</option>
+            <option value="purchase">📦 Bulk Purchase Inward Entry</option>
+            <option value="rate">💲 Quick Rate Revision (Selling Rates)</option>
+          </select>
         </div>
 
-        <!-- Section 2: Quick Bulk Rate Change -->
-        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-          <span style="font-size: 12px; font-weight: 600; color: #334155;">2. Quick Rate Change:</span>
-          <button type="button" class="btn-sync" onclick="exportCurrentRatesCSV()" style="background:#6366f1; color:#fff; padding:5px 10px; font-size:11px;">
-            📥 Download Current Rates CSV
-          </button>
-          <input type="file" id="bulkRateCsvInput" accept=".csv" style="font-size: 11px;" />
-          <button type="button" class="btn-sync" onclick="uploadBulkRatesCSV()" style="background:#ea580c; color:#fff; padding:5px 12px; font-size:11px; font-weight:700;">
-            🏷️ Update Rates Only
-          </button>
+        <!-- Step 2: Dynamic Action Container (Default Hidden) -->
+        <div id="bulkDynamicActionBox" style="display: none; border-top: 1px dashed #cbd5e1; padding-top: 16px;">
+          
+          <!-- Sample Format Bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; background: #f8fafc; padding: 10px 14px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <span style="font-size: 12.5px; color: #334155; font-weight: 600;" id="lblBulkHelpText">
+              Format guidelines for selected operation.
+            </span>
+            <button type="button" id="btnDownloadSampleAction" onclick="handleDynamicSampleDownload()" style="background: #0284c7; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+              📥 Download Format / Sample
+            </button>
+          </div>
+
+          <!-- Drag / Select Upload Box -->
+          <div style="border: 2px dashed #93c5fd; background: #f8fafc; border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 16px;">
+            <div style="font-size: 32px; margin-bottom: 6px;">📄</div>
+            <div style="font-weight: 700; font-size: 13.5px; color: #1e3a8a; margin-bottom: 4px;">
+              Choose your prepared CSV file to process
+            </div>
+            <div style="font-size: 11.5px; color: #64748b; margin-bottom: 14px;">
+              Supported file format: .csv
+            </div>
+            <input type="file" id="dynamicBulkCsvInput" accept=".csv" style="max-width: 320px; font-size: 12px; margin: 0 auto; display: block;" />
+          </div>
+
+          <!-- Process Button -->
+          <div style="display: flex; justify-content: flex-start; gap: 10px;">
+            <button type="button" id="btnExecuteBulkSubmit" onclick="executeSelectedBulkUpload()" style="background: #10b981; color: #fff; border: none; padding: 11px 28px; border-radius: 6px; font-size: 13.5px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 6px rgba(16,185,129,0.3);">
+              🚀 Submit & Process File
+            </button>
+          </div>
+
         </div>
+
       </div>
-            <!-- Mode 1: Regular Inward -->
+           <!-- Mode 1: Regular Inward -->
             <div id="boxStockInward">
               <div class="grid-row row-2">
                 <div class="form-col">
@@ -3649,96 +3675,60 @@ window.submitReturnProcess = async function(idx) {
         alert("Server error: " + err.message);
       });
     };
-    // 1. Sample CSV download karne ke liye
-window.downloadPurchaseSampleCSV = function() {
-  var csvContent = "Date of purchase,Item Name,Qty,Price/PC,Total,Purchase from,Payment mode\n" +
-                   "2026-10-14,Havells Reo 20W Batten Light 4Feet,20,110,2200,Bhagirath place,Cash\n" +
-                   "2026-10-14,Anchor Penta 6A Switch White,50,15,750,Bhagirath place,Cash";
+   // ================= MODERN DROPDOWN BULK INVENTORY HANDLER =================
+    window.onBulkTypeSelectionChange = function() {
+      var type = document.getElementById("selBulkOperationType").value;
+      var actionBox = document.getElementById("bulkDynamicActionBox");
+      var helpText = document.getElementById("lblBulkHelpText");
+      var sampleBtn = document.getElementById("btnDownloadSampleAction");
+      var submitBtn = document.getElementById("btnExecuteBulkSubmit");
+      var fileInp = document.getElementById("dynamicBulkCsvInput");
 
-  var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  var url = URL.createObjectURL(blob);
-  var link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", "Sample_Purchase_Entry.csv");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+      if (fileInp) fileInp.value = "";
 
-// 2. CSV to Array Parser
-function parsePurchaseCSV(text) {
-  var lines = text.trim().split(/\r\n|\n/);
-  if (lines.length < 2) return [];
-
-  var headers = lines[0].split(",").map(function(h) { return h.trim().replace(/^"|"$/g, ""); });
-  var records = [];
-
-  for (var i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    var row = lines[i].split(",");
-    var item = {};
-    for (var j = 0; j < headers.length; j++) {
-      item[headers[j]] = (row[j] || "").trim().replace(/^"|"$/g, "");
-    }
-    records.push(item);
-  }
-  return records;
-}
-
-// 3. File upload aur server bhejne ka handler
-window.uploadBulkPurchaseCSV = function() {
-  var fileInput = document.getElementById("bulkPurchaseCsvInput");
-  if (!fileInput.files || !fileInput.files[0]) {
-    alert("Kripya pehle CSV file select karein!");
-    return;
-  }
-
-  var file = fileInput.files[0];
-  var reader = new FileReader();
-
-  reader.onload = function(e) {
-    var rawText = e.target.result;
-    var purchases = parsePurchaseCSV(rawText);
-
-    if (purchases.length === 0) {
-      alert("CSV file khali hai ya galat format hai.");
-      return;
-    }
-
-    if (!confirm(purchases.length + " purchase entries upload karke stock update karna chahte hain?")) {
-      return;
-    }
-
-    var uPhone = (typeof selectedPermUserPhone !== 'undefined' && selectedPermUserPhone) ? selectedPermUserPhone :
-                 (typeof currentUser !== 'undefined' && currentUser && currentUser.phone) ? currentUser.phone : "";
-
-    fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "bulkPurchaseUpload",
-        purchases: purchases,
-        userPhone: uPhone
-      })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(res) {
-      if (res.success) {
-        alert("Success: " + res.message);
-        fileInput.value = ""; // Reset input
-        if (typeof loadInventory === "function") loadInventory();
+      if (type === "purchase") {
+        actionBox.style.display = "block";
+        helpText.innerHTML = "<b>Format Rule:</b> Download sample CSV, fill Date, Item Name, Qty, Price, Vendor, then upload.";
+        sampleBtn.innerHTML = "📥 Download Sample Purchase CSV";
+        sampleBtn.style.background = "#0284c7";
+        submitBtn.innerHTML = "🚀 Upload Purchases & Add Stock";
+        submitBtn.style.background = "#10b981";
+      } else if (type === "rate") {
+        actionBox.style.display = "block";
+        helpText.innerHTML = "<b>Format Rule:</b> Download current rates CSV, update Customer/Electrician/Wholesale rates, then upload back.";
+        sampleBtn.innerHTML = "📥 Download Current Rates CSV";
+        sampleBtn.style.background = "#6366f1";
+        submitBtn.innerHTML = "🏷️ Update Selling Rates";
+        submitBtn.style.background = "#ea580c";
       } else {
-        alert("Error: " + (res.message || "Upload nahi ho paya."));
+        actionBox.style.display = "none";
       }
-    })
-    .catch(function(err) {
-      alert("Server Error: " + err.message);
-    });
-  };
+    };
 
-  reader.readAsText(file);
-};
-// 1. Current Inventory Rates Export Function (With All 8 Columns)
+    window.handleDynamicSampleDownload = function() {
+      var type = document.getElementById("selBulkOperationType").value;
+      if (type === "purchase") {
+        downloadPurchaseSampleCSV();
+      } else if (type === "rate") {
+        exportCurrentRatesCSV();
+      }
+    };
+
+    window.downloadPurchaseSampleCSV = function() {
+      var csvContent = "Date of purchase,Item Name,Qty,Price/PC,Total,Purchase from,Payment mode\n" +
+                       "2026-10-14,Havells Reo 20W Batten Light 4Feet,20,110,2200,Bhagirath place,Cash\n" +
+                       "2026-10-14,Anchor Penta 6A Switch White,50,15,750,Bhagirath place,Cash";
+
+      var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "Sample_Purchase_Entry.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
     window.exportCurrentRatesCSV = function() {
       if (!cachedItems || cachedItems.length === 0) {
         alert("Inventory list abhi load nahi hui hai.");
@@ -3771,11 +3761,16 @@ window.uploadBulkPurchaseCSV = function() {
       document.body.removeChild(link);
     };
 
-    // 2. Upload and Update Rates Only (Safe update)
-    window.uploadBulkRatesCSV = function() {
-      var fileInput = document.getElementById("bulkRateCsvInput");
+    window.executeSelectedBulkUpload = function() {
+      var type = document.getElementById("selBulkOperationType").value;
+      var fileInput = document.getElementById("dynamicBulkCsvInput");
+
+      if (!type) {
+        alert("Pehle Bulk Type select karein!");
+        return;
+      }
       if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-        alert("Kripya Rate update wali CSV file select karein!");
+        alert("Kripya upload karne ke liye CSV file choose karein!");
         return;
       }
 
@@ -3786,12 +3781,12 @@ window.uploadBulkPurchaseCSV = function() {
         var rawText = e.target.result;
         var lines = rawText.trim().split(/\r\n|\n/);
         if (lines.length < 2) {
-          alert("File khali hai ya galat format hai.");
+          alert("CSV file khali hai ya galat format hai.");
           return;
         }
 
         var headers = lines[0].split(",").map(function(h) { return h.trim().replace(/^"|"$/g, ""); });
-        var ratesArray = [];
+        var records = [];
 
         for (var i = 1; i < lines.length; i++) {
           if (!lines[i].trim()) continue;
@@ -3800,42 +3795,69 @@ window.uploadBulkPurchaseCSV = function() {
           for (var j = 0; j < headers.length; j++) {
             item[headers[j]] = (row[j] || "").trim().replace(/^"|"$/g, "");
           }
-          ratesArray.push(item);
-        }
-
-        if (!confirm(ratesArray.length + " items ke naye rates aur details update karna chahte hain?")) {
-          return;
+          records.push(item);
         }
 
         var uPhone = (typeof selectedPermUserPhone !== 'undefined' && selectedPermUserPhone) ? selectedPermUserPhone :
                      (typeof currentUser !== 'undefined' && currentUser && currentUser.phone) ? currentUser.phone : "";
 
-        fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            action: "bulkRateUpdate",
-            rates: ratesArray,
-            userPhone: uPhone
+        if (type === "purchase") {
+          if (!confirm(records.length + " purchase entries upload karke stock update karna chahte hain?")) return;
+
+          fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              action: "bulkPurchaseUpload",
+              purchases: records,
+              userPhone: uPhone
+            })
           })
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(res) {
-          if (res.success) {
-            alert("Success: " + res.message);
-            fileInput.value = "";
-            if (typeof loadInventory === "function") loadInventory();
-          } else {
-            alert("Error: " + (res.message || "Rates update nahi ho paye."));
-          }
-        })
-        .catch(function(err) {
-          alert("Server Error: " + err.message);
-        });
+          .then(function(res) { return res.json(); })
+          .then(function(res) {
+            if (res.success) {
+              alert("Success: " + res.message);
+              fileInput.value = "";
+              refreshAppData();
+            } else {
+              alert("Error: " + (res.message || "Upload nahi ho paya."));
+            }
+          })
+          .catch(function(err) {
+            alert("Server Error: " + err.message);
+          });
+
+        } else if (type === "rate") {
+          if (!confirm(records.length + " items ke rates update karna chahte hain?")) return;
+
+          fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              action: "bulkRateUpdate",
+              rates: records,
+              userPhone: uPhone
+            })
+          })
+          .then(function(res) { return res.json(); })
+          .then(function(res) {
+            if (res.success) {
+              alert("Success: " + res.message);
+              fileInput.value = "";
+              refreshAppData();
+            } else {
+              alert("Error: " + (res.message || "Rates update nahi ho paye."));
+            }
+          })
+          .catch(function(err) {
+            alert("Server Error: " + err.message);
+          });
+        }
       };
 
       reader.readAsText(file);
-    };    window.submitStockInward = async function() {
+    };
+    window.submitStockInward = async function() {
       var name = document.getElementById("stkName").value.trim();
       var qty = parseFloat(document.getElementById("stkQty").value) || 0;
       if (!name || qty <= 0) { alert("Enter valid item and quantity!"); return; }
