@@ -4130,18 +4130,21 @@ setTimeout(function() {
       } catch(e) { return null; }
     }
 
-    function startSessionTimer() {
-      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
-      var storedTime = localStorage.getItem("mle_login_time");
-      var loginTime = storedTime ? parseInt(storedTime) : new Date().getTime();
-      if (!storedTime) {
+   function startSessionTimer() {
+      if (window.sessionTimerInterval) clearInterval(window.sessionTimerInterval);
+      
+      var raw = localStorage.getItem("mle_login_time");
+      var loginTime = parseInt(raw);
+      // Agar time pehle se save nahi hai ya corrupt hai toh abhi ka time set karein
+      if (!loginTime || isNaN(loginTime)) {
+        loginTime = Date.now();
         localStorage.setItem("mle_login_time", String(loginTime));
       }
 
       function updateClock() {
-        var diff = (loginTime + (24 * 3600 * 1000)) - new Date().getTime();
+        var diff = (loginTime + (24 * 3600 * 1000)) - Date.now();
         if (diff <= 0) {
-          clearInterval(sessionTimerInterval);
+          clearInterval(window.sessionTimerInterval);
           if (typeof executeUserLogout === "function") executeUserLogout();
           return;
         }
@@ -4149,13 +4152,28 @@ setTimeout(function() {
         var m = Math.floor((diff % 3600000) / 60000);
         var s = Math.floor((diff % 60000) / 1000);
         var pad = function(n) { return String(n).padStart(2, '0'); };
+        var timeStr = "⏳ " + pad(h) + ":" + pad(m) + ":" + pad(s);
+
+        // Header element find karein (by ID ya by text fallback)
         var badge = document.getElementById("sessionTimerBadge");
-        if (badge) badge.innerText = "⏳ " + pad(h) + ":" + pad(m) + ":" + pad(s);
+        if (!badge) {
+          // Fallback: Agar ID match na ho toh header ke badges mein dhoondein
+          var allBadges = document.querySelectorAll("header div, header span, header button, .header-badge");
+          for (var i = 0; i < allBadges.length; i++) {
+            if (allBadges[i].innerText && (allBadges[i].innerText.includes("24:00:00") || allBadges[i].innerText.includes("⏳"))) {
+              badge = allBadges[i];
+              badge.id = "sessionTimerBadge";
+              break;
+            }
+          }
+        }
+        if (badge) badge.innerText = timeStr;
       }
 
-      updateClock(); // 1st second par turant run karega bina wait kiye
-      sessionTimerInterval = setInterval(updateClock, 1000);
+      updateClock();
+      window.sessionTimerInterval = setInterval(updateClock, 1000);
     }
+    try { startSessionTimer(); } catch(e) {}
     // ================= DASHBOARD MODE & PROFILE DROPDOWN LOGIC =================
     window.currentActiveDashboard = "GST"; // Default: 'GST', 'NONGST', 'CONSOLIDATED'
 
