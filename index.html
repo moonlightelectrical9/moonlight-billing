@@ -4402,8 +4402,8 @@ setTimeout(function() {
       }
 
       // 6. DASHBOARD ANALYTICS REFRESH
-      if (typeof window.recalcDashboardAnalyticsForMode === "function") {
-        window.recalcDashboardAnalyticsForMode(mode);
+      if (typeof loadDashboardAnalytics === "function") {
+        loadDashboardAnalytics();
       }
     };
 
