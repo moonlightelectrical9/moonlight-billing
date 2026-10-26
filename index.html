@@ -4580,39 +4580,29 @@ setTimeout(function() {
     }
 
     window.openGstExportModal = function() {
-  var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
-  var isOwner = (user && (user.isOwner === true || user.phone === "8860706865" || (user.role && user.role.toLowerCase().includes("admin"))));
-  if (!isOwner) {
-    alert("Security Alert: Only Admin/Owner has permission to export GSTR-1 Tax reports!");
-    return;
-  }
-
-  // Exact Dashboard Check
-  var selBillType = document.getElementById("selExportBillType");
-  if (selBillType) {
-    var isGstActive = false;
-
-    // 1. Check window location hash
-    var hash = window.location.hash.toLowerCase();
-    if (hash.indexOf("nongst") !== -1 || hash.indexOf("regular") !== -1) {
-      isGstActive = false;
-    } else if (hash.indexOf("gst") !== -1) {
-      isGstActive = true;
-    } else {
-      // 2. Check billing mode / toggle if present
-      if (typeof currentBillingMode !== "undefined") {
-        isGstActive = (currentBillingMode === "gst");
-      } else if (typeof isGstBilling !== "undefined") {
-        isGstActive = !!isGstBilling;
-      } else {
-        // Default GST dashboard maan kar chalein
-        isGstActive = true;
+      var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
+      var isOwner = (user && (user.isOwner === true || user.phone === "8860706865" || (user.role && user.role.toLowerCase().includes("admin"))));
+      if (!isOwner) {
+        alert("Security Alert: Only Admin/Owner has permission to export GSTR-1 Tax reports!");
+        return;
       }
-    }
 
-    selBillType.value = isGstActive ? "GST" : "NONGST";
-  }
+      // Exact Active Dashboard Connection
+      var selBillType = document.getElementById("selExportBillType");
+      if (selBillType) {
+        var activeDash = window.currentActiveDashboard || "GST";
+        if (activeDash === "NONGST") {
+          selBillType.value = "NONGST"; // Without GST dashboard se Regular Bills
+        } else if (activeDash === "CONSOLIDATED") {
+          selBillType.value = "ALL";    // Consolidated dashboard se Both
+        } else {
+          selBillType.value = "GST";    // GST dashboard se GST Tax Invoices
+        }
+      }
 
+      setupExportDateSelectors();
+      document.getElementById("gstExportModal").style.display = "flex";
+    };
       setupExportDateSelectors();
       document.getElementById("gstExportModal").style.display = "flex";
     };
