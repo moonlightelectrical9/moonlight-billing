@@ -950,7 +950,20 @@
         <!-- VIEW 4: SEARCH BILLS -->
         <div id="viewSearchBills" style="display: none;">
           <div class="card">
-            <h3 style="font-weight:900; margin-bottom:12px;">Search & Counter Reprint Engine</h3>
+           <!-- Header with Secret Discreet Icon for Search Bills -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <h3 style="font-weight:900; margin:0;">Search & Counter Reprint Engine</h3>
+        <!-- 🔒 Secret Discreet Icon -->
+        <span onclick="toggleDiscreetSearchBillBar()" title="Mode" style="cursor:pointer; opacity:0.25; font-size:16px; user-select:none; transition:opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=0.25">🔒</span>
+      </div>
+      <!-- Secret Toggle Buttons (Default hidden rahega) -->
+      <div id="discreetSearchBillBar" style="display:none; align-items:center; gap:6px; background:#f1f5f9; padding:4px 8px; border-radius:20px; border:1px solid #cbd5e1;">
+        <button type="button" id="btnSearchGst" onclick="switchSearchBillFilter('GST')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:#2563eb; color:#ffffff;">🏢 GST Invoices</button>
+        <button type="button" id="btnSearchReg" onclick="switchSearchBillFilter('REG')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:transparent; color:#64748b;">📦 Regular</button>
+        <button type="button" id="btnSearchAll" onclick="switchSearchBillFilter('ALL')" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:14px; border:none; cursor:pointer; background:transparent; color:#64748b;">📊 All</button>
+      </div>
+    </div>
             <div class="grid-row row-2">
               <div class="form-col">
                 <label>Search by Customer Mobile, Name, or Invoice No</label>
@@ -3084,6 +3097,32 @@ window.switchKhataFilter = function(mode) {
 
   renderKhataTable();
 };
+    // Search Bill Secret Mode (Default GST)
+window.searchBillMode = "GST";
+
+// Secret Bar Toggle Function
+window.toggleDiscreetSearchBillBar = function() {
+  var bar = document.getElementById('discreetSearchBillBar');
+  if (!bar) return;
+  bar.style.display = (bar.style.display === 'none' || bar.style.display === '') ? 'flex' : 'none';
+};
+
+// Filter Switch Function (GST / REG / ALL)
+window.switchSearchBillFilter = function(mode) {
+  window.searchBillMode = mode;
+
+  var btnG = document.getElementById('btnSearchGst');
+  var btnR = document.getElementById('btnSearchReg');
+  var btnA = document.getElementById('btnSearchAll');
+
+  if (btnG) { btnG.style.background = (mode === 'GST' ? '#2563eb' : 'transparent'); btnG.style.color = (mode === 'GST' ? '#ffffff' : '#64748b'); }
+  if (btnR) { btnR.style.background = (mode === 'REG' ? '#0f172a' : 'transparent'); btnR.style.color = (mode === 'REG' ? '#ffffff' : '#64748b'); }
+  if (btnA) { btnA.style.background = (mode === 'ALL' ? '#475569' : 'transparent'); btnA.style.color = (mode === 'ALL' ? '#ffffff' : '#64748b'); }
+
+  if (typeof filterBillHistory === "function") {
+    filterBillHistory();
+  }
+};
 
 async function loadKhataRecords() {
     var c = document.getElementById("khataListContainer");
@@ -3385,12 +3424,23 @@ window.markPaid = function(docNo) {
 
     function renderFilteredBillHistory() {
       var query = (document.getElementById("historySearchInput").value || "").trim().toLowerCase();
-      var filtered = [];
+      // Secret Mode ke hisaab se bills pehle hi filter ho jayenge
+  var activeSourceList = (window.cachedBillHistory || cachedBillHistory || []).filter(function(r) {
+    var doc = String(r.docNo || "").toUpperCase();
+    if (window.searchBillMode === "GST") {
+      return doc.indexOf("INV") !== -1;
+    } else if (window.searchBillMode === "REG") {
+      return doc.indexOf("REG") !== -1;
+    }
+    return true; // "ALL"
+  });
+
+  var filtered = [];
 
       // 🌟 UNIVERSAL SEARCH OVERRIDE:
       // Agar user ne Search Box mein Mobile / Name / Invoice No likha, toh date filter bypass hoga aur All-Time match aayega
       if (query.length > 0) {
-        filtered = cachedBillHistory.filter(function(r) {
+        filtered = activeSourceList.filter(function(r) {
           return (r.docNo && r.docNo.toLowerCase().includes(query)) ||
                  (r.customerName && r.customerName.toLowerCase().includes(query)) ||
                  (r.phone && String(r.phone).includes(query));
@@ -3401,7 +3451,7 @@ window.markPaid = function(docNo) {
         var todayStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
         var sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 3600 * 1000));
 
-        filtered = cachedBillHistory.filter(function(r) {
+        filtered = activeSourceList.filter(function(r) {
           if (!r.date) return false;
           var bDate = new Date(r.date);
           var bDateStr = bDate.getFullYear() + "-" + String(bDate.getMonth() + 1).padStart(2, '0') + "-" + String(bDate.getDate()).padStart(2, '0');
