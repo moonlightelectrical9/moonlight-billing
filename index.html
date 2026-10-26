@@ -1084,14 +1084,16 @@
               </div>
               <div style="display:flex; align-items:center; gap:8px;">
                 <button type="button" class="btn-sync" id="btnExportGstr1" onclick="openGstExportModal()" style="display:none; height: 36px; background: #059669; color: #fff; border-color: #047857; font-weight: 800; font-size: 13px;">📊 Export GSTR-1 (.xlsx)</button>
-                <button type="button" class="btn-sync" style="height: 36px; justify-content:center; font-size: 13px;" onclick="loadBillHistory()">🔄 Refresh List</button>
               </div>
             </div>
 
-            <div class="grid-row row-1" style="margin-bottom: 12px;">
+            <div class="grid-row row-2">
               <div class="form-col">
                 <label>SEARCH BY CUSTOMER MOBILE, NAME, OR INVOICE NO</label>
                 <input type="text" id="historySearchInput" placeholder="Enter mobile, name or bill no..." oninput="filterBillHistory()">
+              </div>
+              <div class="form-col" style="justify-content: flex-end;">
+                <button type="button" class="btn-sync" style="height: 40px; justify-content:center;" onclick="loadBillHistory()">🔄 Refresh List</button>
               </div>
             </div>
             <!-- DYNAMIC BOUNDED FILTER BAR -->
