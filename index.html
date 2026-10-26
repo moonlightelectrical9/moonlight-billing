@@ -4132,16 +4132,29 @@ setTimeout(function() {
 
     function startSessionTimer() {
       if (sessionTimerInterval) clearInterval(sessionTimerInterval);
-      var loginTime = parseInt(localStorage.getItem("mle_login_time") || new Date().getTime());
-      sessionTimerInterval = setInterval(function() {
-        var diff = (loginTime + 24 * 3600 * 1000) - new Date().getTime();
-        if (diff <= 0) { clearInterval(sessionTimerInterval); executeUserLogout(); return; }
+      var storedTime = localStorage.getItem("mle_login_time");
+      var loginTime = storedTime ? parseInt(storedTime) : new Date().getTime();
+      if (!storedTime) {
+        localStorage.setItem("mle_login_time", String(loginTime));
+      }
+
+      function updateClock() {
+        var diff = (loginTime + (24 * 3600 * 1000)) - new Date().getTime();
+        if (diff <= 0) {
+          clearInterval(sessionTimerInterval);
+          if (typeof executeUserLogout === "function") executeUserLogout();
+          return;
+        }
         var h = Math.floor(diff / 3600000);
         var m = Math.floor((diff % 3600000) / 60000);
         var s = Math.floor((diff % 60000) / 1000);
         var pad = function(n) { return String(n).padStart(2, '0'); };
-        document.getElementById("sessionTimerBadge").innerText = "⏳ " + pad(h) + ":" + pad(m) + ":" + pad(s);
-      }, 1000);
+        var badge = document.getElementById("sessionTimerBadge");
+        if (badge) badge.innerText = "⏳ " + pad(h) + ":" + pad(m) + ":" + pad(s);
+      }
+
+      updateClock(); // 1st second par turant run karega bina wait kiye
+      sessionTimerInterval = setInterval(updateClock, 1000);
     }
     // ================= DASHBOARD MODE & PROFILE DROPDOWN LOGIC =================
     window.currentActiveDashboard = "GST"; // Default: 'GST', 'NONGST', 'CONSOLIDATED'
@@ -4270,25 +4283,56 @@ setTimeout(function() {
     };
     // ================= MODE-BASED FILTERING FOR BILLING, SEARCH & KHATA =================
     window.filterViewsByDashboardMode = function(mode) {
-      // 1. Billing Form Controls Adjust
-      var selBillType = document.getElementById("billMode");
-      if (selBillType) {
-        if (mode === "GST") {
-          selBillType.value = "Tax Invoice";
-          Array.from(selBillType.options).forEach(function(opt) {
-            opt.disabled = (opt.value === "Invoice");
-          });
-        } else if (mode === "NONGST") {
-          selBillType.value = "Invoice";
-          Array.from(selBillType.options).forEach(function(opt) {
-            opt.disabled = (opt.value === "Tax Invoice");
-          });
-        } else {
-          Array.from(selBillType.options).forEach(function(opt) {
-            opt.disabled = false;
-          });
+      // 1. Target Actual GST Bill Select Dropdown (Yes / No)
+      var allSelects = document.querySelectorAll("select");
+      var selGstMode = null;
+
+      // Identify the exact GST BILL? dropdown
+      allSelects.forEach(function(s) {
+        var opts = Array.from(s.options).map(function(o) { return o.text.toLowerCase(); });
+        if (opts.some(function(t) { return t.includes("gst invoice") || t.includes("regular bill"); })) {
+          selGstMode = s;
         }
-        if (typeof onPaymentModeChange === "function") onPaymentModeChange();
+      });
+
+      var gstinContainer = document.querySelector("#custGstin") ? document.querySelector("#custGstin").closest(".form-col") : null;
+
+      if (selGstMode) {
+        var parentCol = selGstMode.closest("div") || selGstMode.parentElement;
+
+        if (mode === "GST") {
+          // Find option with 'Yes' or 'GST Invoice'
+          Array.from(selGstMode.options).forEach(function(opt) {
+            if (opt.text.toLowerCase().includes("yes") || opt.text.toLowerCase().includes("gst invoice")) {
+              selGstMode.value = opt.value;
+            }
+          });
+          // Hide or Lock the GST prompt since user is already in GST Dashboard
+          selGstMode.disabled = true;
+          if (parentCol) parentCol.style.opacity = "0.7";
+          if (gstinContainer) gstinContainer.style.display = "block";
+
+        } else if (mode === "NONGST") {
+          // Find option with 'No' or 'Regular'
+          Array.from(selGstMode.options).forEach(function(opt) {
+            if (opt.text.toLowerCase().includes("no") || opt.text.toLowerCase().includes("regular")) {
+              selGstMode.value = opt.value;
+            }
+          });
+          selGstMode.disabled = true;
+          if (parentCol) parentCol.style.opacity = "0.7";
+          if (gstinContainer) gstinContainer.style.display = "none";
+
+        } else {
+          // Consolidated mode: User can freely choose GST or Non-GST bill
+          selGstMode.disabled = false;
+          if (parentCol) parentCol.style.opacity = "1";
+          if (gstinContainer) gstinContainer.style.display = "block";
+        }
+
+        // Trigger change event so dependent tax calculations refresh
+        var evt = new Event("change", { bubbles: true });
+        selGstMode.dispatchEvent(evt);
       }
 
       // 2. Dashboard Analytics refresh with mode
