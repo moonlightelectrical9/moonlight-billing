@@ -3228,18 +3228,18 @@ window.renderKhataTable = function() {
     var c = document.getElementById("khataListContainer");
   var rawList = window.cachedKhataRecords || [];
 
-  // Active Filter ke hisaab se bills chunein
+  var curMode = window.currentActiveDashboard || "GST";
   var list = rawList.filter(function(r) {
     var doc = String(r.docNo || "").toUpperCase();
     var amt = parseFloat(r.amount) || 0;
     if (amt <= 0) return false;
 
-    if (window.khataFilterStatus === "GST") {
-      return doc.indexOf("INV") !== -1;
-    } else if (window.khataFilterStatus === "REG") {
-      return doc.indexOf("REG") !== -1;
+    if (curMode === "GST") {
+      return doc.indexOf("INV") !== -1 || doc.indexOf("EST") !== -1;
+    } else if (curMode === "NONGST") {
+      return doc.indexOf("REG") !== -1 || doc.indexOf("EST") !== -1;
     }
-    return true; // "ALL"
+    return true;
   });
 
   // Top Card ka Total Amount aur Count update karein
@@ -3509,14 +3509,15 @@ window.markPaid = function(docNo) {
       // Secret Mode ke hisaab se bills pehle hi filter ho jayenge
   var activeSourceList = (window.cachedBillHistory || cachedBillHistory || []).filter(function(r) {
     var doc = String(r.docNo || "").toUpperCase();
-    if (window.searchBillMode === "GST") {
-      return doc.indexOf("INV") !== -1;
-    } else if (window.searchBillMode === "REG") {
-      return doc.indexOf("REG") !== -1;
+    var curMode = window.currentActiveDashboard || "GST";
+    
+    if (curMode === "GST") {
+      return doc.indexOf("INV") !== -1 || doc.indexOf("EST") !== -1;
+    } else if (curMode === "NONGST") {
+      return doc.indexOf("REG") !== -1 || doc.indexOf("EST") !== -1;
     }
-    return true; // "ALL"
+    return true;
   });
-
   var filtered = [];
 
       // 🌟 UNIVERSAL SEARCH OVERRIDE:
@@ -4290,6 +4291,8 @@ setTimeout(function() {
       if (typeof filterViewsByDashboardMode === "function") {
         filterViewsByDashboardMode(mode);
       }
+      if (typeof renderFilteredBillHistory === "function") renderFilteredBillHistory();
+      if (typeof renderKhataTable === "function") renderKhataTable();
     };
     // ================= STRICT MODE-BASED FILTERING FOR BILLING, SEARCH, KHATA & DASHBOARD =================
     window.filterViewsByDashboardMode = function(mode) {
