@@ -2684,9 +2684,9 @@ function updateBulkTabVisibility() {
       if (b.isInvoice === false) isInvoice = false;
 
       var isGst = false;
-      if (b.isGst === true || String(b.isGst).toLowerCase() === "true" || (custGstin && custGstin !== "-")) {
-        isGst = true;
-      }
+if (b.isGst === true || String(b.isGst).toLowerCase() === "true" || (custGstin && custGstin !== "-") || docNo.indexOf("INV") !== -1) {
+  isGst = true;
+}
 
       var headerTitle = isInvoice ? (isGst ? "TAX INVOICE" : "INVOICE") : "ESTIMATE INVOICE";
       var docWord = isInvoice ? "Invoice" : "Estimate";
