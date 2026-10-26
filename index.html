@@ -4465,25 +4465,52 @@ setTimeout(function() {
     };
     
     window.switchNav = function(nav) {
-      document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
-      document.getElementById("viewDashboard").style.display = (nav === 'dash') ? 'block' : 'none';
-      document.getElementById("viewGenBill").style.display = 'none';
-      document.getElementById("viewDraftBills").style.display = 'none';
-      document.getElementById("viewRepeatCustomers").style.display = 'none';
-      document.getElementById("viewCreditLedger").style.display = 'none';
-      document.getElementById("viewSearchBills").style.display = 'none';
-      document.getElementById("viewStockInward").style.display = 'none';
-      document.getElementById("viewSettings").style.display = (nav === 'settings') ? 'block' : 'none';
+    var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
+    var isOwner = (user && (user.isOwner || (user.role && user.role.toLowerCase().includes("admin")) || (user.role && user.role.toLowerCase().includes("owner"))));
+    var perms = (user && user.permissions) ? user.permissions : "all";
 
-      if (nav === 'dash') {
-        document.getElementById("btnNavDash").classList.add("active");
-        loadDashboardAnalytics();
-      }
-      if (nav === 'settings') {
-        document.getElementById("btnNavSet").classList.add("active");
-        loadUsersList();
-      }
+    var hasAccess = function(p) {
+      if (isOwner || perms === "all") return true;
+      if (typeof perms === "string") return perms.includes(p);
+      if (Array.isArray(perms)) return perms.includes(p);
+      return false;
     };
+
+    // Strict Lock: Agar permission removed hai toh dashboard ya settings bilkul open nahi honge
+    if (nav === 'dash' && !hasAccess('dashboard')) {
+      if (typeof switchBillingView === "function") {
+        switchBillingView('gen');
+      }
+      return;
+    }
+    if (nav === 'settings' && !isOwner) {
+      if (typeof switchBillingView === "function") {
+        switchBillingView('gen');
+      }
+      return;
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
+    document.getElementById("viewDashboard").style.display = (nav === 'dash') ? 'block' : 'none';
+    document.getElementById("viewGenBill").style.display = 'none';
+    document.getElementById("viewDraftBills").style.display = 'none';
+    document.getElementById("viewRepeatCustomers").style.display = 'none';
+    document.getElementById("viewCreditLedger").style.display = 'none';
+    document.getElementById("viewSearchBills").style.display = 'none';
+    document.getElementById("viewStockInward").style.display = 'none';
+    document.getElementById("viewSettings").style.display = (nav === 'settings') ? 'block' : 'none';
+
+    if (nav === 'dash') {
+      var btnDash = document.getElementById("btnNavDash");
+      if (btnDash) btnDash.classList.add("active");
+      loadDashboardAnalytics();
+    }
+    if (nav === 'settings') {
+      var btnSet = document.getElementById("btnNavSet");
+      if (btnSet) btnSet.classList.add("active");
+      loadUsersList();
+    }
+  };
 
     window.toggleBillingSub = function() {
       var sub = document.getElementById("billingSubMenu");
@@ -4493,6 +4520,23 @@ setTimeout(function() {
 
     window.switchBillingView = function(subView) {
       document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
+      var user = currentUser || JSON.parse(localStorage.getItem("mle_user") || "{}");
+  var isOwner = (user && (user.isOwner || (user.role && user.role.toLowerCase().includes("admin")) || (user.role && user.role.toLowerCase().includes("owner"))));
+  var perms = (user && user.permissions) ? user.permissions : "all";
+
+  var hasAccess = function(p) {
+    if (isOwner || perms === "all") return true;
+    if (typeof perms === "string") return perms.includes(p);
+    if (Array.isArray(perms)) return perms.includes(p);
+    return false;
+  };
+
+  // Agar user ke paas feature ka access nahi hai, toh automatically 'gen' (Generate Bill) par redirect karein
+  if (subView === 'draft' && !hasAccess('draft_bills')) subView = 'gen';
+  if (subView === 'repeat' && !hasAccess('repeat_customers')) subView = 'gen';
+  if (subView === 'khata' && !hasAccess('khata') && !hasAccess('credit_ledger')) subView = 'gen';
+  if (subView === 'search' && !hasAccess('search_bill') && !hasAccess('bill_history')) subView = 'gen';
+  if (subView === 'stock' && !hasAccess('stock_inward') && !hasAccess('stock')) subView = 'gen';
       document.getElementById("btnNavBill").classList.add("active");
       document.querySelectorAll(".sub-nav-btn").forEach(function(b) { b.classList.remove("active"); });
 
