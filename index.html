@@ -2220,88 +2220,107 @@
           billOrder.push(doc);
         }
         var itmAmt = parseFloat(s.total || 0);
-        var itmCost = parseFloat(s.cost || 0);
-        var itmProfit = parseFloat(s.profit || (itmAmt - itmCost));
+        var itmCost = (s.cost !== undefined && s.cost !== null && s.cost !== "") ? parseFloat(s.cost) : (itmAmt * 0.75);
+        var itmProfit = (s.profit !== undefined && s.profit !== null && s.profit !== "") ? parseFloat(s.profit) : (itmAmt - itmCost);
 
         billGroups[doc].totalBillAmt += itmAmt;
         billGroups[doc].totalBillCost += itmCost;
         billGroups[doc].totalBillProfit += itmProfit;
-        billGroups[doc].items.push(s);
+        billGroups[doc].items.push({
+          name: s.name,
+          rate: s.rate,
+          qty: s.qty,
+          total: itmAmt,
+          cost: itmCost,
+          profit: itmProfit
+        });
       });
 
       var safeKey = String(dateKey || "").replace(/[^a-zA-Z0-9_-]/g, "");
       var safeLabel = String(dateLabel || dateKey || "Date");
 
-      var out = '<div style="display:flex; justify-content:flex-end; margin-bottom:10px;">' +
+      // Top Actions Bar (Collapse All + Excel Download)
+      var out = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">' +
+        '<div style="font-size:12px; color:#475569; font-weight:700;">' +
+          'Total Bills: ' + billOrder.length + ' ' +
+          '<button type="button" onclick="collapseAllDayBills(\'' + safeKey + '\')" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer; margin-left:6px;">▲ Collapse All</button>' +
+        '</div>' +
         '<button type="button" class="btn-sync" onclick="exportSingleDayLedgerToExcel(\'' + safeKey + '\', \'' + safeLabel + '\')" style="background:#059669; color:#fff; border:none; padding:6px 14px; font-weight:800; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; border-radius:6px; box-shadow:0 2px 4px rgba(5,150,105,0.2);">' +
           '📥 Download Day Excel (.xlsx)' +
         '</button>' +
       '</div>';
 
-      // 2. Render Cards per Invoice
-      billOrder.forEach(function(doc) {
+      // 2. Render Collapsible Invoice Cards
+      billOrder.forEach(function(doc, bIdx) {
         var b = billGroups[doc];
         var marginPct = b.totalBillAmt > 0 ? ((b.totalBillProfit / b.totalBillAmt) * 100).toFixed(1) : "0.0";
         var isPayLater = String(b.mode || "").toLowerCase().indexOf("later") !== -1 || String(b.mode || "").toLowerCase().indexOf("credit") !== -1;
         var payBadge = isPayLater 
-          ? '<span style="background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:bold;">Pay Later (Due: ₹' + (b.balanceDue ? parseFloat(b.balanceDue).toFixed(2) : b.totalBillAmt.toFixed(2)) + ')</span>'
-          : '<span style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:bold;">' + (b.mode || 'Cash') + ' (Paid)</span>';
+          ? '<span style="background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:bold;">Pay Later</span>'
+          : '<span style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:bold;">' + (b.mode || 'Cash') + '</span>';
 
-        out += '<div style="background:#ffffff; border:1.5px solid #cbd5e1; border-radius:8px; margin-bottom:12px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.03);">' +
-          '<div style="background:#f8fafc; border-bottom:1.5px solid #e2e8f0; padding:9px 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
+        // DEFINING BILLBOXID AND ARROWID EXPLICITLY HERE:
+        var billBoxId = "billItemsBox_" + safeKey + "_" + bIdx;
+        var arrowId = "arrow_" + safeKey + "_" + bIdx;
+
+        out += '<div style="background:#ffffff; border:1.5px solid #cbd5e1; border-radius:8px; margin-bottom:10px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.02);">' +
+          
+          // Clickable Header (Slide / Unslide Toggle)
+          '<div onclick="toggleSingleBillBox(\'' + billBoxId + '\', \'' + arrowId + '\')" style="background:#f8fafc; cursor:pointer; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; transition:background 0.2s;" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'#f8fafc\'">' +
             '<div>' +
               '<span style="font-size:13px; font-weight:900; color:#1e3a8a;">🧾 ' + b.docNo + '</span>' +
               '<span style="font-size:12px; color:#475569; margin-left:8px; font-weight:700;">' + b.custName + (b.phone ? ' (' + b.phone + ')' : '') + '</span>' +
               '<span style="margin-left:8px;">' + payBadge + '</span>' +
+              '<span id="' + arrowId + '" style="margin-left:8px; font-size:11px; color:#0284c7; font-weight:bold;">▾ (Click to View)</span>' +
             '</div>' +
             '<div style="font-size:12px; display:flex; gap:12px; align-items:center;">' +
               '<span>Bill Total: <b style="color:#0f172a; font-size:13.5px;">₹' + b.totalBillAmt.toFixed(2) + '</b></span>' +
               '<span style="background:#ecfdf5; border:1px solid #a7f3d0; color:#047857; padding:3px 8px; border-radius:6px; font-weight:800;">' +
-                'Bill Profit: +₹' + b.totalBillProfit.toFixed(2) + ' (' + marginPct + '%)' +
+                'Profit: +₹' + b.totalBillProfit.toFixed(2) + ' (' + marginPct + '%)' +
               '</span>' +
             '</div>' +
           '</div>' +
 
-          '<table style="width:100%; border-collapse:collapse; font-size:12px;">' +
-            '<thead>' +
-              '<tr style="background:#fff7ed; color:#9a3412; border-bottom:1px solid #fed7aa;">' +
-                '<th style="padding:6px 10px; width:40px; text-align:center;">#</th>' +
-                '<th style="padding:6px 10px; text-align:left;">Item Name</th>' +
-                '<th style="padding:6px 10px; width:75px; text-align:right;">Rate</th>' +
-                '<th style="padding:6px 10px; width:55px; text-align:center;">Qty</th>' +
-                '<th style="padding:6px 10px; width:90px; text-align:right;">Amount (₹)</th>' +
-                '<th style="padding:6px 10px; width:85px; text-align:right; color:#64748b;">FIFO Cost</th>' +
-                '<th style="padding:6px 10px; width:90px; text-align:right; color:#047857;">Profit (₹)</th>' +
-              '</tr>' +
-            '</thead>' +
-            '<tbody>';
+          // Collapsible Items Table (Default Hidden)
+          '<div id="' + billBoxId + '" style="display:none; border-top:1.5px solid #e2e8f0;">' +
+            '<table style="width:100%; border-collapse:collapse; font-size:12px;">' +
+              '<thead>' +
+                '<tr style="background:#fff7ed; color:#9a3412; border-bottom:1px solid #fed7aa;">' +
+                  '<th style="padding:6px 10px; width:40px; text-align:center;">#</th>' +
+                  '<th style="padding:6px 10px; text-align:left;">Item Name</th>' +
+                  '<th style="padding:6px 10px; width:75px; text-align:right;">Rate</th>' +
+                  '<th style="padding:6px 10px; width:55px; text-align:center;">Qty</th>' +
+                  '<th style="padding:6px 10px; width:90px; text-align:right;">Amount (₹)</th>' +
+                  '<th style="padding:6px 10px; width:85px; text-align:right; color:#64748b;">FIFO Cost</th>' +
+                  '<th style="padding:6px 10px; width:90px; text-align:right; color:#047857;">Profit (₹)</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>';
 
-        b.items.forEach(function(itm, iIdx) {
-          var amt = parseFloat(itm.total || 0);
-          var cost = parseFloat(itm.cost || 0);
-          var prof = parseFloat(itm.profit || (amt - cost));
-          var isLabour = String(itm.name || "").toLowerCase().indexOf("labour") !== -1;
+          b.items.forEach(function(itm, iIdx) {
+            var isLabour = String(itm.name || "").toLowerCase().indexOf("labour") !== -1;
+            out += '<tr style="border-bottom:1px solid #f1f5f9;">' +
+              '<td style="padding:6px 10px; text-align:center; color:#94a3b8;">' + (iIdx + 1) + '</td>' +
+              '<td style="padding:6px 10px; font-weight:600; color:#1e293b;">' + (itm.name || '-') + (isLabour ? ' <small style="color:#0284c7; font-weight:bold;">(Service)</small>' : '') + '</td>' +
+              '<td style="padding:6px 10px; text-align:right;">₹' + parseFloat(itm.rate || 0).toFixed(2) + '</td>' +
+              '<td style="padding:6px 10px; text-align:center; font-weight:700;">' + (itm.qty || 1) + '</td>' +
+              '<td style="padding:6px 10px; text-align:right; font-weight:800; color:#0f172a;">₹' + itm.total.toFixed(2) + '</td>' +
+              '<td style="padding:6px 10px; text-align:right; color:#64748b;">₹' + itm.cost.toFixed(2) + '</td>' +
+              '<td style="padding:6px 10px; text-align:right; font-weight:800; color:' + (itm.profit >= 0 ? '#15803d' : '#dc2626') + ';">' + (itm.profit >= 0 ? '+' : '') + '₹' + itm.profit.toFixed(2) + '</td>' +
+            '</tr>';
+          });
 
-          out += '<tr style="border-bottom:1px solid #f1f5f9;">' +
-            '<td style="padding:6px 10px; text-align:center; color:#94a3b8;">' + (iIdx + 1) + '</td>' +
-            '<td style="padding:6px 10px; font-weight:600; color:#1e293b;">' + (itm.name || '-') + (isLabour ? ' <small style="color:#0284c7; font-weight:bold;">(Service)</small>' : '') + '</td>' +
-            '<td style="padding:6px 10px; text-align:right;">₹' + parseFloat(itm.rate || 0).toFixed(2) + '</td>' +
-            '<td style="padding:6px 10px; text-align:center; font-weight:700;">' + (itm.qty || 1) + '</td>' +
-            '<td style="padding:6px 10px; text-align:right; font-weight:800; color:#0f172a;">₹' + amt.toFixed(2) + '</td>' +
-            '<td style="padding:6px 10px; text-align:right; color:#64748b;">₹' + cost.toFixed(2) + '</td>' +
-            '<td style="padding:6px 10px; text-align:right; font-weight:800; color:' + (prof >= 0 ? '#15803d' : '#dc2626') + ';">' + (prof >= 0 ? '+' : '') + '₹' + prof.toFixed(2) + '</td>' +
-          '</tr>';
-        });
-
-        out += '</tbody></table>' +
-        '<div onclick="toggleSingleBillBox(\'' + billBoxId + '\', \'' + arrowId + '\')" style="background:#f8fafc; text-align:center; padding:7px; cursor:pointer; font-size:11.5px; font-weight:bold; color:#64748b; border-top:1px solid #e2e8f0;">' +
-          '▲ Click to Collapse / Unslide This Bill' +
-        '</div></div></div>';
-    });
+          // Unslide Bar
+          out += '</tbody></table>' +
+            '<div onclick="toggleSingleBillBox(\'' + billBoxId + '\', \'' + arrowId + '\')" style="background:#f8fafc; text-align:center; padding:7px; cursor:pointer; font-size:11.5px; font-weight:bold; color:#64748b; border-top:1px solid #e2e8f0; transition:background 0.2s;" onmouseover="this.style.background=\'#e2e8f0\'" onmouseout="this.style.background=\'#f8fafc\'">' +
+              '▲ Click to Collapse / Unslide This Bill' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      });
 
       return out;
     }
-
     // Single Day Excel Downloader
     window.exportSingleDayLedgerToExcel = function(dateKey, dateLabel) {
       if (typeof XLSX === "undefined") {
