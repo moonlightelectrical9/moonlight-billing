@@ -2293,8 +2293,11 @@
           '</tr>';
         });
 
-        out += '</tbody></table></div>';
-      });
+        out += '</tbody></table>' +
+        '<div onclick="toggleSingleBillBox(\'' + billBoxId + '\', \'' + arrowId + '\')" style="background:#f8fafc; text-align:center; padding:7px; cursor:pointer; font-size:11.5px; font-weight:bold; color:#64748b; border-top:1px solid #e2e8f0;">' +
+          '▲ Click to Collapse / Unslide This Bill' +
+        '</div></div></div>';
+    });
 
       return out;
     }
@@ -2365,6 +2368,32 @@
 
       var fileName = "Day_Ledger_" + dateKey + ".xlsx";
       XLSX.writeFile(wb, fileName);
+    };
+    // Toggle Single Bill Box (Slide & Unslide)
+    window.toggleSingleBillBox = function(boxId, arrowId) {
+      var box = document.getElementById(boxId);
+      var arrow = document.getElementById(arrowId);
+      if (!box) return;
+
+      if (box.style.display === "none") {
+        box.style.display = "block";
+        if (arrow) arrow.innerHTML = "▴ (Click to Close)";
+      } else {
+        box.style.display = "none";
+        if (arrow) arrow.innerHTML = "▾ (Click to View)";
+      }
+    };
+
+    // Ek Sath Sabhi Bills Ko Band (Unslide) Karne Ke Liye
+    window.collapseAllDayBills = function(safeKey) {
+      var allBoxes = document.querySelectorAll('[id^="billItemsBox_' + safeKey + '_"]');
+      allBoxes.forEach(function(b) {
+        b.style.display = "none";
+      });
+      var allArrows = document.querySelectorAll('[id^="arrow_' + safeKey + '_"]');
+      allArrows.forEach(function(a) {
+        a.innerHTML = "▾ (Click to View)";
+      });
     };
     
     window.drillDownToMonth = function(year, monthIdx) {
