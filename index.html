@@ -2733,10 +2733,25 @@
       document.getElementById("custName").value = "";
       document.getElementById("custPhone").value = "";
       document.getElementById("custGstin").value = "";
-      document.getElementById("billMode").value = "";
-      document.getElementById("rateType").value = "";
-      document.getElementById("isGstBill").value = "";
-      document.getElementById("paymentMode").value = "";
+      var prevMode = document.getElementById("billMode").value;
+    var prevGst = document.getElementById("isGstBill").value;
+
+    if (prevMode) {
+      document.getElementById("billMode").value = prevMode;
+    }
+    
+    if (prevGst) {
+      document.getElementById("isGstBill").value = prevGst;
+    } else if (prevMode && prevMode.indexOf("Tax_Invoices") !== -1) {
+      document.getElementById("isGstBill").value = "Yes (GST Invoice)";
+    } else {
+      document.getElementById("isGstBill").value = "No (Regular Bill)";
+    }
+
+    document.getElementById("rateType").value = "";
+    document.getElementById("paymentMode").value = "";
+    if (typeof onBillModeChange === "function") { onBillModeChange(); }
+    if (typeof onGstToggleChange === "function") { onGstToggleChange(); }
       document.getElementById("bannerResumedDraft").style.display = "none";
       if (document.getElementById("diffShipAddressCheck")) {
       document.getElementById("diffShipAddressCheck").checked = false;
