@@ -4871,14 +4871,18 @@ setTimeout(function() {
         return;
       }
 
-      // Filter by Type
-      var filtered = bills.filter(function(b) {
-        var doc = String(b.docNo || "").toUpperCase();
-        if (doc.indexOf("EST") !== -1) return false;
-        if (bType === "GST") return doc.indexOf("INV") !== -1 || b.isGst === true;
-        if (bType === "NONGST") return doc.indexOf("REG") !== -1 || b.isGst === false;
-        return true;
-      });
+      // Filter by type (Strict Prefix Check)
+    var filtered = bills.filter(function(b) {
+      var doc = String(b.docNo || "").toUpperCase();
+      if (doc.indexOf("EST") !== -1) return false;
+      if (bType === "GST") {
+        return doc.indexOf("INV") !== -1;
+      }
+      if (bType === "NONGST") {
+        return doc.indexOf("REG") !== -1 && doc.indexOf("INV") === -1;
+      }
+      return true;
+    });
 
       // Filter by Timeline
       var fileSuffix = "";
