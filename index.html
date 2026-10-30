@@ -621,7 +621,10 @@
 
             <!-- Tab A: Sales -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px;">
-              <div style="font-size:12px; font-weight:800; color:#b45309; text-transform:uppercase;">TAB A: SALE DETAILS (Cash Sale + Online Sale = Total Sale)</div>
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+  <div style="font-size:12px; font-weight:800; color:#b45309; text-transform:uppercase;">TAB A: SALE DETAILS (Cash Sale + Online Sale = Total Sale)</div>
+  <div id="reconcileBadge"></div>
+</div>
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-top:8px;">
                 <div style="background:#fff; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
                   <small style="color:#64748b; font-weight:800;">💵 CASH SALES</small>
@@ -2010,6 +2013,30 @@
         var cAssetFixed = Math.round(cAsset * 100) / 100;
         var dAssetFixed = Math.round(dAsset * 100) / 100;
         if (elRealAsset) elRealAsset.innerText = "₹" + (cAssetFixed + dAssetFixed).toFixed(2);
+      // --- Live Reconciliation Audit (Purchase vs Sales + Stock - Profit) ---
+    try {
+      var rSale = parseFloat(totalSale || 0);
+      var rPur = parseFloat(totalPur || 0);
+      var rProfit = parseFloat(profitSale || 0);
+      var rStock = (window.dashData && window.dashData.closingStockAsset) ? parseFloat(window.dashData.closingStockAsset) : 0;
+      var rHold = (window.dashData && window.dashData.holdStockAsset) ? parseFloat(window.dashData.holdStockAsset) : 0;
+
+      // Formula: Total Sale + Closing Stock + Hold Stock - Profit
+      var calcPur = rSale + rStock + rHold - rProfit;
+      var rDiff = Math.round((calcPur - rPur) * 100) / 100;
+
+      var bElem = document.getElementById("reconcileBadge");
+      if (bElem) {
+        if (Math.abs(rDiff) < 0.05) {
+          bElem.innerHTML = '<span style="background:#dcfce7; border:1.5px solid #22c55e; color:#15803d; padding:4px 12px; border-radius:18px; font-size:12px; font-weight:800; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">✔ Balance: True (100% Match)</span>';
+        } else {
+          var sign = rDiff > 0 ? "+" : "";
+          bElem.innerHTML = '<span style="background:#fee2e2; border:1.5px solid #ef4444; color:#b91c1c; padding:4px 12px; border-radius:18px; font-size:12px; font-weight:800; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">✖ Balance: False (Diff: ' + sign + '₹' + rDiff.toFixed(2) + ')</span>';
+        }
+      }
+    } catch(errAudit) {
+      console.error("Audit badge error:", errAudit);
+    }
 
         if (elDBadge) {
           var dCount = (dRaw.draftItemsSummary ? dRaw.draftItemsSummary.length : 0);
