@@ -2013,25 +2013,26 @@
         var cAssetFixed = Math.round(cAsset * 100) / 100;
         var dAssetFixed = Math.round(dAsset * 100) / 100;
         if (elRealAsset) elRealAsset.innerText = "₹" + (cAssetFixed + dAssetFixed).toFixed(2);
-      // --- Live Overall Reconciliation Audit (Hamesha Lifetime / Overall Check Karega) ---
+      // --- Live Overall Reconciliation Audit (Har Filter Par Overall Check Karega) ---
     try {
-      var dd = window.dashData || {};
-      
-      // Hamesha overall data uthayenge taaki filter badalne par formula na toote
-      var rSale = parseFloat(dd.overallTotalSale || dd.totalSales || totalSale || 0);
-      var rPur = parseFloat(dd.overallTotalPurchase || dd.totalPurchases || totalPur || 0);
-      var rProfit = parseFloat(dd.overallTotalProfit || dd.totalProfit || profitSale || 0);
-      var rStock = parseFloat(dd.closingStockAsset || 0);
-      var rHold = parseFloat(dd.draftHoldStockAsset || dd.holdStockAsset || 0);
+      var allDays = (window.dashData && window.dashData.daysMap) ? window.dashData.daysMap : {};
+      var rSale = 0, rPur = 0, rProfit = 0;
 
-      // Agar active view Yearly/All hai toh current view ke totals use karein
-      if (typeof activeDashMode !== "undefined" && activeDashMode === "yearly") {
-        rSale = parseFloat(totalSale || 0);
-        rPur = parseFloat(totalPur || 0);
-        rProfit = parseFloat(profitSale || 0);
-      }
+      // Pure daysMap ke saare records ko jodkar Overall Totals nikalenge
+      Object.keys(allDays).forEach(function(k) {
+        var dObj = allDays[k];
+        if (dObj) {
+          rSale += parseFloat(dObj.total || 0);
+          rPur += parseFloat(dObj.purTotal || ((dObj.purCash || 0) + (dObj.purOnline || 0)) || 0);
+          rProfit += parseFloat(dObj.profit || 0);
+        }
+      });
 
-      // Formula: Total Sale + Closing Stock + Hold Stock - Profit
+      // Closing Stock aur Hold Stock jo dashboard par calculate hue hain
+      var rStock = (typeof dStockFixed !== "undefined") ? dStockFixed : ((window.dashData && window.dashData.closingStockAsset) ? parseFloat(window.dashData.closingStockAsset) : 0);
+      var rHold = (typeof dAssetFixed !== "undefined") ? dAssetFixed : ((window.dashData && window.dashData.draftHoldStockAsset) ? parseFloat(window.dashData.draftHoldStockAsset) : 0);
+
+      // Formula: Total Sales + Closing Stock + Hold Stock - Real Gross Profit
       var calcPur = rSale + rStock + rHold - rProfit;
       var rDiff = Math.round((calcPur - rPur) * 100) / 100;
 
