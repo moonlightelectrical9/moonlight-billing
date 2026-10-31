@@ -5601,18 +5601,37 @@ window.updateActiveItemMarginTracker = function() {
       var isGst = document.getElementById("isGstBill").value.includes("Yes");
       var taxableRate = isGst ? (calc.finalUnitRate - calc.gstPerPc) : calc.finalUnitRate;
 
-      billItems.push({
-        name: name,
-        serialNo: document.getElementById("itemSerial").value.trim() || "-",
-        hsn: document.getElementById("itemHsn").value.trim() || "-",
-        baseRate: baseRate,
-        taxableRate: taxableRate,
-        discount: parseFloat(document.getElementById("itemDisc").value) || 0,
-        gstPerPc: calc.gstPerPc,
-        finalRate: calc.finalUnitRate,
-        qty: parseFloat(document.getElementById("itemQty").value) || 1,
-        total: calc.total
-      });
+      var addQty = parseFloat(document.getElementById("itemQty").value) || 1;
+  
+  // 1. Check if item already exists in cart (Auto-Merge)
+  var existingIdx = billItems.findIndex(function(it) {
+    return it.name.trim().toLowerCase() === name.trim().toLowerCase();
+  });
+
+  if (existingIdx !== -1) {
+    // Already hai -> Qty aur Total update karo
+    billItems[existingIdx].qty += addQty;
+    billItems[existingIdx].total = billItems[existingIdx].finalRate * billItems[existingIdx].qty;
+    billItems[existingIdx]._isMerged = true; // Light green highlight ke liye
+
+    // 2-second Toast Popup trigger
+    showAutoMergeToast(billItems[existingIdx].name, billItems[existingIdx].qty, billItems[existingIdx].total);
+  } else {
+    // Naya item hai -> Cart mein push karo
+    billItems.push({
+      name: name,
+      serialNo: document.getElementById("itemSerial").value.trim() || "-",
+      hsn: document.getElementById("itemHsn").value.trim() || "-",
+      baseRate: baseRate,
+      taxableRate: taxableRate,
+      discount: parseFloat(document.getElementById("itemDisc").value) || 0,
+      gstPerPc: calc.gstPerPc,
+      finalRate: calc.finalUnitRate,
+      qty: addQty,
+      total: calc.total,
+      _isMerged: false
+    });
+  }
       
       renderBillTable();
       document.getElementById("itemSearch").value = "";
@@ -5644,18 +5663,29 @@ window.updateActiveItemMarginTracker = function() {
         var rateToShow = isGst ? (it.taxableRate || (it.finalRate - it.gstPerPc)) : it.baseRate;
         var gstSign = isGst ? ("+₹" + it.gstPerPc.toFixed(2)) : "₹0.00";
 
-        tbody.innerHTML += "<tr>" +
-          "<td>" + (idx + 1) + "</td>" +
-          "<td><b>" + it.name + "</b>" + snDisplay + "</td>" +
-          "<td>" + it.hsn + "</td>" +
-          "<td>₹" + rateToShow.toFixed(2) + "</td>" +
-          "<td style='color:#059669;'>-₹" + it.discount.toFixed(2) + "</td>" +
-          "<td style='color:#b45309;'>" + gstSign + "</td>" +
-          "<td>" + it.qty + "</td>" +
-          "<td><b>₹" + it.total.toFixed(2) + "</b></td>" +
-          "<td><button class='btn-del' onclick='deleteBillItem(" + idx + ")'>✕</button></td>" +
-          "</tr>";
-      });
+        // Agar item merge/update hua hai toh permanent light-green tint (#ecfdf5)
+    var rowBg = it._isMerged ? 'style="background-color: #ecfdf5;"' : '';
+
+    tbody.innerHTML += '<tr ' + rowBg + '>' +
+      '<td>' + (idx + 1) + '</td>' +
+      '<td><b>' + it.name + '</b>' + snDisplay + '</td>' +
+      '<td>' + it.hsn + '</td>' +
+      '<td>₹' + rateToShow.toFixed(2) + '</td>' +
+      '<td style="color:#059669;">-₹' + it.discount.toFixed(2) + '</td>' +
+      '<td style="color:#d97706;">' + gstSign + '</td>' +
+      
+      // Perfectly Aligned Inline [ - ] Qty [ + ]
+      '<td style="text-align: center; vertical-align: middle;">' +
+        '<div style="display: inline-flex; align-items: center; justify-content: center; gap: 3px;">' +
+          '<button type="button" onclick="changeBillItemQty(' + idx + ', -1)" style="width: 22px; height: 22px; line-height: 20px; padding: 0; font-size: 13px; font-weight: bold; border-radius: 4px; border: 1px solid #ef4444; background: #fee2e2; color: #b91c1c; cursor: pointer;">−</button>' +
+          '<span style="display: inline-block; min-width: 26px; height: 22px; line-height: 22px; text-align: center; font-weight: bold; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; background: #ffffff; color: #0f172a; padding: 0 4px;">' + it.qty + '</span>' +
+          '<button type="button" onclick="changeBillItemQty(' + idx + ', 1)" style="width: 22px; height: 22px; line-height: 20px; padding: 0; font-size: 13px; font-weight: bold; border-radius: 4px; border: 1px solid #22c55e; background: #dcfce7; color: #15803d; cursor: pointer;">+</button>' +
+        '</div>' +
+      '</td>' +
+
+      '<td><b>₹' + it.total.toFixed(2) + '</b></td>' +
+      '<td><button class="btn-del" onclick="deleteBillItem(' + idx + ')">✕</button></td>' +
+    '</tr>';
 
       document.getElementById("lblTotalItemCount").innerText = billItems.length;
       document.getElementById("lblTotalUnitsCount").innerText = totalUnits + " Pcs";
@@ -5666,6 +5696,44 @@ window.updateActiveItemMarginTracker = function() {
       renderBillTable();
       checkFormState();
     };
+      // Live Plus/Minus Qty Change Logic
+window.changeBillItemQty = function(idx, delta) {
+  if (!billItems[idx]) return;
+  var newQty = billItems[idx].qty + delta;
+
+  if (newQty <= 0) {
+    if (confirm("Kya aap '" + billItems[idx].name + "' ko bill se hatana chahte hain?")) {
+      deleteBillItem(idx);
+    }
+    return;
+  }
+
+  billItems[idx].qty = newQty;
+  billItems[idx].total = billItems[idx].finalRate * billItems[idx].qty;
+  billItems[idx]._isMerged = true; // Highlight green
+  
+  renderBillTable();
+  
+  // Pending amount recalculate trigger
+  var recInput = document.getElementById("amtReceived");
+  if (recInput) recInput.dispatchEvent(new Event("input"));
+};
+
+// 2-Second Clean Toast Popup
+function showAutoMergeToast(name, qty, total) {
+  var oldToast = document.getElementById("autoMergeToast");
+  if (oldToast) oldToast.remove();
+
+  var toast = document.createElement("div");
+  toast.id = "autoMergeToast";
+  toast.style.cssText = "position: fixed; bottom: 25px; right: 25px; background: #064e3b; color: #ffffff; padding: 12px 18px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); z-index: 999999; font-size: 13px; border-left: 4px solid #10b981;";
+  toast.innerHTML = "<b style='color:#6ee7b7;'>⚡ Item Quantity Updated!</b><br>" + name + " (Total Qty: <b>" + qty + "</b> | ₹" + total.toFixed(2) + ")";
+
+  document.body.appendChild(toast);
+  setTimeout(function() {
+    if (toast) toast.remove();
+  }, 2000);
+}
 
     function checkFormState() {
   var bMode = document.getElementById("billMode").value;
