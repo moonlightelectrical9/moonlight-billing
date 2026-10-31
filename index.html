@@ -1166,6 +1166,7 @@
               <option value="" selected>-- Select Bulk Type --</option>
               <option value="purchase">📦 Bulk Purchase Inward Entry</option>
               <option value="rate">💲 Quick Rate Revision (Selling Rates)</option>
+              <option value="rename">🔄 Bulk Product Rename (Old ➔ New Name CSV)</option>
             </select>
             <button type="button" id="btnResetBulkSelection" onclick="resetBulkSelection()" style="display: none; background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 9px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
               Reset
@@ -4113,6 +4114,14 @@ window.submitReturnProcess = async function(idx) {
         sampleBtn.style.background = "#6366f1";
         submitBtn.innerHTML = "🏷️ Update Selling Rates";
         submitBtn.style.background = "#ea580c";
+        } else if (type === "rename") {
+    actionBox.style.display = "block";
+    if (resetBtn) resetBtn.style.display = "inline-block";
+    helpText.innerHTML = "<b>Format Rule:</b> Upload 2-column CSV: Column A = <b>Current Item Name</b>, Column B = <b>New Name</b>.";
+    sampleBtn.innerHTML = "📥 Download Rename Sample CSV";
+    sampleBtn.style.background = "#0891b2";
+    submitBtn.innerHTML = "🔄 Process Bulk Rename";
+    submitBtn.style.background = "#0284c7";
       } else {
         // Agar blank / -- Select Bulk Type -- chuna jaye toh band ho jayega
         actionBox.style.display = "none";
@@ -4145,8 +4154,21 @@ window.submitReturnProcess = async function(idx) {
         downloadPurchaseSampleCSV();
       } else if (type === "rate") {
         exportCurrentRatesCSV();
+        } else if (type === "rename") {
+    downloadRenameSampleCSV();
       }
     };
+    window.downloadRenameSampleCSV = function() {
+  var csvContent = "Current Item Name,New Name\n" +
+                   "\"Crompton Ceiling FAN White 1200MM\",\"CROMPTON CEILING FAN WHITE 1200MM\"\n" +
+                   "\"Baja Iron 600Watt\",\"BAJA IRON 600W\"\n" +
+                   "\"8'' Cable Tie 200 MM\",\"8'' CABLE TIE 200MM\"\n";
+  var blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  var link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "Sample_Bulk_Product_Rename.csv";
+  link.click();
+};
 
     window.downloadPurchaseSampleCSV = function() {
       var csvContent = "Date of purchase,Item Name,Qty,Price/PC,Total,Purchase from,Payment mode\n" +
@@ -4285,12 +4307,37 @@ window.submitReturnProcess = async function(idx) {
           })
           .catch(function(err) {
             alert("Server Error: " + err.message);
-          });
-        }
-      };
+        });
+    } else if (type === "rename") {
+      if (!confirm(records.length + " items ko bulk rename karna chahte hain? Ye sabhi sheets mein update hoga.")) return;
 
-      reader.readAsText(file);
-    };
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "bulkProductRename",
+          items: records,
+          userPhone: uPhone
+        })
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(res) {
+        if (res.success) {
+          alert("Success: " + res.message);
+          fileInput.value = "";
+          refreshAppData();
+        } else {
+          alert("Error: " + (res.message || "Rename update nahi ho paya."));
+        }
+      })
+      .catch(function(err) {
+        alert("Server Error: " + err.message);
+      });
+    }
+  };
+
+  reader.readAsText(file);
+};
     window.submitStockInward = async function() {
       var name = document.getElementById("stkName").value.trim();
       var qty = parseFloat(document.getElementById("stkQty").value) || 0;
