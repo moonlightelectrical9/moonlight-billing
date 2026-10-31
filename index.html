@@ -5673,19 +5673,17 @@ window.updateActiveItemMarginTracker = function() {
       '<td>₹' + rateToShow.toFixed(2) + '</td>' +
       '<td style="color:#059669;">-₹' + it.discount.toFixed(2) + '</td>' +
       '<td style="color:#d97706;">' + gstSign + '</td>' +
-      
-      // Perfectly Aligned Inline [ - ] Qty [ + ]
       '<td style="text-align: center; vertical-align: middle;">' +
         '<div style="display: inline-flex; align-items: center; justify-content: center; gap: 3px;">' +
-          '<button type="button" onclick="changeBillItemQty(' + idx + ', -1)" style="width: 22px; height: 22px; line-height: 20px; padding: 0; font-size: 13px; font-weight: bold; border-radius: 4px; border: 1px solid #ef4444; background: #fee2e2; color: #b91c1c; cursor: pointer;">−</button>' +
-          '<span style="display: inline-block; min-width: 26px; height: 22px; line-height: 22px; text-align: center; font-weight: bold; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; background: #ffffff; color: #0f172a; padding: 0 4px;">' + it.qty + '</span>' +
-          '<button type="button" onclick="changeBillItemQty(' + idx + ', 1)" style="width: 22px; height: 22px; line-height: 20px; padding: 0; font-size: 13px; font-weight: bold; border-radius: 4px; border: 1px solid #22c55e; background: #dcfce7; color: #15803d; cursor: pointer;">+</button>' +
+          '<button type="button" class="btn-qty" onclick="changeBillItemQty(' + idx + ', -1)" style="width:22px; height:22px; line-height:20px; padding:0; font-size:13px; font-weight:bold; border-radius:4px; border:1px solid #ef4444; background:#fee2e2; color:#b91c1c; cursor:pointer;">−</button>' +
+          '<span style="display:inline-block; min-width:26px; height:22px; line-height:22px; text-align:center; font-weight:bold; font-size:13px; border:1px solid #cbd5e1; border-radius:4px; background:#ffffff; color:#0f172a; padding:0 4px;">' + it.qty + '</span>' +
+          '<button type="button" class="btn-qty" onclick="changeBillItemQty(' + idx + ', 1)" style="width:22px; height:22px; line-height:20px; padding:0; font-size:13px; font-weight:bold; border-radius:4px; border:1px solid #22c55e; background:#dcfce7; color:#15803d; cursor:pointer;">+</button>' +
         '</div>' +
       '</td>' +
-
       '<td><b>₹' + it.total.toFixed(2) + '</b></td>' +
       '<td><button class="btn-del" onclick="deleteBillItem(' + idx + ')">✕</button></td>' +
     '</tr>';
+  });  
 
       document.getElementById("lblTotalItemCount").innerText = billItems.length;
       document.getElementById("lblTotalUnitsCount").innerText = totalUnits + " Pcs";
@@ -5696,13 +5694,13 @@ window.updateActiveItemMarginTracker = function() {
       renderBillTable();
       checkFormState();
     };
-      // Live Plus/Minus Qty Change Logic
+    // Live Plus/Minus Qty Change Logic
 window.changeBillItemQty = function(idx, delta) {
   if (!billItems[idx]) return;
   var newQty = billItems[idx].qty + delta;
 
   if (newQty <= 0) {
-    if (confirm("Kya aap '" + billItems[idx].name + "' ko bill se hatana chahte hain?")) {
+    if (confirm("Kya aap is item ko bill se hatana chahte hain?")) {
       deleteBillItem(idx);
     }
     return;
@@ -5710,11 +5708,10 @@ window.changeBillItemQty = function(idx, delta) {
 
   billItems[idx].qty = newQty;
   billItems[idx].total = billItems[idx].finalRate * billItems[idx].qty;
-  billItems[idx]._isMerged = true; // Highlight green
+  billItems[idx]._isMerged = true;
   
   renderBillTable();
   
-  // Pending amount recalculate trigger
   var recInput = document.getElementById("amtReceived");
   if (recInput) recInput.dispatchEvent(new Event("input"));
 };
@@ -5734,7 +5731,6 @@ function showAutoMergeToast(name, qty, total) {
     if (toast) toast.remove();
   }, 2000);
 }
-
     function checkFormState() {
   var bMode = document.getElementById("billMode").value;
   var rType = document.getElementById("rateType").value;
