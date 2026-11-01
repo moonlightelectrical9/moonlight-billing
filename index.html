@@ -2767,9 +2767,12 @@
           return ci.name && ci.name.toLowerCase().trim() === itmName.toLowerCase();
         });
 
-        var bRate = parseFloat(itm.finalRate || itm.rate || itm.baseRate || 0);
         var q = parseFloat(itm.qty || 1);
-        var t = parseFloat(itm.total || (bRate * q));
+    var t = parseFloat(itm.total || 0);
+    // Agar rate missing ho toh Total / Qty se exact rate nikalo ya inventory se lo
+    var calculatedRate = (q > 0 && t > 0) ? (t / q) : (invMatch ? parseFloat(invMatch.custRate || 0) : 0);
+    var bRate = parseFloat(itm.finalRate || itm.rate || itm.baseRate || calculatedRate || 0);
+    if (t === 0 && bRate > 0) t = bRate * q;
 
         return {
           name: itmName,
