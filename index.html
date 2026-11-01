@@ -2769,26 +2769,24 @@
 
         var q = parseFloat(itm.qty || 1);
     var t = parseFloat(itm.total || 0);
-    // Agar rate missing ho toh Total / Qty se exact rate nikalo ya inventory se lo
-    var calculatedRate = (q > 0 && t > 0) ? (t / q) : (invMatch ? parseFloat(invMatch.custRate || 0) : 0);
-    var bRate = parseFloat(itm.finalRate || itm.rate || itm.baseRate || calculatedRate || 0);
-    if (t === 0 && bRate > 0) t = bRate * q;
+    var disc = parseFloat(itm.discount || 0);
+    var fRate = parseFloat(itm.finalRate || (q > 0 ? t / q : 0));
+    var bRate = parseFloat(itm.baseRate || (fRate + disc));
 
-        return {
-          name: itmName,
-          serialNo: itm.serialNo || "-",
-          hsn: itm.hsn || (invMatch ? invMatch.hsn : "-"),
-          baseRate: bRate,
-          taxableRate: bRate,
-          discount: parseFloat(itm.discount || 0),
-          gstPerPc: 0,
-          finalRate: bRate,
-          qty: q,
-          total: t,
-          purchasePrice: invMatch ? invMatch.purchasePrice : 0,
-          _isMerged: false
-        };
-      });
+    return {
+      name: itmName,
+      serialNo: itm.serialNo || "-",
+      hsn: itm.hsn || (invMatch ? invMatch.hsn : "-"),
+      baseRate: bRate,
+      taxableRate: bRate,
+      discount: disc,
+      gstPerPc: 0,
+      finalRate: fRate,
+      qty: q,
+      total: t,
+      purchasePrice: invMatch ? invMatch.purchasePrice : 0,
+      _isMerged: false
+    };      });
 
       renderBillTable();
       onBillModeChange();
