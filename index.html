@@ -1465,6 +1465,7 @@
     var deferredPrompt = null;
     var selectedPermUserPhone = "";
     var activeResumedDraftId = null;
+    var activeResumedEstimateNo = null;
 
     var activeDashMode = "today";
     var allMonthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -2739,6 +2740,65 @@
       document.getElementById("bannerResumedDraft").style.display = "none";
       clearBillingForm();
     };
+    window.resumeEstimateBill = function(idx) {
+      var est = filteredBillHistoryItem(idx);
+      if (!est || !est.items || est.items.length === 0) {
+        alert("Is Estimate ke items load nahi ho sake!");
+        return;
+      }
+
+      activeResumedEstimateNo = est.docNo;
+      activeResumedDraftId = null;
+
+      switchBillingView('gen');
+
+      // Customer Details Auto-Fill
+      document.getElementById("custName").value = est.customerName || "";
+      document.getElementById("custPhone").value = est.phone || "";
+      document.getElementById("custAddress").value = est.address || "Sector-121, Noida";
+      document.getElementById("billMode").value = "Estimate (Estimates)";
+      document.getElementById("rateType").value = "Customer Rate";
+      document.getElementById("isGstBill").value = "No (Regular Bill)";
+
+      // Items Cart Setup
+      billItems = (est.items || []).map(function(itm) {
+        var itmName = String(itm.name || "").trim();
+        var invMatch = (cachedItems || []).find(function(ci) {
+          return ci.name && ci.name.toLowerCase().trim() === itmName.toLowerCase();
+        });
+
+        var bRate = parseFloat(itm.finalRate || itm.rate || itm.baseRate || 0);
+        var q = parseFloat(itm.qty || 1);
+        var t = parseFloat(itm.total || (bRate * q));
+
+        return {
+          name: itmName,
+          serialNo: itm.serialNo || "-",
+          hsn: itm.hsn || (invMatch ? invMatch.hsn : "-"),
+          baseRate: bRate,
+          taxableRate: bRate,
+          discount: parseFloat(itm.discount || 0),
+          gstPerPc: 0,
+          finalRate: bRate,
+          qty: q,
+          total: t,
+          purchasePrice: invMatch ? invMatch.purchasePrice : 0,
+          _isMerged: false
+        };
+      });
+
+      renderBillTable();
+      onBillModeChange();
+
+      var banner = document.getElementById("bannerResumedDraft");
+      if (banner) {
+        document.getElementById("lblResumedDraftId").innerText = "Resumed Estimate: " + est.docNo + " (" + est.customerName + ")";
+        banner.style.display = "flex";
+      }
+
+      document.getElementById("cardBillForm").scrollIntoView({ behavior: 'smooth' });
+      checkFormState();
+    };
 
     window.deleteDraftBill = async function(draftId) {
     console.log("Delete clicked for ID:", draftId);
@@ -2766,6 +2826,7 @@
 
     function clearBillingForm() {
       activeResumedDraftId = null;
+      activeResumedEstimateNo = null;
       billItems = [];
       renderBillTable();
       document.getElementById("custName").value = "";
@@ -3925,6 +3986,7 @@ window.markPaid = function(docNo) {
             "<td><b>₹" + parseFloat(r.amount || 0).toFixed(2) + "</b></td>" +
             "<td><b>" + (r.generatedBy || r.operatorName || '-') + "</b></td>" +
             "<td style='white-space:nowrap;'>" +
+            (r.docNo && r.docNo.indexOf("EST") !== -1 ? "<button class='btn-sync' style='padding:4px 8px; font-size:11px; background:#16a34a; color:#fff; border-color:#15803d; margin-right:4px; font-weight:800;' onclick='resumeEstimateBill(" + idx + ")'>✏️ Resume</button>" : "") +
             "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='triggerDirectPrint(filteredBillHistoryItem(" + idx + "))'>🖨️ Re-Print</button>" +
             "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px; color:#10b981;' onclick='shareBillOnWhatsApp(filteredBillHistoryItem(" + idx + "))'>📲 WhatsApp</button>" +
             "<button class='btn-sync' style='padding:4px 8px; font-size:11px; margin-right:4px;' onclick='viewDownloadPdf(filteredBillHistoryItem(" + idx + "))'>👁️ View</button>" +
@@ -5832,6 +5894,7 @@ grandTotal: totalAmt,
 amountPaid: (document.getElementById("paymentMode").value === "Pay Later") ? 0 : (parseFloat(document.getElementById("receivedAmt").value) >= 0 ? parseFloat(document.getElementById("receivedAmt").value) : totalAmt),
 balanceDue: (document.getElementById("paymentMode").value === "Pay Later") ? totalAmt : Math.max(0, totalAmt - (parseFloat(document.getElementById("receivedAmt").value) || 0)),
 resumedDraftId: activeResumedDraftId,
+resumedEstimateNo: activeResumedEstimateNo,
 operatorName: (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? (currentUser.name + (currentUser.role ? " (" + currentUser.role + ")" : "")) : "Varun Sharma (Owner)"
 };
       // --- YAHAN PASTE KAREIN (STOCK VALIDATION CHECK) ---
