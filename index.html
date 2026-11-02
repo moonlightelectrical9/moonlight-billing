@@ -2769,9 +2769,16 @@
 
         var q = parseFloat(itm.qty || 1);
     var t = parseFloat(itm.total || 0);
-    var disc = parseFloat(itm.discount || 0);
+    var disc = parseFloat(itm.discount !== undefined ? itm.discount : 0) || 0;
     var fRate = parseFloat(itm.finalRate || (q > 0 ? t / q : 0));
-    var bRate = parseFloat(itm.baseRate || (fRate + disc));
+    var bRate = parseFloat(itm.baseRate || 0);
+
+    // Agar baseRate missing ya finalRate ke barabar hai aur discount tha, toh baseRate = fRate + disc
+    if (bRate <= fRate && disc > 0) {
+      bRate = fRate + disc;
+    } else if (bRate === 0) {
+      bRate = fRate + disc;
+    }
 
     return {
       name: itmName,
@@ -2786,7 +2793,8 @@
       total: t,
       purchasePrice: invMatch ? invMatch.purchasePrice : 0,
       _isMerged: false
-    };      });
+    };
+      });
 
       renderBillTable();
       onBillModeChange();
