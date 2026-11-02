@@ -4815,8 +4815,8 @@ setTimeout(function() {
         });
 
         if (docNo) {
-          var isGstBill = (docNo.includes("/TAX-") || docNo.includes("/INV-") || trText.includes("Tax Invoice") || trText.includes("GST"));
-          var isRegBill = (docNo.includes("/REG-") || trText.includes("Regular"));
+          var isGstBill = (docNo.includes("/TAX-") || docNo.includes("/INV-") || docNo.includes("/EST-") || trText.includes("Tax Invoice") || trText.includes("GST") || trText.includes("Estimate"));
+          var isRegBill = (docNo.includes("/REG-") || docNo.includes("/EST-") || trText.includes("Regular") || trText.includes("Estimate"));
 
           if (mode === "GST") {
             tr.style.display = isGstBill ? "" : "none";
