@@ -3289,7 +3289,10 @@ if (b.isGst === true || String(b.isGst).toLowerCase() === "true" || (custGstin &
         totalGst += lineGstAmt;
         computedTotal += itemTotal;
 
-        var snStr = (it.serialNo && it.serialNo !== '-') ? '<br><small style="color:#555;">' + it.serialNo + '</small>' : '';
+        var noteText = String(it.serialNo || it.serial || it.workNote || it.warranty || "").trim();
+var snStr = (noteText && noteText !== "-" && noteText !== "undefined")
+  ? '<br><small style="color:#334155; font-weight:600; font-size:10px; display:inline-block; margin-top:2px;">' + noteText + '</small>'
+  : '';
 
         // Clean 6-Column Output
         lines += '<tr>' +
