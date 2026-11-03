@@ -6516,34 +6516,65 @@ window.sendConsolidatedWhatsAppReminder = function() {
   </div>
 </div>
   <script>
-// Open Modal & Populate 90M Coils
+// Universal Coil Extractor & Dropdown Loader (Handles 90M, 180M, 300M, etc.)
 function openCoilConvertModal() {
   var sel = document.getElementById("convertParentSelect");
   sel.innerHTML = '<option value="">-- Choose Coil Wire --</option>';
 
-  var items = window.ALL_PRODUCTS || window.inventoryItems || window.products || [];
+  // 1. Gather products from all common billing & inventory variables or DOM datalists
+  var allItems = [];
   
-  var coilItems = items.filter(function(it) {
-    var nm = String(it.name || it.itemName || "").toUpperCase();
-    return nm.includes("(90M)") || (nm.includes("90M") && nm.includes("WIRE"));
+  var possibleSources = [
+    window.inventory, window.INVENTORY_DATA, window.allProducts, window.ALL_PRODUCTS, 
+    window.products, window.inventoryItems, window.ratesData, window.ITEMS_LIST, 
+    window.stockData, window.rawInventory, window.masterProducts
+  ];
+  for (var i = 0; i < possibleSources.length; i++) {
+    if (Array.isArray(possibleSources[i]) && possibleSources[i].length > 0) {
+      allItems = possibleSources[i];
+      break;
+    }
+  }
+
+  // Fallback: Agar kisi array mein na mile toh datalist ya page elements se uthayega
+  if (allItems.length === 0) {
+    var datalists = document.querySelectorAll("datalist option, #inventoryList option, #itemsList option");
+    if (datalists && datalists.length > 0) {
+      datalists.forEach(function(opt) {
+        var val = opt.value || opt.textContent;
+        if (val) allItems.push({ name: val.trim() });
+      });
+    }
+  }
+
+  // 2. Filter wire coils dynamically: 90M, 180M, 300M etc. (Excludes PER METER items)
+  var coilMap = {};
+  allItems.forEach(function(it) {
+    var nm = String(it.name || it.itemName || it.Item_Name || it[0] || "").trim();
+    if (nm && !nm.toUpperCase().includes("METER") && /\b\d+\s*M\b/i.test(nm)) {
+      var stk = it.stock !== undefined ? it.stock : (it.currentStock !== undefined ? it.currentStock : (it.Current_Stock !== undefined ? it.Current_Stock : (it[5] !== undefined ? it[5] : 0)));
+      coilMap[nm] = stk;
+    }
   });
 
-  coilItems.forEach(function(it) {
-    var nm = it.name || it.itemName;
+  var coilNames = Object.keys(coilMap);
+  coilNames.sort();
+
+  coilNames.forEach(function(nm) {
     var opt = document.createElement("option");
     opt.value = nm;
-    opt.textContent = nm + " (Stock: " + (it.stock || it.currentStock || it.current_stock || 0) + " Coils)";
+    opt.textContent = nm + " (Stock: " + coilMap[nm] + " Coils)";
     sel.appendChild(opt);
   });
 
+  // Reset modal values
   document.getElementById("convertCoilCount").value = 1;
   document.getElementById("convertMetersFactor").value = 90;
   document.getElementById("convertAvailableCoilStock").textContent = "0 Coil";
   document.getElementById("convertAvailableMtrStock").textContent = "0 Mtr";
   document.getElementById("convertTargetNameLabel").textContent = "Target: (Select a coil)";
   
-  var modal = document.getElementById("coilConvertModal");
-  modal.style.display = "flex";
+  document.getElementById("coilConvertModal").style.display = "flex";
 }
 
 function closeCoilConvertModal() {
@@ -6554,15 +6585,38 @@ function onCoilItemSelect() {
   var parentName = document.getElementById("convertParentSelect").value;
   if (!parentName) return;
 
-  var childName = parentName.replace(/\(\s*90\s*M\s*\)/i, "(PER METER)").trim();
+  // Dynamic Coil Length Extractor (90M -> 90, 180M -> 180, 300M -> 300)
+  var meterMatch = parentName.match(/(\d+)\s*M/i);
+  var detectedMeters = meterMatch ? parseInt(meterMatch[1], 10) : 90;
+  document.getElementById("convertMetersFactor").value = detectedMeters;
+
+  // Dynamic Child Name: replaces any (90M), (180M), (300M) with (PER METER)
+  var childName = parentName.replace(/\(\s*\d+\s*M\s*\)/i, "(PER METER)").trim();
   document.getElementById("convertTargetNameLabel").textContent = "Target: " + childName;
 
-  var items = window.ALL_PRODUCTS || window.inventoryItems || window.products || [];
-  var parentItem = items.find(function(it) { return (it.name || it.itemName) === parentName; });
-  var childItem = items.find(function(it) { return (it.name || it.itemName) === childName; });
+  // Stock Detection
+  function findStock(name) {
+    var sources = [
+      window.inventory, window.INVENTORY_DATA, window.allProducts, window.ALL_PRODUCTS, 
+      window.products, window.inventoryItems, window.ratesData, window.ITEMS_LIST, 
+      window.stockData, window.rawInventory, window.masterProducts
+    ];
+    for (var s = 0; s < sources.length; s++) {
+      if (Array.isArray(sources[s]) && sources[s].length > 0) {
+        var found = sources[s].find(function(it) {
+          var n = String(it.name || it.itemName || it.Item_Name || it[0] || "").trim().toUpperCase();
+          return n === name.toUpperCase();
+        });
+        if (found) {
+          return parseFloat(found.stock !== undefined ? found.stock : (found.currentStock !== undefined ? found.currentStock : (found.Current_Stock !== undefined ? found.Current_Stock : (found[5] !== undefined ? found[5] : 0))));
+        }
+      }
+    }
+    return 0;
+  }
 
-  var pStock = parentItem ? parseFloat(parentItem.stock || parentItem.currentStock || parentItem.current_stock || 0) : 0;
-  var cStock = childItem ? parseFloat(childItem.stock || childItem.currentStock || childItem.current_stock || 0) : 0;
+  var pStock = findStock(parentName);
+  var cStock = findStock(childName);
 
   document.getElementById("convertAvailableCoilStock").textContent = pStock + " Coils";
   document.getElementById("convertAvailableMtrStock").textContent = cStock + " Mtr";
