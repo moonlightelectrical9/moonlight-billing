@@ -2218,16 +2218,26 @@
       var out = '<table style="width:100%; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:12px;">' +
         '<thead style="background:#e0f2fe; color:#0369a1;"><tr><th>#</th><th>Item Name</th><th>Quantity</th><th>Unit Price</th><th>Total (₹)</th><th>Vendor / HUB</th><th>Mode</th></tr></thead><tbody>';
       items.forEach(function(p, idx) {
-        out += '<tr>' +
-          '<td>' + (idx + 1) + '</td>' +
-          '<td><b>' + p.name + '</b></td>' +
-          '<td>' + p.qty + ' Pcs</td>' +
-          '<td>₹' + parseFloat(p.price || 0).toFixed(2) + '</td>' +
-          '<td><b style="color:#0284c7;">₹' + parseFloat(p.total || 0).toFixed(2) + '</b></td>' +
-          '<td>' + (p.vendor || 'HUB / Sadar Mandi') + '</td>' +
-          '<td>' + (p.mode || 'Cash') + '</td>' +
-          '</tr>';
-      });
+      var pNameUpper = String(p.name || "").toUpperCase();
+      var pUnit = "Pcs";
+      var pQty = parseFloat(p.qty || 0);
+
+      if (pNameUpper.includes("METER") || pNameUpper.includes("MTR") || pNameUpper.includes("PER/METER")) {
+        pUnit = "Mtr";
+      } else if (pNameUpper.includes("90M") || pNameUpper.includes("COIL") || (pNameUpper.includes("WIRE") && !pNameUpper.includes("CUTTER"))) {
+        pUnit = pQty > 1 ? "Coils" : "Coil";
+      }
+
+      out += '<tr>' +
+        '<td>' + (idx + 1) + '</td>' +
+        '<td><b>' + p.name + '</b></td>' +
+        '<td>' + pQty + ' ' + pUnit + '</td>' +
+        '<td>₹' + parseFloat(p.price || 0).toFixed(2) + '</td>' +
+        '<td><b style="color:#0284c7;">₹' + parseFloat(p.total || 0).toFixed(2) + '</b></td>' +
+        '<td>' + (p.vendor || 'HUB / Sadar Mandi') + '</td>' +
+        '<td>' + (p.mode || 'Cash') + '</td>' +
+        '</tr>';
+    });
       out += '</tbody></table>';
       return out;
     }
