@@ -6523,20 +6523,27 @@ function openCoilConvertModal() {
 
   // Direct source: cachedItems
   var items = window.cachedItems || [];
-  
   if (!Array.isArray(items) || items.length === 0) {
-    // Fallback agar direct array na ho
     var fallback = window.inventory || window.INVENTORY_DATA || window.allProducts || [];
     if (Array.isArray(fallback) && fallback.length > 0) items = fallback;
   }
 
-  // Filter only Wire Coils (90M, 180M, 300M, etc.) and exclude (PER METER)
+  // Filter STRICTLY for Wire Coils
   var coilItems = items.filter(function(it) {
     var nm = String(it.name || it.itemName || it.Item_Name || it[0] || "").trim().toUpperCase();
-    return !nm.includes("METER") && /\b\d+\s*M\b/i.test(nm);
+
+    if (nm.includes("METER") || nm.includes("/MTR") || nm.includes("PER MTR")) return false;
+    if (/\b(PLATE|SWITCH|SOCKET|REGULATOR|DIMMER|BELL|INDICATOR|FAN COVER|TEE COVER)\b/.test(nm)) {
+      return false;
+    }
+
+    var hasBracketM = /\(\s*\d+\s*M\s*\)/.test(nm);
+    var isWireWithM = (nm.includes("WIRE") || nm.includes("CABLE") || nm.includes("COIL")) && /\b\d+\s*M\b/.test(nm);
+
+    return hasBracketM || isWireWithM;
   });
 
-  // Sort alphabetically
+  // Alphabetical sorting
   coilItems.sort(function(a, b) {
     var na = String(a.name || a.itemName || a.Item_Name || a[0] || "").toUpperCase();
     var nb = String(b.name || b.itemName || b.Item_Name || b[0] || "").toUpperCase();
@@ -6561,7 +6568,6 @@ function openCoilConvertModal() {
   
   document.getElementById("coilConvertModal").style.display = "flex";
 }
-
 function closeCoilConvertModal() {
   document.getElementById("coilConvertModal").style.display = "none";
 }
