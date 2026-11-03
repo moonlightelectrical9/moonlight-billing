@@ -6473,9 +6473,8 @@ window.sendConsolidatedWhatsAppReminder = function() {
     <div style="padding:18px;">
       <div style="margin-bottom:12px;">
         <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px; color:#374151;">SELECT COIL ITEM (90M) *</label>
-        <select id="convertParentSelect" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;" onchange="onCoilItemSelect()">
-          <option value="">-- Choose Coil Wire --</option>
-        </select>
+        <input type="text" id="convertParentInput" list="coilWireDatalist" placeholder="Type coil name or size (e.g. 1.5mm, 90m)..." style="width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; box-sizing:border-box;" oninput="onCoilItemSelect()" autocomplete="off">
+<datalist id="coilWireDatalist"></datalist>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
@@ -6516,12 +6515,12 @@ window.sendConsolidatedWhatsAppReminder = function() {
   </div>
 </div>
  <script>
-// Universal Coil Extractor & Dropdown Loader (Powered by cachedItems)
+// Universal Coil Extractor with Searchable Autocomplete
 function openCoilConvertModal() {
-  var sel = document.getElementById("convertParentSelect");
-  sel.innerHTML = '<option value="">-- Choose Coil Wire --</option>';
+  var dl = document.getElementById("coilWireDatalist");
+  dl.innerHTML = '';
+  document.getElementById("convertParentInput").value = '';
 
-  // Direct source: cachedItems
   var items = window.cachedItems || [];
   if (!Array.isArray(items) || items.length === 0) {
     var fallback = window.inventory || window.INVENTORY_DATA || window.allProducts || [];
@@ -6543,7 +6542,6 @@ function openCoilConvertModal() {
     return hasBracketM || isWireWithM;
   });
 
-  // Alphabetical sorting
   coilItems.sort(function(a, b) {
     var na = String(a.name || a.itemName || a.Item_Name || a[0] || "").toUpperCase();
     var nb = String(b.name || b.itemName || b.Item_Name || b[0] || "").toUpperCase();
@@ -6555,55 +6553,62 @@ function openCoilConvertModal() {
     var stk = it.stock !== undefined ? it.stock : (it.currentStock !== undefined ? it.currentStock : (it.Current_Stock !== undefined ? it.Current_Stock : (it[5] !== undefined ? it[5] : 0)));
     var opt = document.createElement("option");
     opt.value = nm;
-    opt.textContent = nm + " (Stock: " + stk + " Coils)";
-    sel.appendChild(opt);
+    opt.label = "Stock: " + stk + " Coils";
+    dl.appendChild(opt);
   });
 
-  // Reset defaults
   document.getElementById("convertCoilCount").value = 1;
   document.getElementById("convertMetersFactor").value = 90;
   document.getElementById("convertAvailableCoilStock").textContent = "0 Coil";
   document.getElementById("convertAvailableMtrStock").textContent = "0 Mtr";
-  document.getElementById("convertTargetNameLabel").textContent = "Target: (Select a coil)";
+  document.getElementById("convertTargetNameLabel").textContent = "Target: (Type or select a coil)";
   
   document.getElementById("coilConvertModal").style.display = "flex";
+  setTimeout(function() {
+    document.getElementById("convertParentInput").focus();
+  }, 100);
 }
+
 function closeCoilConvertModal() {
   document.getElementById("coilConvertModal").style.display = "none";
 }
 
 function onCoilItemSelect() {
-  var parentName = document.getElementById("convertParentSelect").value;
+  var parentName = document.getElementById("convertParentInput").value.trim();
   if (!parentName) return;
 
-  // 1. Dynamic length detection (90M -> 90, 180M -> 180, 300M -> 300)
-  var meterMatch = parentName.match(/(\d+)\s*M/i);
-  var detectedMeters = meterMatch ? parseInt(meterMatch[1], 10) : 90;
-  document.getElementById("convertMetersFactor").value = detectedMeters;
-
-  // 2. Target child loose wire item mapping
-  var childName = parentName.replace(/\(\s*\d+\s*M\s*\)/i, "(PER METER)").trim();
-  document.getElementById("convertTargetNameLabel").textContent = "Target: " + childName;
-
-  // 3. Stock Lookups from cachedItems
   var items = window.cachedItems || [];
+  var exactItem = items.find(function(it) {
+    var n = String(it.name || it.itemName || it.Item_Name || it[0] || "").trim().toUpperCase();
+    return n === parentName.toUpperCase();
+  });
 
-  function getItemStock(name) {
-    var found = items.find(function(it) {
-      var n = String(it.name || it.itemName || it.Item_Name || it[0] || "").trim().toUpperCase();
-      return n === name.toUpperCase();
-    });
-    if (!found) return 0;
-    return parseFloat(found.stock !== undefined ? found.stock : (found.currentStock !== undefined ? found.currentStock : (found.Current_Stock !== undefined ? found.Current_Stock : (found[5] !== undefined ? found[5] : 0))));
+  // Agar user ne pura item name select kar liya hai
+  if (exactItem) {
+    var meterMatch = parentName.match(/(\d+)\s*M/i);
+    var detectedMeters = meterMatch ? parseInt(meterMatch[1], 10) : 90;
+    document.getElementById("convertMetersFactor").value = detectedMeters;
+
+    var childName = parentName.replace(/\(\s*\d+\s*M\s*\)/i, "(PER METER)").trim();
+    document.getElementById("convertTargetNameLabel").textContent = "Target: " + childName;
+
+    function getItemStock(name) {
+      var found = items.find(function(it) {
+        var n = String(it.name || it.itemName || it.Item_Name || it[0] || "").trim().toUpperCase();
+        return n === name.toUpperCase();
+      });
+      if (!found) return 0;
+      return parseFloat(found.stock !== undefined ? found.stock : (found.currentStock !== undefined ? found.currentStock : (found.Current_Stock !== undefined ? found.Current_Stock : (found[5] !== undefined ? found[5] : 0))));
+    }
+
+    var pStock = getItemStock(parentName);
+    var cStock = getItemStock(childName);
+
+    document.getElementById("convertAvailableCoilStock").textContent = pStock + " Coils";
+    document.getElementById("convertAvailableMtrStock").textContent = cStock + " Mtr";
+
+    updateConversionPreview();
   }
-
-  var pStock = getItemStock(parentName);
-  var cStock = getItemStock(childName);
-
-  document.getElementById("convertAvailableCoilStock").textContent = pStock + " Coils";
-  document.getElementById("convertAvailableMtrStock").textContent = cStock + " Mtr";
-
-  updateConversionPreview();
 }
 
 function updateConversionPreview() {
@@ -6616,12 +6621,12 @@ function updateConversionPreview() {
 }
 
 function submitCoilConversion() {
-  var parentName = document.getElementById("convertParentSelect").value;
+  var parentName = document.getElementById("convertParentInput").value.trim();
   var coils = parseInt(document.getElementById("convertCoilCount").value || 1, 10);
   var metersFactor = parseInt(document.getElementById("convertMetersFactor").value || 90, 10);
 
   if (!parentName) {
-    alert("Kripya coil item select karein!");
+    alert("Kripya coil item select ya search karein!");
     return;
   }
   if (isNaN(coils) || coils <= 0) {
@@ -6666,6 +6671,6 @@ function submitCoilConversion() {
     alert("Network error: " + err);
   });
 }
-</script>
+ </script>
 </body>
 </html>
