@@ -1134,6 +1134,7 @@
           <button class="btn-sync" id="btnStkTabRate" onclick="setStockMode('rate')">💲 Quick Rates</button>
           <button class="btn-sync" id="btnStkTabCorrect" onclick="setStockMode('correct')">🔧 Correct Qty</button>
           <button type="button" class="btn-tool" onclick="openRenameModal()" style="background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; border-radius:6px; padding:6px 12px; font-weight:700; cursor:pointer;">🔄 Rename Product</button>
+          <button type="button" class="btn-sync" style="background:#7c3aed; color:#fff; border:1px solid #6d28d9; padding:6px 12px; font-weight:600; border-radius:6px; cursor:pointer;" onclick="openCoilConvertModal()">⚡ Convert Coil to Meter</button>
           <button class="btn-sync" id="btnStkTabPurchase" onclick="setStockMode('purchase')">📦 Purchase Bill Entry</button>
           <button class="btn-sync" id="btnStkTabBulk" onclick="setStockMode('bulk')">📤 Bulk Upload CSV</button>
         </div>
@@ -6461,5 +6462,174 @@ window.sendConsolidatedWhatsAppReminder = function() {
 
   </div>
 </div>
+  <!-- Coil to Meter Convert Modal -->
+<div id="coilConvertModal" style="display:none; position:fixed; z-index:99999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.55); align-items:center; justify-content:center;">
+  <div style="background:#fff; width:95%; max-width:520px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.2); overflow:hidden; font-family:sans-serif;">
+    <div style="background:#7c3aed; color:#fff; padding:12px 18px; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0; font-size:16px;">⚡ Convert Coil to Loose Meter</h3>
+      <span style="cursor:pointer; font-size:20px; font-weight:bold;" onclick="closeCoilConvertModal()">&times;</span>
+    </div>
+    
+    <div style="padding:18px;">
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px; color:#374151;">SELECT COIL ITEM (90M) *</label>
+        <select id="convertParentSelect" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;" onchange="onCoilItemSelect()">
+          <option value="">-- Choose Coil Wire --</option>
+        </select>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div style="background:#f8fafc; padding:8px 10px; border-radius:6px; border:1px solid #e2e8f0;">
+          <div style="font-size:11px; color:#64748b; font-weight:600;">AVAILABLE COILS</div>
+          <div id="convertAvailableCoilStock" style="font-size:15px; font-weight:bold; color:#0f172a;">0 Coil</div>
+        </div>
+        <div style="background:#f8fafc; padding:8px 10px; border-radius:6px; border:1px solid #e2e8f0;">
+          <div style="font-size:11px; color:#64748b; font-weight:600;">CURRENT LOOSE MTR</div>
+          <div id="convertAvailableMtrStock" style="font-size:15px; font-weight:bold; color:#0f172a;">0 Mtr</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div>
+          <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px; color:#374151;">COILS TO CONVERT *</label>
+          <input type="number" id="convertCoilCount" value="1" min="1" style="width:100%; padding:7px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;" oninput="updateConversionPreview()">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px; color:#374151;">METERS PER COIL</label>
+          <input type="number" id="convertMetersFactor" value="90" style="width:100%; padding:7px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px;" oninput="updateConversionPreview()">
+        </div>
+      </div>
+
+      <!-- Preview Box -->
+      <div style="background:#eff6ff; border:1px dashed #3b82f6; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+        <div style="font-size:12px; font-weight:bold; color:#1d4ed8; margin-bottom:4px;">STOCK IMPACT PREVIEW:</div>
+        <div id="convertPreviewDeduct" style="font-size:12px; color:#dc2626;">• Parent: -1 Coil</div>
+        <div id="convertPreviewAdd" style="font-size:12px; color:#16a34a; font-weight:bold;">• Loose: +90 Meters</div>
+        <div id="convertTargetNameLabel" style="font-size:11px; color:#475569; margin-top:4px;">Target: (Select a coil)</div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" style="padding:8px 16px; border:1px solid #cbd5e1; background:#f1f5f9; border-radius:6px; font-weight:600; cursor:pointer;" onclick="closeCoilConvertModal()">Cancel</button>
+        <button type="button" id="btnConfirmConversion" style="padding:8px 18px; border:none; background:#7c3aed; color:#fff; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="submitCoilConversion()">Confirm & Update Stock</button>
+      </div>
+    </div>
+  </div>
+</div>
+  <script>
+// Open Modal & Populate 90M Coils
+function openCoilConvertModal() {
+  var sel = document.getElementById("convertParentSelect");
+  sel.innerHTML = '<option value="">-- Choose Coil Wire --</option>';
+
+  var items = window.ALL_PRODUCTS || window.inventoryItems || window.products || [];
+  
+  var coilItems = items.filter(function(it) {
+    var nm = String(it.name || it.itemName || "").toUpperCase();
+    return nm.includes("(90M)") || (nm.includes("90M") && nm.includes("WIRE"));
+  });
+
+  coilItems.forEach(function(it) {
+    var nm = it.name || it.itemName;
+    var opt = document.createElement("option");
+    opt.value = nm;
+    opt.textContent = nm + " (Stock: " + (it.stock || it.currentStock || it.current_stock || 0) + " Coils)";
+    sel.appendChild(opt);
+  });
+
+  document.getElementById("convertCoilCount").value = 1;
+  document.getElementById("convertMetersFactor").value = 90;
+  document.getElementById("convertAvailableCoilStock").textContent = "0 Coil";
+  document.getElementById("convertAvailableMtrStock").textContent = "0 Mtr";
+  document.getElementById("convertTargetNameLabel").textContent = "Target: (Select a coil)";
+  
+  var modal = document.getElementById("coilConvertModal");
+  modal.style.display = "flex";
+}
+
+function closeCoilConvertModal() {
+  document.getElementById("coilConvertModal").style.display = "none";
+}
+
+function onCoilItemSelect() {
+  var parentName = document.getElementById("convertParentSelect").value;
+  if (!parentName) return;
+
+  var childName = parentName.replace(/\(\s*90\s*M\s*\)/i, "(PER METER)").trim();
+  document.getElementById("convertTargetNameLabel").textContent = "Target: " + childName;
+
+  var items = window.ALL_PRODUCTS || window.inventoryItems || window.products || [];
+  var parentItem = items.find(function(it) { return (it.name || it.itemName) === parentName; });
+  var childItem = items.find(function(it) { return (it.name || it.itemName) === childName; });
+
+  var pStock = parentItem ? parseFloat(parentItem.stock || parentItem.currentStock || parentItem.current_stock || 0) : 0;
+  var cStock = childItem ? parseFloat(childItem.stock || childItem.currentStock || childItem.current_stock || 0) : 0;
+
+  document.getElementById("convertAvailableCoilStock").textContent = pStock + " Coils";
+  document.getElementById("convertAvailableMtrStock").textContent = cStock + " Mtr";
+
+  updateConversionPreview();
+}
+
+function updateConversionPreview() {
+  var coils = parseInt(document.getElementById("convertCoilCount").value || 1, 10);
+  var factor = parseInt(document.getElementById("convertMetersFactor").value || 90, 10);
+  var totalMtr = coils * factor;
+
+  document.getElementById("convertPreviewDeduct").textContent = "• Parent: -" + coils + " Coil" + (coils > 1 ? "s" : "");
+  document.getElementById("convertPreviewAdd").textContent = "• Loose: +" + totalMtr + " Meters";
+}
+
+function submitCoilConversion() {
+  var parentName = document.getElementById("convertParentSelect").value;
+  var coils = parseInt(document.getElementById("convertCoilCount").value || 1, 10);
+  var metersFactor = parseInt(document.getElementById("convertMetersFactor").value || 90, 10);
+
+  if (!parentName) {
+    alert("Kripya coil item select karein!");
+    return;
+  }
+  if (isNaN(coils) || coils <= 0) {
+    alert("Valid coils quantity daalein!");
+    return;
+  }
+
+  var btn = document.getElementById("btnConfirmConversion");
+  btn.disabled = true;
+  btn.textContent = "Updating Stock...";
+
+  var payload = {
+    action: "convertCoilToMeter",
+    parentName: parentName,
+    coils: coils,
+    metersPerCoil: metersFactor,
+    updatedBy: "Varun Sharma (Owner)"
+  };
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    btn.disabled = false;
+    btn.textContent = "Confirm & Update Stock";
+
+    if (data.success) {
+      alert("✅ " + data.message);
+      closeCoilConvertModal();
+      if (typeof syncInventoryData === "function") syncInventoryData();
+      else if (typeof fetchInventoryRates === "function") fetchInventoryRates();
+      else location.reload();
+    } else {
+      alert("❌ Failed: " + (data.message || "Unknown error"));
+    }
+  })
+  .catch(function(err) {
+    btn.disabled = false;
+    btn.textContent = "Confirm & Update Stock";
+    alert("Network error: " + err);
+  });
+}
+</script>
 </body>
 </html>
