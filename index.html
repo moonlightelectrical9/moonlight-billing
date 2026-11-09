@@ -3317,7 +3317,7 @@ var snStr = (noteText && noteText !== "-" && noteText !== "undefined")
       });
 
       // Stretch table vertically on A4 page
-      var fillerHeight = (itms.length <= 12) ? Math.max(160, 520 - (itms.length * 28)) : 0;
+      var fillerHeight = (itms.length <= 22) ? Math.max(20, 580 - (itms.length * 25)) : 0;
       if (fillerHeight > 0) {
         lines += '<tr>' +
           '<td class="print-filler-cell" style="height:' + fillerHeight + 'px; border-left:1.5px solid #1e3a8a; border-right:1px solid #1e3a8a;">&nbsp;</td>' +
@@ -3523,7 +3523,9 @@ var snStr = (noteText && noteText !== "-" && noteText !== "undefined")
         '@page { size: A4 portrait; margin: 8mm 6mm; }' +
         '* { box-sizing: border-box; font-family: Helvetica, Arial, sans-serif; }' +
         'body { margin: 0; padding: 0; background: #fff; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }' +
-        'table { border-collapse: collapse; }' +
+        'table { border-collapse: collapse; width: 100%; }' +
+        'thead { display: table-header-group; }' +
+        'tr { page-break-inside: avoid; break-inside: avoid; }' +
         '</style></head><body>' +
         buildReceiptHtml(data) +
         '</body></html>'
