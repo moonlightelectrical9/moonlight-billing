@@ -270,11 +270,11 @@
       <div id="stepPasswordMode">
         <div class="form-col" style="text-align: left; margin-bottom: 10px;">
           <label>AUTHORIZED MOBILE NUMBER</label>
-          <input type="tel" id="pwdLoginPhone" placeholder="Enter 10-digit mobile number" value="" autocomplete="tel">
+          <input type="tel" id="pwdLoginPhone" placeholder="Enter 10-digit mobile number" value="" autocomplete="tel" onkeydown="if(event.key === 'Enter'){ doPasswordLogin(); }">
         </div>
         <div class="form-col" style="text-align: left; margin-bottom: 12px;">
           <label>PASSWORD / SECURITY PIN</label>
-          <input type="password" id="loginPassword" placeholder="Enter password">
+          <input type="password" id="loginPassword" placeholder="Enter password" onkeydown="if(event.key === 'Enter'){ doPasswordLogin(); }">
         </div>
         <div id="pwdErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
         
@@ -289,7 +289,7 @@
       <div id="stepPhoneMode" style="display: none;">
         <div class="form-col" style="text-align: left; margin-bottom: 12px;">
           <label>AUTHORIZED MOBILE NUMBER</label>
-          <input type="tel" id="loginPhone" placeholder="Enter 10-digit mobile number" value="" autocomplete="tel">
+          <input type="tel" id="loginPhone" placeholder="Enter 10-digit mobile number" value="" autocomplete="tel" onkeydown="if(event.key === 'Enter'){ doSendOtp(); }">
         </div>
         <div id="loginErr" style="color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none;"></div>
         
@@ -303,7 +303,7 @@
       <!-- Mode 3: Enter WhatsApp OTP -->
       <div id="stepOtp" style="display: none;">
         <div style="font-size: 12px; color: #475569; margin-bottom: 10px;">OTP sent for: <b id="displaySentPhone"></b></div>
-        <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;">
+        <input type="number" id="loginOtp" placeholder="Enter 4-digit OTP" style="width: 100%; margin-bottom: 12px; font-size: 20px; text-align: center; letter-spacing: 4px;" onkeydown="if(event.key === 'Enter'){ doVerifyOtp(); }">
         <button type="button" class="btn-checkout" onclick="doVerifyOtp()" style="background:#10b981; color:#fff;">VERIFY & LOGIN</button>
         <div style="margin-top: 14px;">
           <a id="waDirectBtn" href="#" target="_blank" style="font-size: 12px; color: #2563eb; font-weight: bold; text-decoration: underline;">Open WhatsApp chat for OTP ➔</a>
